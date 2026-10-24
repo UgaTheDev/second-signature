@@ -6,7 +6,7 @@ Opens with the moment, per Hyphenate and Cartesia. Three people: **Dolores** (a 
 ## Before judging (10 minutes)
 
 1. `uv run python preflight.py --crs`: every line ok.
-2. Dashboard: Reset, then click Passcode and enter it.
+2. Dashboard: Reset, then click the key icon in the header and enter the passcode.
 3. `uv run python arena.py -n 3 --publish` and `uv run python arena.py --shield -n 3 --publish` (a few cents), so the
    scoreboard is fresh.
 4. Phones charged, ringers on, loud.
@@ -23,7 +23,7 @@ Opens with the moment, per Hyphenate and Cartesia. Three people: **Dolores** (a 
 | 1:00 | She mentions secrecy. Agent offers to connect her with Susan. She says yes. Susan joins; agent leaves. | "Scams work by isolating her. We do the opposite." |
 | 1:20 | Dashboard: case file, gate refusals, night stats, arena scoreboard. | "Every action is logged with who did it. The gate refused [N] things tonight." |
 | 1:35 | Kill the server, restart it. The case reloads with a `resume` line. Click Confirm fraud. | "It recovers. And the analyst makes the final call." |
-| 1:45 | Run review now: Droid's steps stream, a policy diff waits for Approve. | "In the morning, Droid reads the night and proposes a policy change. A human approves it." |
+| 1:45 | Policy review tab, Run a review now: Droid's steps stream, a policy diff waits for Approve. | "In the morning, Droid reads the night and proposes a policy change. A human approves it." |
 | 1:55 | — | "Second Signature: the overnight fraud analyst a small credit union can't afford." |
 
 ## If a judge brings their own scenario

@@ -1,6 +1,86 @@
 @import "tailwindcss";
 
+/* One accent (amber). Red and green appear only as status text, never as decoration. */
+:root,
+:root[data-theme="dark"] {
+  --bg: #131210;
+  --surface: #1a1916;
+  --raise: #23211d;
+  --line: #2e2b26;
+  --ink: #efeae0;
+  --ink-2: #b9b2a4;
+  --ink-3: #8c8576;
+  --accent: #e8a33d;
+  --on-accent: #1b1306;
+  --danger: #f0705f;
+  --ok: #8cc194;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f1ea;
+  --surface: #faf8f3;
+  --raise: #ffffff;
+  --line: #dcd6c8;
+  --ink: #1c1a16;
+  --ink-2: #4b463d;
+  --ink-3: #6b6558;
+  --accent: #96570a;
+  --on-accent: #fffaf0;
+  --danger: #b0301d;
+  --ok: #2d6a39;
+  color-scheme: light;
+}
+
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raise: var(--raise);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+dialog {
+  color: var(--ink);
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes arrive {
+  from { background-color: color-mix(in srgb, var(--accent) 22%, transparent); }
+  to { background-color: transparent; }
+}
+.arrive {
+  animation: arrive 1.8s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrive { animation: none; }
+  * { scroll-behavior: auto !important; }
 }
