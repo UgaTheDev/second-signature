@@ -53,7 +53,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 # DASHBOARD_ORIGIN (e.g. http://localhost:3000) limits which site may call the analyst routes from a browser
-app.add_middleware(CORSMiddleware, allow_origins=[o for o in os.getenv("DASHBOARD_ORIGIN", "*").split(",") if o],
+app.add_middleware(CORSMiddleware, allow_origins=[o for o in (os.getenv("DASHBOARD_ORIGIN") or "*").split(",") if o],
                    allow_methods=["*"], allow_headers=["*"])
 
 

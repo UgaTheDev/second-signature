@@ -3,7 +3,7 @@
 import { KeyRound, ListPlus, Moon, RotateCcw, Sun } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { getPasscode, pingServer, post, setPasscode } from "../lib/api";
-import { Button, IconButton, useToast } from "./ui";
+import { Button, Dialog, IconButton, useToast } from "./ui";
 
 export type Tab = "desk" | "policy" | "proof";
 const TABS: [Tab, string][] = [
@@ -85,21 +85,45 @@ export function Header({
   const [theme, toggleTheme] = useTheme();
   const toast = useToast();
 
-  function passcode() {
-    const v = prompt("Analyst passcode (the server's ANALYST_TOKEN)", getPasscode());
-    if (v === null) return;
-    setPasscode(v);
-    toast(v ? "Passcode saved in this browser." : "Passcode cleared.");
+  // In-page dialogs, not prompt()/confirm(): embedded browsers and previews block the native ones.
+  const [asking, setAsking] = useState<"passcode" | "reset" | null>(null);
+  const [code, setCode] = useState("");
+
+  function savePasscode(e: React.FormEvent) {
+    e.preventDefault();
+    setPasscode(code.trim());
+    setAsking(null);
+    toast(code.trim() ? "Passcode saved in this browser." : "Passcode cleared.");
   }
 
   async function reset() {
-    if (!confirm("Delete every case and review from the dashboard? The server's open cases are cleared too.")) return;
+    setAsking(null);
     const err = await post("/reset");
     toast(err ?? "All cases cleared.", Boolean(err));
   }
 
   return (
     <header className="border-b border-line">
+      <Dialog open={asking === "passcode"} onClose={() => setAsking(null)} title="Analyst passcode">
+        <form onSubmit={savePasscode}>
+          <label className="mb-6 block text-sm text-ink-2">
+            The server&apos;s ANALYST_TOKEN. Saved in this browser only.
+            <input type="password" autoFocus value={code} onChange={(e) => setCode(e.target.value)}
+              className="mt-2 w-full rounded-md border border-line bg-bg px-3 py-2 text-[15px] text-ink" />
+          </label>
+          <div className="flex justify-end gap-3">
+            <Button type="button" onClick={() => setAsking(null)}>Cancel</Button>
+            <Button variant="primary" type="submit">Save</Button>
+          </div>
+        </form>
+      </Dialog>
+      <Dialog open={asking === "reset"} onClose={() => setAsking(null)} title="Delete every case?">
+        <p className="mb-6">Every case and review is removed from the dashboard, and the server&apos;s open cases are cleared too.</p>
+        <div className="flex justify-end gap-3">
+          <Button onClick={() => setAsking(null)}>Go back</Button>
+          <Button variant="danger" onClick={reset}>Delete all cases</Button>
+        </div>
+      </Dialog>
       <div className="mx-auto flex max-w-[1560px] flex-wrap items-center gap-x-8 gap-y-3 px-6 py-4">
         <div className="mr-auto">
           <h1 className="font-display text-2xl font-bold leading-tight tracking-tight">Second Signature</h1>
@@ -115,10 +139,10 @@ export function Header({
               {demo ? "Use live data" : "Use sample data"}
             </Button>
           )}
-          <IconButton label="Enter analyst passcode" onClick={passcode}>
+          <IconButton label="Enter analyst passcode" onClick={() => { setCode(getPasscode()); setAsking("passcode"); }}>
             <KeyRound size={18} strokeWidth={1.75} />
           </IconButton>
-          <IconButton label="Delete all cases" onClick={reset} disabled={demo}>
+          <IconButton label="Delete all cases" onClick={() => setAsking("reset")} disabled={demo}>
             <RotateCcw size={18} strokeWidth={1.75} />
           </IconButton>
           <IconButton label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"} onClick={toggleTheme}>
