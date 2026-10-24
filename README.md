@@ -30,9 +30,17 @@ Nessie (poll 2s) ─▶ triage (Claude Opus 5.5) ◀── CRS identity + credit
 | `server/shield.py` | Scam Shield: protected line, live scam-script detection, the whisper |
 | `server/intel.py` | FTC alerts from the Apify actor; Elastic history and scam-pattern search |
 | `server/review.py` | Morning review with the Factory Droid SDK (below) |
-| `server/server.py` | Twilio webhooks (signature-checked), `/ws` media stream, dashboard API, schedules |
+| `server/overrides.py` | Event trigger: after `OVERRIDE_REVIEW_AT` analyst releases of the agent's holds, a Droid review starts right away |
+| `server/calltools.py` | The call bot's prompt, tools and per-call keyterms, shared by `bot.py` and the arena |
+| `server/arena.py` | Red-team arena: Claude plays scammers and members against the call bot (below) |
+| `server/crs.py`, `server/nessie.py` | CRS sandbox client; Nessie client and the 2s purchase watcher |
+| `server/store.py` | Convex writes (case file, actions, transcript, gate state for restart recovery) |
+| `server/seed.py`, `server/members.py` | Demo members (Dolores, Robert) and their Nessie accounts and history |
+| `server/preflight.py` | Before a live demo: every key set, every service answering. Read-only, never prints a secret |
+| `server/server.py` | Twilio webhooks (signature-checked), `/ws` media stream, analyst API (passcode), schedules |
 | `actor/` | Apify actor: FTC consumer alerts → scam type, payment methods, red-flag sentences |
-| `dashboard/` | Next.js + Convex: live case timeline, analyst buttons, Judge Scenario form, morning review |
+| `dashboard/` | Next.js + Convex, three tabs: **Live desk** (case queue, case file, night stats, Judge Scenario), **Policy review** (Droid steps and diff, Approve/Reject), **How we know it works** (permission matrix, arena scoreboard, real vs simulated). Dark and light themes; sample-data mode |
+| `docs/` | Demo script, track write-ups, threat model, submission checklist |
 
 ## Scam Shield: catch it during the scam call
 
@@ -130,16 +138,18 @@ uv sync
 uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py   # self-checks
 uv run seed.py                       # once: creates Dolores + Robert in Nessie, writes seed_ids.json
 ngrok http 7860                      # put the https URL in LOCAL_SERVER_URL
-uv run server.py
 uv run python preflight.py           # every key and service, read-only; --crs also tests the CRS login once
-# Twilio console → the number → Voice "A call comes in" → Webhook POST {LOCAL_SERVER_URL}/twiml
+uv run server.py
+# Twilio console → each number (TWILIO_NUMBER, and SHIELD_NUMBER if set) → Voice "A call comes in"
+#   → Webhook POST {LOCAL_SERVER_URL}/twiml. One URL for both: calls to SHIELD_NUMBER are routed to Scam Shield by `To`
 
 # 2. dashboard
 cd dashboard && npm i
 npx convex dev                       # writes NEXT_PUBLIC_CONVEX_URL to .env.local
 npx convex env set CASE_WRITE_SECRET <same as CONVEX_WRITE_SECRET>
 echo "NEXT_PUBLIC_SERVER_URL=<ngrok url>" >> .env.local
-npm run dev                          # click "Passcode" once and enter the server's ANALYST_TOKEN
+npm run dev                          # click the key icon once and enter the server's ANALYST_TOKEN
+                                     # no Convex yet? open http://localhost:3000/?demo=1 for sample data
 
 # 3. optional: scam intel (Apify) and the morning review (Factory)
 cd actor && apify login && apify push          # then set APIFY_TOKEN + APIFY_ACTOR in server/.env
@@ -209,6 +219,7 @@ the threat model in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
 ```bash
 cd server
 uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py
+uv run python arena.py --selftest   # arena harness, no API calls
 uv run python smoke.py     # offline end-to-end: hold-by-default, gate, webhook auth, analyst passcode, family bridge,
                            # code floor, Scam Shield, restart recovery, override-triggered review
 ```

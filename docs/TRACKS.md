@@ -109,10 +109,33 @@ name can't move, signed Twilio webhooks, and a Droid that can edit exactly one f
 `actor/` scrapes FTC consumer alerts into scam type, payment methods and red-flag sentences. Triage cites a matching
 alert as evidence (source "apify"), so the case file says which current scam this purchase looks like.
 
+## Elastic
+
+Elastic answers the question a human analyst asks first: "is this normal for her?" `intel.py` uses two indices.
+`member_txns` holds each member's purchases (member, date, amount, category, merchant), indexed on every new purchase by
+transaction id so repeats don't duplicate. `scam_patterns` holds the FTC alerts our Apify actor scraped. For history, one
+query over her last 90 days returns how many purchases she has in this category and the largest, and each answer becomes a
+risk signal with source "elastic": "0 gift_card purchases in her last 90 days: first time in this category" (weight 0.6), or
+"larger than any purchase in her last 90 days" (weight 0.4). For scam patterns, a boosted match on red flags and payment
+method returns the top 3 alerts, which triage cites as evidence. Without `ELASTIC_URL` set, alerts are ranked in memory and
+no "elastic" signals are produced; triage still summarizes history itself. Live: [N] member purchases indexed, [N] alerts
+indexed, [N] "elastic" signals on the demo case.
+
 ## Best Use of Nessie (Capital One)
 
-Nessie is the bank: seeded member accounts, a 2-second watcher on purchases, the Judge Scenario form posting real purchases,
-and hold status written back.
+**Completeness:** Nessie is the bank for the whole loop, read and write. `seed.py` creates Dolores and Robert as Nessie
+customers with checking accounts and about 90 days of completed purchases at real merchants (groceries, pharmacy, a church
+donation, Robert's yearly gift cards). The server watches those accounts, hands each new purchase to the agent, and writes
+status back: "held" when we pause it, "pending" when an analyst releases it.
+**Creativity:** The Judge Scenario form posts a real purchase into Nessie (it finds or creates the merchant first), and the
+watcher picks it up like any other, so a judge's input goes through the same path as a live customer. The member's Nessie
+history is also what drives the rule: a first-ever gift card, wire or crypto purchase is held by code even if triage says
+"allow", and Robert, who buys gift cards yearly, isn't held for them.
+**Complexity:** Nessie has no webhooks, so `nessie.watch` polls every 2 seconds and diffs transaction ids. Existing ids are
+loaded first, so history and a server restart never re-trigger old purchases. Each new purchase is passed on with the rest
+of that account's transactions as history. The purchases route isn't in Nessie's published spec, so `NESSIE_TXN_ROUTE=withdrawals`
+switches to withdrawals with the merchant in the description. Requests retry three times with backoff. The hold lives in our
+database and Convex, so a rejected Nessie status update is logged and doesn't unhold anything.
 
 ## Anthropic
 
