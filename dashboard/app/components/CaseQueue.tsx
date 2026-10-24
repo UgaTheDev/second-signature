@@ -1,6 +1,7 @@
 "use client";
 
 import { PhoneIncoming } from "lucide-react";
+import { useEffect, useState } from "react";
 import { isShieldCase, money, shortClock, STATUS_LABEL } from "../lib/format";
 import type { Case, Status } from "../lib/types";
 
@@ -21,6 +22,20 @@ export function StatusMark({ status }: { status: Status }) {
   );
 }
 
+// Convex never answers when the URL is wrong or offline; say so instead of loading forever.
+function useSlow(waiting: boolean, ms = 8000) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    if (!waiting) return;
+    const id = setTimeout(() => setSlow(true), ms);
+    return () => {
+      clearTimeout(id);
+      setSlow(false);
+    };
+  }, [waiting, ms]);
+  return waiting && slow;
+}
+
 export function CaseQueue({
   cases,
   selected,
@@ -32,11 +47,16 @@ export function CaseQueue({
   onSelect: (id: string) => void;
   fresh: string | null;
 }) {
+  const slow = useSlow(cases === undefined);
   return (
     <section aria-label="Cases">
       <h2 className="mb-2 font-display text-lg font-semibold">Cases</h2>
       {cases === undefined ? (
-        <p className="text-ink-2">Loading cases…</p>
+        <p className="max-w-[30ch] text-ink-2">
+          {slow
+            ? "The case database isn't answering. Check NEXT_PUBLIC_CONVEX_URL and that `npx convex dev` is running, or switch to sample data."
+            : "Loading cases…"}
+        </p>
       ) : cases.length === 0 ? (
         <p className="max-w-[28ch] text-ink-2">Nothing yet. Use “Run a scenario” to send a test purchase.</p>
       ) : (

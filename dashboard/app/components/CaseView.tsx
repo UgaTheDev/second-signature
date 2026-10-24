@@ -68,10 +68,12 @@ function Decision({ c }: { c: CaseDetail }) {
   return (
     <div className="flex flex-wrap items-center gap-3 border-y border-line py-4">
       <p className="mr-auto max-w-[44ch] text-ink-2">This case needs a person to decide. Neither choice can be undone from here.</p>
-      <Button onClick={() => setAsking("release")}>Release payment</Button>
-      <Button variant="danger" onClick={() => setAsking("confirm_fraud")}>
-        <Ban size={16} strokeWidth={1.75} /> Confirm fraud
-      </Button>
+      <div className="flex gap-3">
+        <Button onClick={() => setAsking("release")}>Release payment</Button>
+        <Button variant="danger" onClick={() => setAsking("confirm_fraud")}>
+          <Ban size={16} strokeWidth={1.75} /> Confirm fraud
+        </Button>
+      </div>
       <Dialog open={asking !== null} onClose={() => setAsking(null)} title={releasing ? "Release this payment?" : "Confirm this as fraud?"}>
         <p className="mb-4">
           {releasing
@@ -202,7 +204,7 @@ export function CaseView({ caseId }: { caseId: string | null }) {
           <p className="text-ink-2">
             {c.member_name} · {words(c.category)} · opened {shortClock(c.opened_at)}
           </p>
-          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight">
+          <h2 className="font-display text-4xl font-bold leading-tight tracking-tight [overflow-wrap:anywhere]">
             {c.merchant}
             {c.amount > 0 && <span className="num ml-3 font-semibold text-ink-2">{money(c.amount)}</span>}
           </h2>
