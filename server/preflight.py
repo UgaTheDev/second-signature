@@ -8,6 +8,7 @@ Prints one line per check and exits 1 if anything required fails. Never prints a
 
 import asyncio
 import os
+import re
 import shutil
 import sys
 
@@ -26,6 +27,8 @@ results: list[tuple[str, bool | None, str]] = []  # (name, ok / None = skipped, 
 
 
 def note(name: str, ok: bool | None, detail: str = ""):
+    # httpx errors quote the whole URL, and Apify/Nessie take their key in the query string
+    detail = re.sub(r"((?:token|key|api_key|apikey)=)[^&\s']+", r"\1***", detail, flags=re.I)
     results.append((name, ok, detail))
 
 
