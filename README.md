@@ -47,6 +47,11 @@ Nessie (poll 2s) ─▶ triage (Claude Opus 5.5) ◀── CRS identity + credit
 Everything above starts after the purchase. The Shield starts while the scammer is still talking.
 Dolores opts in and gets a **protected line** (`SHIELD_NUMBER`; in real life she forwards her landline to it).
 
+**What the member sets up: nothing technical.** Every key in `.env` belongs to the credit union's server, set up once by
+its staff. Dolores's part happens at the branch or on one phone call: she says yes, names a trusted contact, and staff
+turn on call forwarding to her protected line with her. The overnight fraud check needs nothing from her at all; it
+only calls her. Hard questions like this one, and our answers, are in [docs/CRITIQUES.md](docs/CRITIQUES.md).
+
 1. **Consent first.** The caller hears, in the Cartesia voice: *"This call is protected by Bayview's scam shield, and an
    automated assistant is listening for scams."* California needs every party's consent, and the notice alone scares off scammers.
 2. **Listen to the caller only.** `<Start><Stream track="inbound_track">` forks the caller's audio to us, while the call

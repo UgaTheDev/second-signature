@@ -90,6 +90,8 @@ async def twiml(request: Request):
     if inbound and not case_id:  # callback to the card number: find her held case by caller id
         case = agent.open_case_for(by_phone(form.get("From")))
         case_id = case.id if case else ""
+    if case_id and agent.machine_answered(form, case_id, mode):  # voicemail/fax: hang up, never start verification
+        return Response(str(VoiceResponse().hangup()), media_type="application/xml")
     stream = Stream(url=os.environ["LOCAL_SERVER_URL"].replace("https://", "wss://") + "/ws")
     for name, value in {
         "case_id": case_id,

@@ -30,21 +30,31 @@ HARD RULES:
 - Once verified, ask whether she made this purchase herself, and whether anyone asked her to buy it.
 - If someone asked her to buy gift cards, read numbers, keep it secret, or said they were Microsoft, the IRS, the police, or a grandchild in trouble:
   keep the hold. Explain gently that real companies never ask for gift cards. Call escalate_to_analyst.
-  Scammers work by cutting people off from family. So offer, as her choice: "Would you like me to connect you with {family} right now, on this call?"
-  If she says yes: say "I'm connecting you now. Please stay on the line; you'll hear music for a moment." then call connect_family.
-  If she says no, respect it, don't ask again, and call notify_trusted_contact instead (a short message, no details).
-- release_hold only if she is verified, made the purchase knowingly, and nobody told her to buy it. It may be refused; if so, say an analyst will review it in the morning.
+{family_lines}
+- release_hold only if she is verified, made the purchase knowingly, and nobody told her to buy it. It may be refused; if so, say an analyst will review it in the morning.{held_line}
 - You cannot move, refund or send money. If unsure, keep the hold and escalate. Holding is cheap; releasing a scam is not.
 - Every tool call needs a one-sentence reason; it goes into the case file.
 - When the conversation is done, say goodbye, then call end_call."""
 
 FIRST_OUT = ('Your first words, exactly: "Hi, this is the after-hours assistant at {cu}, calling for {first_name}. '
-             "You don't have to trust this call. You can hang up and call the number on the back of your card, and I'll pick up there.\"")
+             "You don't have to trust this call. You can hang up and call the number on the back of your card, and I'll pick up there.\" "
+             'Then, before any verification question, offer it as her choice in one warm sentence, no pressure: '
+             '"Would you rather hang up and call that number, or keep going with me now?" '
+             'If she wants to call back, say that is a wise choice, say goodbye, then end_call. Only continue if she wants to.')
 FIRST_IN = ('Your first words, exactly: "{cu} after-hours line. Is this {first_name}? I see we paused a purchase on your account tonight. '
             'Thank you for calling back. Calling the number on your card was exactly the right thing to do."')
 RESUME = ("You are back on the line after trying to connect her with {family}, who did not answer. Your first words: tell her gently that "
           "{family} didn't pick up, the payment stays paused, and a staff member will call her in the morning. "
           "She is already verified; do not ask the questions again. Ask if there's anything else, then say goodbye and end_call.")
+
+FAMILY_LINES = """  Scammers work by cutting people off from family. So offer, as her choice: "Would you like me to connect you with {family} right now, on this call?"
+  If she says yes: say "I'm connecting you now. Please stay on the line; you'll hear music for a moment." then call connect_family.
+  If she says no, respect it, don't ask again, and call notify_trusted_contact instead (a short message, no details)."""
+NO_FAMILY_LINE = "  Tell her a staff member will call her first thing in the morning. Do not mention or offer to contact family."
+HELD_LINE = ("\n- This is her first-ever purchase of this kind, so only a person at the credit union can release it; release_hold will be refused. "
+             "If she made it herself, tell her plainly and kindly: it's a new kind of purchase for her account, a person at the credit union "
+             "will look at it first thing in the morning, and she did nothing wrong.")
+FAMILY_TOOLS = ("connect_family", "notify_trusted_contact")
 
 _reason = {"reason": {"type": "string", "description": "One sentence for the case file."}}
 TOOL_SPECS = [
@@ -70,7 +80,7 @@ def family_label(case) -> str | None:
 
 
 def tool_specs(case) -> list[dict]:
-    return [t for t in TOOL_SPECS if t["name"] != "connect_family" or family_label(case)]
+    return [t for t in TOOL_SPECS if t["name"] not in FAMILY_TOOLS or family_label(case)]
 
 
 def keyterms(case) -> list[str]:
@@ -84,12 +94,14 @@ def keyterms(case) -> list[str]:
 
 def build_prompt(case, inbound: bool, resume: bool = False) -> str:
     m = MEMBERS[case.member_id]
-    fam = family_label(case) or "your family"
-    first = RESUME.format(family=fam) if resume else (FIRST_IN if inbound else FIRST_OUT).format(cu=CU, first_name=m["first_name"])
+    fam = family_label(case)
+    first = RESUME.format(family=fam or "your family") if resume else (FIRST_IN if inbound else FIRST_OUT).format(cu=CU, first_name=m["first_name"])
     qs = verify.questions(case.id)
     return PROMPT.format(
         cu=CU, how="answering a call from" if inbound else "calling", name=m["name"], first=first,
-        amount=case.amount, merchant=case.merchant, category=case.category, rationale=case.rationale, family=fam,
+        amount=case.amount, merchant=case.merchant, category=case.category, rationale=case.rationale,
+        family_lines=FAMILY_LINES.format(family=fam) if fam else NO_FAMILY_LINE,
+        held_line=HELD_LINE if case.held_by_rule else "",
         questions="\n".join(f"  {q['number']}. {q['question']} Options: {', '.join(q['options'])}." for q in qs) or "  (none available)",
     )
 

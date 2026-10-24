@@ -169,10 +169,13 @@ async def bot(runner_args: RunnerArguments):
     kin = "mother" if fam and fam["relation"] == "daughter" else "family member"
 
     if mode == "family" and case and fam:
+        # ponytail: family is auto-called only after MAX_UNANSWERED misses; otherwise she asked for it on a live call
+        talked = case.verified or case.unanswered_calls < agent.gate.MAX_UNANSWERED
+        reached = "spoke with her" if talked else "tried to reach her but couldn't"
         await store.action(case.id, "family_call", "agent", f"Calling {fam['name']}: payment paused, please call {m['first_name']} (no details shared)")
         await one_way(transport, runner_args,
                       f"Hi, this is the after-hours assistant at {CU}, calling for {fam['name']}. "
-                      f"We paused a payment on your {kin} {m['first_name']}'s account tonight and spoke with her. Please give her a call. "
+                      f"We paused a payment on your {kin} {m['first_name']}'s account tonight and {reached}. Please give her a call. "
                       "We will never ask you for codes or passwords. Goodbye.")
     elif mode == "bridge" and case and fam:
         await store.action(case.id, "family_bridge", "agent", f"{fam['name']} answered; joining her to {m['first_name']}'s call. The agent leaves the line.")

@@ -39,42 +39,49 @@ from twilio.twiml.voice_response import Dial, Start, VoiceResponse
 
 import store
 from calltools import CU
-from members import MEMBERS, member_phone
+from members import MEMBERS, member_phone, phone
 
 MODEL = "claude-haiku-5-5"  # it runs during a live call, so latency matters
 THRESHOLD = 0.75
 WINDOW_HOURS = 24  # a flagged call holds her high-risk purchases for this long
 ANNOUNCE = f"This call is protected by {CU}'s scam shield, and an automated assistant is listening for scams."
-WHISPER = ("{name}, this is {cu}. Only you can hear me. This call sounds like a scam: {why}. "
-           "Real companies never ask for gift cards or secrecy. It's okay to hang up.")
+# Fixed words only: the trusted voice never repeats anything the caller (or a model reading him) wrote.
+WHISPER = ("{name}, it's your credit union. You don't need to answer me. This sounds like a scam. "
+           "It's okay to hang up. It's okay to hang up.")
+WHISPER_TRIES, WHISPER_GAP = 3, 5  # she may not have picked up yet: retry over ~15s
 
 # Cheap gate before any model call: phrases from real scripts (FTC alerts, PLAYBOOK.md section 2).
 PREFILTER = re.compile(
     r"gift ?cards?|read (me )?the (numbers|codes)|don'?t tell|keep (this|it) (a )?secret|microsoft|apple support|"
     r"tech(nical)? support|hacked|virus|remote access|irs|social security|warrant|arrest|police|bail|jail|"
-    r"wire (the )?money|bitcoin|crypto|western union|zelle|grand(son|daughter|ma)|your bank (may be|is) involved", re.I)
+    r"wire (the )?money|bitcoin|crypto|western union|zelle|grand(son|daughter|ma)|your bank (may be|is) involved|"
+    r"one[- ]time (pass)?code|verification code|fraud department|suspicious activity|medicare|amazon|cash ?app|venmo",
+    re.I)
 
 SESSIONS: dict[str, dict] = {}  # conference name -> live call state (in memory only)
 EVENTS: dict[str, list[dict]] = {}  # member_id -> flagged calls, feeds triage + gate
 AUDIO: dict[str, bytes] = {}  # rendered Cartesia clips served at /shield/audio/{id}.wav
 TWIML: dict[str, str] = {}  # whisper TwiML Twilio fetches as the participant announce_url
 _llm = None
+_TASKS: set = set()  # keep background whisper retries referenced until they finish
 
 
 class Verdict(BaseModel):
     scam: bool
     confidence: float
     scam_type: str  # tech_support | government_impersonation | family_emergency | romance | other | none
-    evidence: str  # the caller's exact words that show it
-    why_short: str  # under 12 words, spoken to her, e.g. "he's asking for gift cards and secrecy"
+    evidence: str  # the caller's exact words that show it (case file only, never spoken to her)
+
+
+def _digits(s: str | None) -> str:
+    return "".join(c for c in s or "" if c.isdigit())[-10:]
 
 
 def shield_member(to_number: str | None) -> str | None:
     """Which member owns this protected line."""
-    digits = lambda s: "".join(c for c in s or "" if c.isdigit())[-10:]
     for mid, m in MEMBERS.items():
         num = os.getenv(m.get("shield_env") or "")
-        if num and to_number and digits(num) == digits(to_number):
+        if num and to_number and _digits(num) == _digits(to_number):
             return mid
     return None
 
@@ -118,15 +125,29 @@ def play_twiml(clip: str | None, fallback_text: str) -> str:
     return str(r)
 
 
+def _whisper_text(member_id: str) -> str:
+    return WHISPER.format(name=MEMBERS[member_id]["first_name"])
+
+
 async def prerender():
-    """Render the consent notice once (server startup), so the first call isn't waiting on Cartesia."""
-    if "announce" not in AUDIO and (clip := await render(ANNOUNCE)):
-        AUDIO["announce"] = AUDIO.pop(clip)
+    """Render every clip the Shield can play (consent notice, each member's whisper) once at server startup,
+    so no call waits on Cartesia. A clip that fails to render falls back to <Say>."""
+    clips = {"announce": ANNOUNCE, **{f"whisper-{mid}": _whisper_text(mid) for mid, m in MEMBERS.items() if m.get("shield_env")}}
+    todo = [k for k in clips if k not in AUDIO]
+    for key, clip in zip(todo, await asyncio.gather(*(render(clips[k]) for k in todo))):
+        if clip:
+            AUDIO[key] = AUDIO.pop(clip)
 
 
 async def caller_twiml(form: dict) -> str:
     """TwiML for an incoming call to a protected line: announce, fork caller audio, conference, ring her."""
     member_id = shield_member(form.get("To"))
+    family = (MEMBERS[member_id].get("family") or {}) if member_id else {}
+    fam_num, to = phone(family.get("phone_env")), member_phone(member_id) if member_id else None
+    if fam_num and to and _digits(fam_num) == _digits(form.get("From")):
+        r = VoiceResponse()  # her trusted contact: no notice, no listening, just put the call through
+        r.dial(to)
+        return str(r)
     conf = f"shield-{form.get('CallSid', uuid.uuid4().hex)}"
     base = os.environ["LOCAL_SERVER_URL"]
     SESSIONS[conf] = {"member_id": member_id, "caller": form.get("From", ""), "member_sid": None,
@@ -174,34 +195,49 @@ async def classify(transcript: str) -> Verdict:
                 "A relative chatting about a birthday gift card is not a scam. Quote the caller's exact words as evidence."),
         messages=[{"role": "user", "content": f"Caller so far:\n{transcript}"}],
     )
-    return r.parsed_output or Verdict(scam=False, confidence=0, scam_type="none", evidence="", why_short="")
+    return r.parsed_output or Verdict(scam=False, confidence=0, scam_type="none", evidence="")
 
 
 async def whisper(conf: str, v: Verdict):
-    """Warn her and only her, then record it and arm the money-side hold."""
+    """Record the flag and arm the money-side hold (exactly once), then warn her and only her."""
     s = SESSIONS[conf]
     s["flagged"] = True
     m = MEMBERS[s["member_id"]]
-    text = WHISPER.format(name=m["first_name"], cu=CU, why=v.why_short or "it matches a known scam script")
-    key = await render(text) or conf
-    TWIML[key] = play_twiml(None if key == conf else key, text)
-    try:
-        tw = Twilio(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"])
-        sid = (await asyncio.to_thread(tw.conferences.list, friendly_name=conf, status="in-progress", limit=1))[0].sid
-        await asyncio.to_thread(tw.conferences(sid).participants(s["member_sid"]).update,
-                                announce_url=f"{os.environ['LOCAL_SERVER_URL']}/shield/twiml/{key}", announce_method="POST")
-        whispered = "Whispered a warning only she could hear"
-    except Exception as e:
-        logger.error(f"shield: whisper failed: {e}")
-        whispered = f"Whisper failed ({e}); the money-side hold is still armed"
     EVENTS.setdefault(s["member_id"], []).append({"t": time.time(), "scam_type": v.scam_type, "evidence": v.evidence})
     cid = await store.open_case(
         member_id=s["member_id"], member_name=m["name"], txn_id=conf, merchant=f"Phone call from {mask(s['caller'])}",
         category="scam_call", amount=0.0, status="escalated",
         risk_signals=[{"source": "shield", "fact": f'Caller said: "{v.evidence[:200]}"', "weight": round(v.confidence, 2)}],
-        plan=f"{whispered}. Any gift card, wire or crypto purchase in the next {WINDOW_HOURS}h is held for an analyst.",
+        plan=f"Whisper a warning only she can hear. Any gift card, wire or crypto purchase in the next {WINDOW_HOURS}h "
+             "is held for an analyst.",
         decision_rationale=f"Scam Shield: {v.scam_type.replace('_', ' ')} script detected live (confidence {v.confidence:.0%}).",
     )
+    task = asyncio.create_task(_warn(conf, cid))  # retries must not stall the listener
+    _TASKS.add(task)
+    task.add_done_callback(_TASKS.discard)
+
+
+async def _warn(conf: str, cid):
+    """Play the pre-rendered whisper to her participant; she may not have joined yet, so retry a few times."""
+    s = SESSIONS[conf]
+    key = f"whisper-{s['member_id']}"
+    TWIML[key] = play_twiml(key if key in AUDIO else None, _whisper_text(s["member_id"]))
+    for attempt in range(1, WHISPER_TRIES + 1):
+        try:
+            if not s["member_sid"]:
+                raise RuntimeError("she hasn't been rung into the call yet")
+            tw = Twilio(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"])
+            sid = (await asyncio.to_thread(tw.conferences.list, friendly_name=conf, status="in-progress", limit=1))[0].sid
+            await asyncio.to_thread(tw.conferences(sid).participants(s["member_sid"]).update,
+                                    announce_url=f"{os.environ['LOCAL_SERVER_URL']}/shield/twiml/{key}", announce_method="POST")
+            whispered = "Whispered a warning only she could hear"
+            break
+        except Exception as e:
+            logger.error(f"shield: whisper attempt {attempt}/{WHISPER_TRIES} failed: {e}")
+            whispered = f"Whisper failed ({e}); the money-side hold is still armed"
+            if attempt == WHISPER_TRIES or conf not in SESSIONS:  # out of tries, or the call already ended
+                break
+            await asyncio.sleep(WHISPER_GAP)
     await store.action(cid, "shield", "agent", whispered)
 
 

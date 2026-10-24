@@ -27,6 +27,17 @@ from triage import triage
 CASES: dict[str, Case] = {}  # live cases; Convex holds the durable copy and `resume()` reloads it on startup
 STATUS = {"release": "released", "escalate": "escalated", "confirm_fraud": "confirmed_fraud"}
 REDIAL_SECONDS = 20
+QUIET_START, QUIET_END = 21, 8  # local server hours: no unanswered-call family wake-ups from 9pm to 8am
+MACHINE: set[tuple[str, str]] = set()  # (case_id, mode) calls a voicemail/fax answered; on_call_status counts them as unanswered
+
+
+def machine_answered(form, case_id: str, mode: str) -> bool:
+    """/twiml: Twilio AMD says a machine picked up a member or bridge call. Caller hangs up instead of talking."""
+    by = form.get("AnsweredBy", "")
+    if mode in ("member", "bridge") and (by.startswith("machine") or by == "fax"):
+        MACHINE.add((case_id, mode))
+        return True
+    return False
 
 
 async def on_new_purchase(member_id: str, txn: dict, history: list[dict]):
@@ -112,6 +123,7 @@ async def dial(case: Case, to: str | None, mode: str):
             Twilio(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"]).calls.create,
             to=to, from_=frm, url=f"{base}/twiml?{q}", method="POST",
             status_callback=f"{base}/call-status?{q}", status_callback_event=["completed"],
+            **({"machine_detection": "Enable"} if mode in ("member", "bridge") else {}),  # family mode may leave a voicemail
         )
         logger.info(f"dialed {mode} for {case.id}: {call.sid}")
     except Exception as e:
@@ -121,7 +133,10 @@ async def dial(case: Case, to: str | None, mode: str):
 async def on_call_status(case_id: str, mode: str, call_status: str):
     """Twilio's final status for a call we placed. Unanswered member calls retry, then go to family."""
     case = CASES.get(case_id)
-    if not case or call_status not in ("busy", "no-answer", "failed"):
+    if (case_id, mode) in MACHINE:
+        MACHINE.discard((case_id, mode))
+        call_status = "voicemail"
+    if not case or call_status not in ("busy", "no-answer", "failed", "voicemail"):
         return
     if mode == "bridge":  # family didn't pick up: bring her out of the waiting conference, back to the agent
         await store.action(case.id, "family_bridge", "agent", f"Family didn't answer ({call_status}); returning the member to the agent")
@@ -141,7 +156,12 @@ async def on_call_status(case_id: str, mode: str, call_status: str):
         await asyncio.sleep(REDIAL_SECONDS)
         await do(case, "call_member", "agent", "Trying her again")
     else:
-        await do(case, "call_family", "agent", f"No answer after {case.unanswered_calls} calls")
+        if QUIET_START > datetime.datetime.now().hour >= QUIET_END:
+            await do(case, "call_family", "agent", f"No answer after {case.unanswered_calls} calls")
+        else:
+            fam = MEMBERS[case.member_id]["family"]
+            await store.action(case.id, "call", "agent", f"Unanswered at night; not waking {fam['name'] if fam else 'family'}. "
+                               "Hold stays; an analyst decides in the morning")
         await do(case, "escalate", "agent", "Member unreachable; hold stays until an analyst reviews it")
 
 
