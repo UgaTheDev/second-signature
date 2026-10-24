@@ -24,7 +24,8 @@ async def _req(method: str, path: str, **kw):
         try:
             r = await _http.request(method, path, params={"key": os.environ["NESSIE_KEY"]}, **kw)
             if r.status_code < 500:
-                r.raise_for_status()
+                if r.is_error:  # say why, and never put the key (a query param) in the message
+                    raise RuntimeError(f"nessie {method} {path} {r.status_code}: {r.text[:300]}")
                 return r.json() if r.content else None
         except (httpx.TimeoutException, httpx.TransportError) as e:
             logger.warning(f"nessie {method} {path}: {e}")
@@ -54,7 +55,7 @@ async def merchant_id(name: str, category: str) -> str:
 async def create_txn(account_id: str, merchant_id: str, merchant: str, amount: int, description: str,
                      status: str = "pending", date: str | None = None):
     date = date or datetime.date.today().isoformat()
-    body = {"medium": "balance", "transaction_date": date, "status": status, "amount": int(amount)}
+    body = {"medium": "balance", "status": status, "amount": int(amount)}  # Nessie rejects transaction_date (extra field)
     if ROUTE == "purchases":
         body |= {"merchant_id": merchant_id, "purchase_date": date, "description": description}
     else:

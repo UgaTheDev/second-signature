@@ -34,11 +34,10 @@ ROBERT = [
 
 
 async def customer(first: str, last: str) -> dict:
-    await nessie._req("POST", "/customers", json={"first_name": first, "last_name": last, "address": ADDR})
-    cust = [c for c in await nessie._req("GET", "/customers") if c["first_name"] == first and c["last_name"] == last][-1]["_id"]
-    await nessie._req("POST", f"/customers/{cust}/accounts",
-                      json={"type": "Checking", "nickname": f"{first} Checking", "rewards": 0, "balance": 12000})
-    acct = (await nessie._req("GET", f"/customers/{cust}/accounts"))[-1]["_id"]
+    # use the ids Nessie returns: re-listing by name can pick an older, broken account from an earlier run
+    cust = (await nessie._req("POST", "/customers", json={"first_name": first, "last_name": last, "address": ADDR}))["objectCreated"]["_id"]
+    acct = (await nessie._req("POST", f"/customers/{cust}/accounts",
+                              json={"type": "Checking", "nickname": f"{first} Checking", "rewards": 0, "balance": 12000}))["objectCreated"]["_id"]
     return {"customer": cust, "account": acct}
 
 

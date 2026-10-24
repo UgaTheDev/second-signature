@@ -6,6 +6,7 @@ import asyncio, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.update(ANTHROPIC_API_KEY="bad", TWILIO_AUTH_TOKEN="tok", LOCAL_SERVER_URL="https://example.ngrok.app", ANALYST_TOKEN="pass")
 for k in ("CONVEX_URL", "NESSIE_KEY", "CRS_USERNAME", "TWILIO_NUMBER", "FACTORY_API_KEY"): os.environ.pop(k, None)
+import dotenv; dotenv.load_dotenv = lambda *a, **k: False  # offline: a real .env must not override the fakes above
 import agent, server
 from fastapi.testclient import TestClient
 
