@@ -186,6 +186,7 @@ async def resume() -> int:
     working after a restart. Open cases get their verification questions rebuilt from CRS
     (same seed, same questions); if CRS is down they get none, and the call escalates."""
     rows = await store.load_active()
+    shield.rebuild(rows)  # re-arm the Scam Shield's 24h hold window from flagged-call cases
     for r in rows:
         if r["_id"] in CASES or r["member_id"] not in MEMBERS:
             continue

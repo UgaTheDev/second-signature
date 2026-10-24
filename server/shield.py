@@ -16,10 +16,12 @@ to it) run like this:
 """
 
 import asyncio
+import io
 import os
 import re
 import time
 import uuid
+import wave
 
 import anthropic
 import httpx
@@ -92,6 +94,35 @@ def recent(member_id: str, hours: float = WINDOW_HOURS) -> dict | None:
     return hits[-1] if hits else None
 
 
+def rebuild(rows: list[dict]) -> int:
+    """Startup: re-arm the 24h window from scam_call cases in the case file (EVENTS itself is memory only)."""
+    # ponytail: rows come from cases:active (open/escalated), so a scam_call case an analyst already closed
+    # isn't re-armed after a restart; add a by-category query if that matters.
+    cutoff, n = time.time() - WINDOW_HOURS * 3600, 0
+    for r in rows:
+        t = r.get("opened_at", 0) / 1000
+        if r.get("category") != "scam_call" or t < cutoff:
+            continue
+        kind = re.search(r"Scam Shield: (.+?) script", r.get("decision_rationale", ""))
+        fact = next((x["fact"] for x in r.get("risk_signals", []) if x.get("source") == "shield"), "")
+        EVENTS.setdefault(r["member_id"], []).append({"t": t, "scam_type": kind.group(1).replace(" ", "_") if kind else "other",
+                                                      "evidence": fact.removeprefix('Caller said: "').removesuffix('"')})
+        n += 1
+    for evs in EVENTS.values():
+        evs.sort(key=lambda e: e["t"])  # recent() takes the last one
+    return n
+
+
+def clip_seconds(key: str) -> float:
+    """How long a rendered clip plays; 12s if it's a <Say> fallback or the header is unreadable."""
+    try:
+        with wave.open(io.BytesIO(AUDIO[key])) as w:
+            secs = w.getnframes() / w.getframerate()
+        return secs if 0 < secs < 60 else 12.0
+    except Exception:
+        return 12.0
+
+
 def mask(number: str) -> str:
     d = "".join(c for c in number or "" if c.isdigit())
     return f"***-{d[-4:]}" if len(d) >= 4 else "unknown number"
@@ -144,13 +175,21 @@ async def caller_twiml(form: dict) -> str:
     member_id = shield_member(form.get("To"))
     family = (MEMBERS[member_id].get("family") or {}) if member_id else {}
     fam_num, to = phone(family.get("phone_env")), member_phone(member_id) if member_id else None
-    if fam_num and to and _digits(fam_num) == _digits(form.get("From")):
-        r = VoiceResponse()  # her trusted contact: no notice, no listening, just put the call through
+    frm = _digits(form.get("From"))
+    # Her landline forwarding must exclude calls from SHIELD_NUMBER: forward the landline to the Shield, and have
+    # the Shield ring her cell or a second line (MEMBER_PHONE) that is not itself forwarded here.
+    if frm and frm == _digits(os.getenv("SHIELD_NUMBER")):  # our own ring to her came back: a forwarding loop
+        logger.warning("shield: call from SHIELD_NUMBER to the protected line; her phone forwards back to the Shield. Hanging up")
+        r = VoiceResponse()
+        r.hangup()
+        return str(r)
+    if to and frm and frm in (_digits(fam_num), _digits(os.getenv("TWILIO_NUMBER"))):
+        r = VoiceResponse()  # her trusted contact, or our own overnight call: no notice, no listening, just put it through
         r.dial(to)
         return str(r)
     conf = f"shield-{form.get('CallSid', uuid.uuid4().hex)}"
     base = os.environ["LOCAL_SERVER_URL"]
-    SESSIONS[conf] = {"member_id": member_id, "caller": form.get("From", ""), "member_sid": None,
+    SESSIONS[conf] = {"member_id": member_id, "caller": form.get("From", ""), "caller_sid": form.get("CallSid"), "member_sid": None,
                       "flagged": False, "text": [], "checked_at": 0.0}
     await prerender()
     r = VoiceResponse()
@@ -228,8 +267,14 @@ async def _warn(conf: str, cid):
                 raise RuntimeError("she hasn't been rung into the call yet")
             tw = Twilio(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"])
             sid = (await asyncio.to_thread(tw.conferences.list, friendly_name=conf, status="in-progress", limit=1))[0].sid
-            await asyncio.to_thread(tw.conferences(sid).participants(s["member_sid"]).update,
-                                    announce_url=f"{os.environ['LOCAL_SERVER_URL']}/shield/twiml/{key}", announce_method="POST")
+            parts = tw.conferences(sid).participants
+            await _mute(parts, s.get("caller_sid"), True)  # he can't talk over the warning; to him it's just silence
+            try:
+                await asyncio.to_thread(parts(s["member_sid"]).update,
+                                        announce_url=f"{os.environ['LOCAL_SERVER_URL']}/shield/twiml/{key}", announce_method="POST")
+                await asyncio.sleep(clip_seconds(key) + 1)
+            finally:
+                await _mute(parts, s.get("caller_sid"), False)
             whispered = "Whispered a warning only she could hear"
             break
         except Exception as e:
@@ -239,6 +284,15 @@ async def _warn(conf: str, cid):
                 break
             await asyncio.sleep(WHISPER_GAP)
     await store.action(cid, "shield", "agent", whispered)
+
+
+async def _mute(parts, call_sid: str | None, muted: bool):
+    if not call_sid:
+        return
+    try:
+        await asyncio.to_thread(parts(call_sid).update, muted=muted)
+    except Exception as e:  # he may have hung up already; the whisper and the hold don't depend on this
+        logger.warning(f"shield: could not {'mute' if muted else 'unmute'} the caller: {e}")
 
 
 class Detector(FrameProcessor):
