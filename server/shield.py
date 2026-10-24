@@ -295,8 +295,14 @@ async def _mute(parts, call_sid: str | None, muted: bool):
         logger.warning(f"shield: could not {'mute' if muted else 'unmute'} the caller: {e}")
 
 
+REVIEW_EVERY = 30  # s: without a keyword hit, the model still reads the transcript this often
+MAX_REVIEWS = 6  # per call, so a long benign call costs at most a few cents
+
+
 class Detector(FrameProcessor):
-    """Collects the caller's words; asks Claude only after a scam-ish phrase, at most every 6s."""
+    """Collects the caller's words. Asks Claude after a scam-ish phrase (at most every 6s), and also every
+    REVIEW_EVERY seconds of new speech without one: the keyword gate alone misses a mis-transcribed or
+    accented "gift card", so it can't be the only way in."""
 
     def __init__(self, conf: str, classify=classify, whisper=whisper):
         super().__init__()
@@ -314,9 +320,17 @@ class Detector(FrameProcessor):
             return
         s["text"] = (s["text"] + [text])[-40:]  # rolling window, memory only
         joined = " ".join(s["text"])
-        if s["flagged"] or self._busy or not PREFILTER.search(joined) or time.time() - s["checked_at"] < 6:
+        if s["flagged"] or self._busy:
             return
-        self._busy, s["checked_at"] = True, time.time()
+        now = time.time()
+        reviewed = s.setdefault("reviewed_at", now)  # periodic clock starts when the caller first speaks
+        hit = bool(PREFILTER.search(joined)) and now - s["checked_at"] >= 6
+        periodic = not hit and now - reviewed >= REVIEW_EVERY and s.get("reviews", 0) < MAX_REVIEWS
+        if not (hit or periodic):
+            return
+        if periodic:
+            s["reviews"] = s.get("reviews", 0) + 1
+        self._busy, s["checked_at"], s["reviewed_at"] = True, now, now
         try:
             v = await self._classify(joined)
             if v.scam and v.confidence >= THRESHOLD:

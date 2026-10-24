@@ -20,10 +20,11 @@ A skeptical judge's questions, checked against the code, ordered by how likely w
 | 11 | Members with no family | FIXED in 968ae39 |
 | 12 | 24h Shield window lost on restart | FIXED: rebuilt from recent scam-call cases on startup (`shield.rebuild` in `agent.resume`) |
 | 13 | Landline forwarding loop | FIXED: calls from the Shield's own number hang up; the credit union's own calls bypass the Shield. Keeping her caller ID is still OPEN |
-| 14 | Hearing aids, accents, Spanish | OPEN |
+| 14 | Hearing aids, accents, Spanish | PARTLY FIXED: the Shield no longer depends on the keyword gate alone (see #18); English-only still OPEN |
 | 15 | Treats older people as incompetent | Already handled |
 | 16 | Scammer controls the trusted voice | FIXED in 968ae39 |
 | 17 | Whisper latency | PARTLY FIXED: pre-rendered; end-to-end time not measured |
+| 18 | Is Scam Shield listening to all her calls; scam words and accents | PARTLY FIXED: periodic model review without a keyword hit; English-only and legal review OPEN |
 
 ---
 
@@ -318,11 +319,15 @@ carrier-level setup.
 (`README.md:173`), and the prompt asks for short sentences and one question at a time (`calltools.py:17`). STT is
 biased per call (`README.md:167-169`). There's a hard-of-hearing scenario in the arena (`arena.py:87`). But it's
 English-only, there's no "press 1" fallback if speech recognition fails, and phone audio at 8 kHz is rough on hearing
-aids.
+aids. For the Scam Shield side (does a mis-heard accent hide a scam?), see #18.
 
 **Answer:** "Slower voice, one question at a time, she can interrupt, and the recognizer listens for her four answer
 choices. If it can't understand her, the money stays held and a person calls. Languages are a setting on the voice and
 recognizer, not a rebuild."
+
+**Shield side, FIXED (see #18):** the Shield's keyword gate used to be a single point of failure for accents (a
+mis-transcribed "gift curds" never reached the model). The model now also reviews the transcript periodically without a
+keyword hit. English-only is still OPEN.
 
 **Fix (S):** prompt line: "If she asks you to repeat, or seems not to hear, repeat more slowly with fewer words. After
 two failed tries, offer a staff call in the morning instead." **(L)** Spanish and keypad answers.
@@ -372,6 +377,41 @@ buys them, they're held. We'll put the measured number on screen after our live 
 **Fixed in 968ae39:** the whisper is pre-rendered per member at startup (like the consent notice), so no call waits on
 Cartesia; the remaining live steps are the Haiku call and the conference update. **Still open:** measure the real delay
 on a live call.
+
+---
+
+## 18. "Is Scam Shield listening to all her calls? How does it recognise scam words, and what about accents?"
+
+**Verdict: mostly valid on accents, now PARTLY FIXED; scope and privacy are by design. English-only and the legal review are still OPEN.**
+
+- **Scope.** Only calls *to* her protected line (`SHIELD_NUMBER`, `shield.py:175`), and she opts in by forwarding her
+  landline to it. Calls from her family contact and from the credit union's own `TWILIO_NUMBER` skip the Shield entirely:
+  `caller_twiml` returns a plain `<Dial>` with no notice and no stream (`shield.py:186-189`).
+- **Consent.** The caller hears `ANNOUNCE` ("an automated assistant is listening for scams", `shield.py:49`,
+  `shield.py:196`) before anything is streamed; the `<Start><Stream>` comes after it (`shield.py:197`).
+- **Only the caller is processed.** The stream is `track="inbound_track"` (`shield.py:198`) and the pipeline has
+  `audio_out_enabled=False` (`shield.py:337`). Dolores's side never leaves Twilio.
+- **No recording.** A rolling in-memory window of the last 40 transcript lines (`shield.py:315`), dropped at hang-up
+  (`SESSIONS.pop`, `shield.py:352`). Only a flagged call's evidence quote goes into the case file.
+- **Pipeline.** Cartesia Ink (`ink-2`) with scam keyterms (`shield.py:338-339`), then the regex `PREFILTER`
+  (`shield.py:56-61`), then Claude Haiku classifies the whole rolling transcript (`shield.py:321`), and the whisper
+  plays at confidence >= `THRESHOLD` = 0.75 (`shield.py:47`, `shield.py:322`).
+- **Accents, the weak spot.** Before: the keyword gate was a single point of failure. If the recognizer heard "gift
+  curds", the regex never matched and Claude never saw the call (`shield.py:317`).
+  **FIXED:** the model also reviews the transcript on a timer, about every 30 s of new caller speech and capped per call,
+  even with no keyword hit, so a scam in an accent the gate misses can still be caught by context (`Detector.heard`).
+  Keyterm biasing helps the listed words. **Still OPEN:** English-only (`ink-2` with no language set), and the cost of
+  the periodic check is a few more Haiku calls on calls with no keyword.
+- **Innocent callers.** Their speech still goes to Cartesia (and to Claude on a gate hit or periodic check). The notice
+  covers the caller's consent; the legal review is OPEN (see #6).
+
+**Answer:** "It only listens to calls to her protected line, which she opted into, and every caller is told an automated
+assistant is listening before any audio leaves the call. We only transcribe the caller, keep nothing in memory after
+hang-up, and keep only a quote if we flag it. Words are caught two ways: a keyword check that's cheap, and the model
+rereading the whole conversation every so often, so an accent that fools the keyword list doesn't hide the scam. It's
+English-only today, and a real deployment gets a legal review."
+
+**Fix (M):** language setting on the recognizer plus a Spanish keyword list. **(L)** compliance review of the notice.
 
 ---
 
