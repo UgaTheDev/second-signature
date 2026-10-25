@@ -280,11 +280,12 @@ async def estates_why(key: str):
     d = estate_data(key)[0]
     try:
         _why_llm = _why_llm or anthropic.AsyncAnthropic(timeout=30, max_retries=1)
-        r = await _why_llm.messages.create(model=WHY_MODEL, max_tokens=700, system=WHY_SYSTEM,
+        r = await _why_llm.messages.create(model=WHY_MODEL, max_tokens=2000, output_config={"effort": "low"}, system=WHY_SYSTEM,
                                            messages=[{"role": "user", "content": json.dumps(d)}])
         text = " ".join(b.text for b in r.content if b.type == "text").strip()
         if text:
             return {"text": text}
+        logger.warning(f"estate why: no text (stop_reason {r.stop_reason}); using the template")  # e.g. thinking used every token
     except Exception as e:
         logger.warning(f"estate why: {e}; using the template")
     # ponytail: template fallback straight from compute()'s findings
