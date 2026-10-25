@@ -13,17 +13,16 @@ Read with `docs/DEMO.md` (run table and timings). This covers only what the thre
 **Key press:** the Twilio number is a trial. Every call it places or bridges starts with Twilio's trial message, and you
 press any key to continue. Answer fast and press right away.
 
-**Verification (Dolores only).** These are answers for the CRS sandbox test identity, not a real person's. The bot reads
-four options for each question. Pick the one below and say it back exactly as the bot read it. **All three must be right.**
+**Verification (Dolores only).** These come live from the CRS sandbox test identity, not a real person. Its file has
+no street addresses and anonymized lenders, so the bot asks **two** questions, and **both must be right**:
 
 | Question | Say |
 |---|---|
-| Which of these streets have you lived on? | **Anacapa St** (if Anacapa isn't offered, **Ocean View Dr**) |
-| Which of these lenders have you had an account with? | **Bank of America** (if it isn't offered, **Sears**) |
-| About what year did you open your oldest credit account? | **1978** |
+| Which of these lenders have you had an account with? | the **"Former Lender" numbered 1 to 6**. Exactly one option will be (the others are 7 and up). Say it exactly, e.g. "Former Lender 3". |
+| About what year did you open your oldest credit account? | **1981** |
 
-Questions may come in a different order. Match on the question, not the position. One wrong answer and the call can't
-verify (each question can be answered once).
+One wrong answer and the call can't verify (each question can be answered once). Don't use Bank of America or 1978:
+those are the arena's practice data, not the live file.
 
 ---
 
@@ -78,12 +77,10 @@ DOLORES answers, hears the trial message, presses a key. The bot speaks first.
 | Speaker | Line |
 |---|---|
 | BOT | Hi Dolores, this is the after-hours assistant at Bayview Community Credit Union, about Harold's account. I'm so sorry for your loss. You can always hang up and call the number on your card instead, and I will never ask for a PIN, password or code. |
-| BOT | Which of these streets have you lived on? *(four options)* |
-| DOLORES | Anacapa St. |
-| BOT | Which of these lenders have you had an account with? *(four options)* |
-| DOLORES | Bank of America. |
+| BOT | Which of these lenders have you had an account with? *(four "Former Lender" options)* |
+| DOLORES | Former Lender *(the one numbered 1 to 6)*. |
 | BOT | About what year did you open your oldest credit account? *(four options)* |
-| DOLORES | 1978. |
+| DOLORES | 1981. |
 | BOT | *(explains, a few short sentences)* Harold's Social Security payments that arrived after March have to go back to the US Treasury. The credit union is sorting that out. You don't need to do anything tonight, and you owe the man who phoned you nothing. A real request comes in a letter, never a phone call asking for gift cards. |
 | DOLORES | Do I owe the government anything? |
 | BOT | *(should say)* That isn't settled yet. The credit union is handling it and will write to you if anything is needed from you. |
@@ -105,8 +102,7 @@ Both hang up on the presenter's cue.
 **Wait for the bot to finish speaking before answering.** Speak each answer once, clearly, nothing else.
 
 **If it goes wrong:**
-- The bot reads an option list without your answer: use the fallback in the cheat card. If none fits, say "I'm not
-  sure". The bot will say a staff member will call during business hours and hang up. That is the designed failure, so
+- No option is numbered 1 to 6, or no 1981: say "I'm not sure". The bot will say a staff member will call during business hours and hang up. That is the designed failure, so
   the presenter says so and narrates from the dashboard. Don't redial live.
 - The bot asks no questions (CRS down): it won't discuss the account and ends the call. Also designed.
 - The bot says the Treasury question is settled or that she owes nothing: carry on, and the presenter notes it later.
@@ -128,7 +124,7 @@ DOLORES answers, presses a key for the trial message.
 | BOT | Hi, this is the after-hours assistant at Bayview Community Credit Union, calling for Dolores. You don't have to trust this call. You can hang up and call the number on the back of your card, and I'll pick up there. |
 | BOT | Would you rather hang up and call that number, or keep going with me now? |
 | DOLORES | Keep going. |
-| BOT | *(the same three questions: answer from the cheat card)* |
+| BOT | *(the same two questions: answer from the cheat card)* |
 | BOT | Did you make this purchase yourself? Did anyone ask you to buy it? |
 
 Then one of these:

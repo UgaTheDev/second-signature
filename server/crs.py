@@ -8,6 +8,7 @@ import datetime
 import os
 
 import httpx
+import verify
 from loguru import logger
 
 BASE = "https://api-sandbox.stitchcredit.com/api"
@@ -73,9 +74,9 @@ def _messages(data: dict) -> list[dict]:
 
 def answers_needed(data: dict) -> int:
     """CRS guide: mismatched/deceased/synthetic = FAIL (no phone verification at all),
-    fraud alert = step up (ask for more proof), otherwise 2 of 3."""
+    otherwise every question (verify.NEEDED). 2 of 3 let the arena's impostors guess through."""
     codes = {str(m.get("code")) for m in _messages(data)}
-    return 0 if codes & FAIL_CODES else 3 if codes & STEP_UP_CODES else 2
+    return 0 if codes & FAIL_CODES else verify.NEEDED
 
 
 def signals(data: dict) -> list[dict]:
