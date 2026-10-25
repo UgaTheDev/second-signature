@@ -1,8 +1,27 @@
 # Second Signature
 
-The overnight fraud analyst a small credit union can't afford. When something suspicious hits an older
-member's account, it holds the payment, calls the member in a calm voice to check, puts her on the line
-with her family if she wants, and writes a case file it can defend. **It can never move money on its own.**
+**Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.**
+
+Second Signature is the back office a small credit union can't afford to staff, shown through one widow's week.
+When Harold Whitcomb dies, a fake debt collector goes after his widow Dolores, and the US Treasury sends a reclamation
+notice for the Social Security that kept arriving after his death. The agent warns Dolores during the scam call, closes
+Harold's books against Treasury's claim with every number cited to a rule, and calls her to explain it: it drafts, a
+human signs, and **it can never move money on its own**.
+
+## The demo in three beats
+
+1. **Scam Shield.** A fake debt collector calls Dolores and tells her she must pay Harold's debts in gift cards. Scam
+   Shield listens to the caller only and whispers to her alone: *"This sounds like a scam. It's okay to hang up."*
+2. **Estate desk.** The agent closes Harold's books against Treasury's reclamation (FS-133): it protests the $1,045
+   deposit the credit union already returned (R15), returns the $535 on hand, and books a $2,600 credit-union liability,
+   because a rep's March 20 note shows the credit union knew he had died. Without that note the liability would be capped
+   at $1,045, so the note cost $1,555. The agent drafts the journal entries; only the controller can sign them.
+3. **The call.** A gentle Cartesia voice calls Dolores: the real repayment is between the credit union and Treasury,
+   she owes the scammer nothing, and would she like to be connected with Susan, the executor, right now?
+
+Underneath runs the older overnight loop, **Overnight holds**: a Nessie purchase, Claude triage, a hold, a verification
+call to the member, and an analyst's decision. The five estates carry planted errors, and the desk gets **5/5** against
+an answer key.
 
 ## How it works
 
@@ -18,6 +37,9 @@ Nessie (poll 2s) ─▶ triage (Claude Opus 5.5) ◀── CRS identity + credit
                          │
               Convex case file ─▶ live dashboard ─▶ 7am: Factory Droid reviews the night,
                                                     proposes a policy diff, a human approves it
+
+Treasury FS-133 + death records ─▶ estate.py (pure arithmetic, cited rules) ─▶ Convex estates
+   ─▶ Claude explains ("Why?") ─▶ controller signs (gate) ─▶ Cartesia call to the widow
 ```
 
 | File | Job |
@@ -37,9 +59,13 @@ Nessie (poll 2s) ─▶ triage (Claude Opus 5.5) ◀── CRS identity + credit
 | `server/store.py` | Convex writes (case file, actions, transcript, gate state for restart recovery) |
 | `server/seed.py`, `server/members.py` | Demo members (Dolores, Robert) and their Nessie accounts and history |
 | `server/preflight.py` | Before a live demo: every key set, every service answering. Read-only, never prints a secret |
+| `server/estate.py` | Estate desk: which death date to trust, what Treasury claimed that wasn't due or was already returned, what to return now, the credit union's liability, balanced journal entries. Pure arithmetic; the model only explains it |
+| `server/estates.json` | Five estates (Harold plus four with planted errors), each with sources, deposits, withdrawals, the FS-133, and the answer key |
 | `server/server.py` | Twilio webhooks (signature-checked), `/ws` media stream, analyst API (passcode), schedules |
 | `actor/` | Apify actor: FTC consumer alerts → scam type, payment methods, red-flag sentences |
-| `dashboard/` | Next.js + Convex, three tabs: **Live desk** (case queue, case file, night stats, Judge Scenario), **Policy review** (Droid steps and diff, Approve/Reject), **How we know it works** (permission matrix, arena scoreboard, real vs simulated). Dark and light themes; sample-data mode |
+| `dashboard/` | Next.js + Convex, five views: **Scam Shield** (the flagged call and the whisper), **Estate desk** (sources, timeline, reclamation math, findings, journal, sign), **Overnight holds** (case queue, case file, night stats, Run a scenario, Cinema mode), **Morning review** (Droid steps and diff, Approve/Reject), **Proof** (permission matrix, arena scoreboard, real vs simulated). Dark and light themes; sample-data mode |
+| `dashboard/convex/estates.ts` | The estate desk's record: drafts upserted by the server, the controller's signature, the posted journal |
+| `dashboard/app/components/night/EstatesPanel.tsx` | The Estate desk view |
 | `docs/` | Demo script, track write-ups, threat model, submission checklist |
 
 ## Scam Shield: catch it during the scam call
@@ -67,6 +93,44 @@ only calls her. Hard questions like this one, and our answers, are in [docs/CRIT
 `uv run python arena.py --shield -n 3` measures detection on 10 labelled caller scripts: 5 scams, and 5 benign calls that
 mention gift cards, Microsoft or the bank. It runs the same path as production: keyword gate first, model only on a hit.
 
+## Estate desk: close a deceased member's books
+
+When a Social Security recipient dies, deposits keep arriving until SSA learns of it, and then Treasury sends the credit
+union a reclamation notice (FS-133) for them. Answering it is a back-office job: get it wrong and the credit union either
+pays money it didn't owe or stonewalls a claim it did. `server/estate.py` reconciles each estate from what the credit union
+actually holds: the state death certificate, rep notes and family calls, the CRS deceased indicator, card activity, the ACH
+death notification (DNE), the deposits and withdrawals, and the FS-133 itself. It is plain arithmetic over
+`estates.json`; Claude only explains the result ("Why?"), and every sentence must cite a source id or rule from that output.
+
+The rules, as checked in [docs/RECLAMATION.md](docs/RECLAMATION.md):
+
+- **Date of death:** the state death certificate wins over the DNE and CRS (institution policy: primary vital record).
+- **Not due:** SSA pays in arrears, so a deposit received before death is not a post-death payment; protest it (31 CFR 210.10(a); CRS 93-792).
+- **Already returned:** an item returned R15 is excluded from the outstanding total by definition; protest it (31 CFR 210.2(n)).
+- **Return now:** the lesser of the outstanding total and the balance on hand, within one business day of the notice (31 CFR 210.11(a)(1)).
+- **Knowledge:** the earliest rep note, family call or DNE. With knowledge, the credit union is liable for every post-death payment received after it (31 CFR 210.10(a)-(b)).
+- **No knowledge:** liability is capped at the 45-day amount, and only if Treasury can't collect from the withdrawers (31 CFR 210.11(a)(2), (c)).
+- **Withdrawers:** name everyone who withdrew after death (31 CFR 210.11(b)(3)(i)).
+- **False death report:** an ID-checked, in-person transaction after the reported death rebuts the DNE; answer "recipient alive" (institution policy).
+- **Deadline:** the response must reach Treasury within 60 days of the notice (Green Book, via SSA POMS GN 02408.635).
+
+Harold: $4,180 claimed, $1,045 already returned (R15), $3,135 valid, $535 on hand returned now, $2,600 shortfall. The
+rep's March 20 note precedes every post-death deposit, so the credit union owes all $2,600. Without the note, only the
+04-03 deposit falls in the 45-day window, so it would owe $1,045. Over the $250 materiality line, so the controller must sign.
+
+The other four estates each plant one error: Eleanor's FS-133 claims a deposit from before her death; Frank is alive
+(a teller-line chip-and-PIN after his "death"); nobody told the credit union about Margaret until months later, so the 45-day cap applies; George's son
+called two days after the death, so knowledge starts there and a pre-death deposit is protested. Against the answer key
+in `estates.json` (date of death, knowledge date, decision, protest, return now, liability), the desk gets **5/5**:
+
+```bash
+cd server && uv run python estate.py   # balanced journals, Harold's figures, and score() == (5, 5); prints "estate ok"
+```
+
+The permission gate (`gate.py`) lets the agent draft an estate but only a human post the journal, sign a loss over $250
+or close it. "Call Dolores" places a real Twilio call in estate mode: same verification, no hold tools, and it never
+mentions the credit union's internal loss.
+
 ## The family bridge
 
 Scams work by isolation: "don't tell the bank, they may be involved." Once Dolores is verified and red
@@ -76,7 +140,73 @@ so mother and daughter talk privately. If Susan doesn't answer, Dolores is broug
 The gate allows a bridge only for a verified member who asked for it, so a scammer calling the card number
 can't use us to reach her family.
 
-## Red-team arena: how we know it works
+## Run it
+
+```bash
+# 1. server
+cd server && cp .env.example .env    # fill it in
+uv sync
+uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py && uv run python estate.py   # self-checks
+uv run seed.py                       # once: creates Dolores + Robert in Nessie, writes seed_ids.json
+ngrok http 7860                      # put the https URL in LOCAL_SERVER_URL
+uv run python preflight.py           # every key and service, read-only; --crs also tests the CRS login once
+uv run server.py
+# Twilio console → each number (TWILIO_NUMBER, and SHIELD_NUMBER if set) → Voice "A call comes in"
+#   → Webhook POST {LOCAL_SERVER_URL}/twiml. One URL for both: calls to SHIELD_NUMBER are routed to Scam Shield by `To`
+
+# 2. dashboard
+cd dashboard && npm i
+npx convex dev                       # writes NEXT_PUBLIC_CONVEX_URL to .env.local
+npx convex env set CASE_WRITE_SECRET <same as CONVEX_WRITE_SECRET>
+echo "NEXT_PUBLIC_SERVER_URL=<ngrok url>" >> .env.local
+npm run dev                          # click the key icon once and enter the server's ANALYST_TOKEN
+                                     # no Convex yet? open http://localhost:3000/?demo=1 for sample data
+
+# 3. optional: scam intel (Apify) and the morning review (Factory)
+cd actor && apify login && apify push          # then set APIFY_TOKEN + APIFY_ACTOR in server/.env
+# Factory: install the droid CLI and set FACTORY_API_KEY
+```
+
+Without Apify, Elastic or Factory keys, the server still runs. Alerts come from the committed `alerts.json`
+(a real actor run), triage summarizes history itself, and the review button reports that it failed.
+
+Demo reset: the dashboard's Reset button clears cases; `uv run seed.py` again for fresh Nessie members.
+
+## Hackathon tracks
+
+One line on the seat it fills: **the back office a small credit union can't afford to staff: the night fraud analyst and the estate desk.**
+Track-by-track write-ups are in [docs/TRACKS.md](docs/TRACKS.md), the demo script in [docs/DEMO.md](docs/DEMO.md),
+the threat model in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
+
+| Track | Where it lives |
+|---|---|
+| Hyphenate: Autonomous Systems for Finance | The estate desk (`estate.py`: the reclamation close, cited to 31 CFR 210, 5/5 on planted errors) and the hold loop; `gate.py` (agent drafts, only the controller signs), Convex case file (clean record), Shield (the moment) |
+| CRS Financial Intelligence | `crs.py` (identity, fraud and credit-file signals into triage), `verify.py` (questions from her credit file) |
+| Cartesia | `bot.py`, `shield.py`: every call (including the estate call to the widow), the whisper and the family intro; Ink STT with per-call keyterms |
+| Factory Droid SDK | `review.py`, `overrides.py`: scheduled, on-demand and event-triggered policy reviews with a human-approved diff |
+| Convex | Case file, estate drafts and signed journals, live dashboard, restart recovery, night stats and arena scoreboard |
+| Apify | `actor/`: FTC scam alerts actor, cited in triage |
+| Capital One Nessie | `nessie.py`: watched accounts, real purchases from the Judge Scenario form |
+| Elastic | `intel.py`: purchase history and scam-pattern search |
+| Anthropic | Triage and the estate desk's cited "Why?" (Opus 5.5), the call bot and Shield (Haiku 5.5), and the arena |
+| Microsoft: Built for the Real World | Night stats, arena results, and "Path to production" in docs/TRACKS.md |
+| Meta: Bringing People Closer Together | The family bridge |
+| Armadin security | docs/THREAT_MODEL.md and the arena's attack scenarios |
+
+## Checks
+
+```bash
+cd server
+uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py
+uv run python estate.py            # estate desk: 5/5 against the answer key
+uv run python arena.py --selftest   # arena harness, no API calls
+uv run python smoke.py     # offline end-to-end: hold-by-default, gate, webhook auth, analyst passcode, family bridge,
+                           # code floor, Scam Shield, restart recovery, override-triggered review
+```
+
+## Proof and details
+
+### Red-team arena: how we know it works
 
 `server/arena.py` has Claude play scammers, impostors and real members against the call bot. The bot side is
 the production brain: the prompt, tools, gate and verification are shared with the live bot through
@@ -110,7 +240,7 @@ obscure lenders. Decoys are now local streets and household-name banks. Outbound
 number on my card" continue as a simulated callback on the same case. Scam Shield on its 10 labelled scripts (`--shield -n 3`):
 15/15 caught, 0/15 false alarms.
 
-## Where and how Droid is used (Factory)
+### Where and how Droid is used (Factory)
 
 **Triggers:** every day at 7am (`server.py: morning_reviews`), "Run review now" on the dashboard, or an event: when analysts
 release `OVERRIDE_REVIEW_AT` (default 3) of the agent's holds since the last review, a review starts right away
@@ -126,7 +256,7 @@ no Read tool. Reads aren't permission-gated in the SDK, so a Read tool could rea
 dashboard, followed by the unified diff. **Nothing takes effect until an analyst clicks Approve**, and only if
 `policy.md` hasn't changed since the review ran. Hard rules stay in `gate.py`, which policy can't touch.
 
-## Surviving a restart
+### Surviving a restart
 
 Every case and its gate state (verified, red flags, family notified, bridged, held by rule, unanswered calls) is written to
 Convex after each action. On startup the server reloads every held or escalated case (`agent.resume`), rebuilds her
@@ -134,46 +264,14 @@ verification questions from CRS (same seed, same questions), and logs a `resume`
 mid-demo, start it again, and the analyst buttons and her callback still work, with the gate exactly as strict as before:
 a member who was already bridged to family can't be bridged twice, and a first-ever gift card still needs an analyst.
 
-## The night in numbers
+### The night in numbers
 
 The dashboard's top row is computed from the case file itself (`convex/cases.ts: stats`): purchases checked, held (and how many
 by the code floor), released by the member after verifying, sent to an analyst, confirmed fraud, gate refusals, and the median
 minutes from hold to resolution. The red-team arena's latest scoreboard sits beside the permission matrix
 (`uv run python arena.py -n 3 --publish`, and `--shield --publish` for Scam Shield detection).
 
-## Run it
-
-```bash
-# 1. server
-cd server && cp .env.example .env    # fill it in
-uv sync
-uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py   # self-checks
-uv run seed.py                       # once: creates Dolores + Robert in Nessie, writes seed_ids.json
-ngrok http 7860                      # put the https URL in LOCAL_SERVER_URL
-uv run python preflight.py           # every key and service, read-only; --crs also tests the CRS login once
-uv run server.py
-# Twilio console → each number (TWILIO_NUMBER, and SHIELD_NUMBER if set) → Voice "A call comes in"
-#   → Webhook POST {LOCAL_SERVER_URL}/twiml. One URL for both: calls to SHIELD_NUMBER are routed to Scam Shield by `To`
-
-# 2. dashboard
-cd dashboard && npm i
-npx convex dev                       # writes NEXT_PUBLIC_CONVEX_URL to .env.local
-npx convex env set CASE_WRITE_SECRET <same as CONVEX_WRITE_SECRET>
-echo "NEXT_PUBLIC_SERVER_URL=<ngrok url>" >> .env.local
-npm run dev                          # click the key icon once and enter the server's ANALYST_TOKEN
-                                     # no Convex yet? open http://localhost:3000/?demo=1 for sample data
-
-# 3. optional: scam intel (Apify) and the morning review (Factory)
-cd actor && apify login && apify push          # then set APIFY_TOKEN + APIFY_ACTOR in server/.env
-# Factory: install the droid CLI and set FACTORY_API_KEY
-```
-
-Without Apify, Elastic or Factory keys, the server still runs. Alerts come from the committed `alerts.json`
-(a real actor run), triage summarizes history itself, and the review button reports that it failed.
-
-Demo reset: the dashboard's Reset button clears cases; `uv run seed.py` again for fresh Nessie members.
-
-## Cartesia features used
+### Cartesia features used
 
 - **Sonic TTS over Twilio Media Streams** (8 kHz, via Pipecat's `CartesiaTTSService`) for every call.
 - **Ink STT (`ink-2`) with per-call keyterms.** The recognizer is biased toward this call's four answer options,
@@ -184,7 +282,7 @@ Demo reset: the dashboard's Reset button clears cases; `uv run seed.py` again fo
   message, and the intro before the family bridge. The voice members hear is the credit union's voice.
 - Interruptible: Silero VAD plus Pipecat interruptions, so she can talk over the bot.
 
-## Real vs simulated
+### Real vs simulated
 
 | Real | Simulated |
 |---|---|
@@ -192,8 +290,9 @@ Demo reset: the dashboard's Reset button clears cases; `uv run seed.py` again fo
 | CRS sandbox calls against test identities | Nessie is Capital One's sandbox bank, not a real core |
 | FTC scam alerts, scraped live by our Apify actor | The scammer (a teammate) |
 | Holds, the code floor and the permission gate, enforced in our code | Holds don't reach a card network |
+| Reclamation rules, checked against 31 CFR 210 ([docs/RECLAMATION.md](docs/RECLAMATION.md)) | The five estates, their death records and FS-133 notices (`estates.json`) |
 
-## Known limitations
+### Known limitations
 
 - Analyst auth is one shared passcode (`ANALYST_TOKEN`), not per-analyst accounts. Real use needs SSO and an audit of who clicked.
 - After a restart, a case that was mid-call loses that call; the member's next callback to the card number picks the case back up.
@@ -204,36 +303,5 @@ Demo reset: the dashboard's Reset button clears cases; `uv run seed.py` again fo
   - **Pipecat:** `EndWorkerFrame` from a processor ends a real pipeline after flushing the goodbye.
   - **Twilio's `<Stream>` docs** confirm that verbs after `<Connect>` run once our socket closes.
   - **Factory's docs** use `Edit` as a tool ID; each review logs `list_tools()` first.
-
-## Hackathon tracks
-
-One line on the seat it fills: **the overnight fraud analyst a small credit union can't afford to staff.**
-Track-by-track write-ups are in [docs/TRACKS.md](docs/TRACKS.md), the demo script in [docs/DEMO.md](docs/DEMO.md),
-the threat model in [docs/THREAT_MODEL.md](docs/THREAT_MODEL.md).
-
-| Track | Where it lives |
-|---|---|
-| Hyphenate: Autonomous Systems for Finance | The whole agent loop; `gate.py` (limited access), Convex case file (clean record), `escalate` (knowing when to ask), arena + Shield (the moment) |
-| CRS Financial Intelligence | `crs.py` (identity, fraud and credit-file signals into triage), `verify.py` (questions from her credit file) |
-| Cartesia | `bot.py`, `shield.py`: every call, the whisper and the family intro; Ink STT with per-call keyterms |
-| Factory Droid SDK | `review.py`, `overrides.py`: scheduled, on-demand and event-triggered policy reviews with a human-approved diff |
-| Convex | Case file, live dashboard, restart recovery, night stats and arena scoreboard |
-| Apify | `actor/`: FTC scam alerts actor, cited in triage |
-| Capital One Nessie | `nessie.py`: watched accounts, real purchases from the Judge Scenario form |
-| Elastic | `intel.py`: purchase history and scam-pattern search |
-| Anthropic | Triage (Opus 5.5), the call bot and Shield (Haiku 5.5), and the arena |
-| Microsoft: Built for the Real World | Night stats, arena results, and "Path to production" in docs/TRACKS.md |
-| Meta: Bringing People Closer Together | The family bridge |
-| Armadin security | docs/THREAT_MODEL.md and the arena's attack scenarios |
-
-## Checks
-
-```bash
-cd server
-uv run python gate.py && uv run python verify.py && uv run python intel.py && uv run python review.py
-uv run python arena.py --selftest   # arena harness, no API calls
-uv run python smoke.py     # offline end-to-end: hold-by-default, gate, webhook auth, analyst passcode, family bridge,
-                           # code floor, Scam Shield, restart recovery, override-triggered review
-```
 
 No API keys are in this repo; `.env` is gitignored.

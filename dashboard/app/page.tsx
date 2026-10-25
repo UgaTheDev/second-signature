@@ -19,15 +19,18 @@ import { Walls } from "./components/night/Walls";
 import { Dialog, ToastProvider, useToast } from "./components/ui";
 import { getPasscode, post, setPasscode } from "./lib/api";
 import { DemoContext, useCaseDetail, useCases, useReview, useStats } from "./lib/data";
+import { shortClock } from "./lib/format";
+import type { Case } from "./lib/types";
 
 const noop = () => () => {};
 
-const VIEWS: View[] = ["cases", "shield", "estates", "review", "safety"];
+// Demo order: Scam Shield (beat 1), Estate desk (beat 2), then the overnight purchase loop and the proof.
+const VIEWS: View[] = ["shield", "estates", "cases", "review", "safety"];
 // Old section anchors still land on the view that holds them.
 const LEGACY: Record<string, View> = { matrix: "safety", arena: "safety", honesty: "safety" };
 const viewFromHash = (): View => {
   const h = location.hash.slice(1);
-  return VIEWS.includes(h as View) ? (h as View) : LEGACY[h] ?? "cases";
+  return VIEWS.includes(h as View) ? (h as View) : LEGACY[h] ?? "shield";
 };
 
 /** The active view lives in the URL hash so links, refresh and back/forward work. */
@@ -58,6 +61,24 @@ function useClock() {
     return () => clearInterval(id);
   }, []);
   return now;
+}
+
+/** Overnight holds toolbar: the purchase-loop actions, kept out of the global header. */
+function HoldsToolbar({ cases, onScenario, onCinema }: { cases?: Case[]; onScenario: () => void; onCinema: () => void }) {
+  const members = new Set((cases ?? []).map((c) => c.member_name)).size;
+  const last = (cases ?? []).reduce((m, c) => Math.max(m, c.opened_at), 0);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line px-8 py-2.5 max-sm:px-4">
+      <div className="flex flex-wrap gap-x-3 text-[13px] text-muted">
+        <span>Watching {members} member{members === 1 ? "" : "s"}</span>
+        <span>Last purchase <span className="font-mono">{last ? shortClock(last) : "—"}</span></span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Btn variant="ink" size="sm" onClick={onScenario}>Run a scenario</Btn>
+        <Btn variant="quiet" size="sm" onClick={onCinema}>Cinema mode</Btn>
+      </div>
+    </div>
+  );
 }
 
 /** In-page dialog, not prompt(): embedded browsers and previews block the native one. */
@@ -133,14 +154,11 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
     <div className="flex">
       <Sidebar cases={cases} review={review} now={now} active={view} onNavigate={go} />
       <div className="min-w-0 flex-1 overflow-x-clip">
-        <h1 className="sr-only">Second Signature: after-hours fraud desk</h1>
+        <h1 className="sr-only">Bayview Community CU · Second Signature</h1>
         <HeaderStrip
-          cases={cases}
           now={now}
           demo={demo}
           onToggleDemo={onToggleDemo}
-          onScenario={() => setScenario(true)}
-          onCinema={() => setCinema(true)}
           onReset={reset}
           onPasscode={() => setPasscodeOpen(true)}
         />
@@ -148,6 +166,7 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
         <main key={view} className="ss-in">
           {view === "cases" && (
             <>
+              <HoldsToolbar cases={cases} onScenario={() => setScenario(true)} onCinema={() => setCinema(true)} />
               <KpiBand stats={stats} cases={cases} />
               <div className="flex flex-wrap">
                 <aside aria-label="Cases" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line">

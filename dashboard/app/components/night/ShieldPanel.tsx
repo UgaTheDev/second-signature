@@ -2,8 +2,8 @@
 
 // 05 Scam Shield: the most recent scam_call case. Armed for 24h from when the call was flagged (server/shield.py).
 import { useEffect, useState } from "react";
-import { countdown, firstName, SHIELD_THRESHOLD, shieldInfo, whisperText } from "../../lib/derive";
-import { isShieldCase, shortClock } from "../../lib/format";
+import { countdown, firstName, isShield, SHIELD_THRESHOLD, shieldInfo, whisperText } from "../../lib/derive";
+import { shortClock } from "../../lib/format";
 import type { Case } from "../../lib/types";
 import { SectionHead, Stamp } from "./primitives";
 
@@ -14,7 +14,7 @@ export function ShieldPanel({ cases, className = "" }: { cases: Case[] | undefin
     return () => clearInterval(id);
   }, []);
 
-  const c = (cases ?? []).filter(isShieldCase).reduce<Case | null>((a, x) => (!a || x.opened_at > a.opened_at ? x : a), null);
+  const c = (cases ?? []).filter(isShield).reduce<Case | null>((a, x) => (!a || x.opened_at > a.opened_at ? x : a), null);
   const info = c && shieldInfo(c);
   const armed = !!info && now < info.armedUntil;
   const conf = info?.confidence ?? null;

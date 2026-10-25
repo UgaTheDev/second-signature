@@ -1,6 +1,6 @@
 "use client";
 
-// 06 Morning review: same logic as PolicyReview.tsx, Night Ledger look.
+// Morning review: a Factory Droid reads the night's cases and proposes a policy.md diff; an analyst approves or rejects it.
 import { useContext, useEffect, useRef, useState } from "react";
 import { post } from "../../lib/api";
 import { DemoContext, useReview } from "../../lib/data";

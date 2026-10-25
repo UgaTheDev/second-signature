@@ -12,11 +12,11 @@ function navRows({ cases, review, now }: Pick<NavProps, "cases" | "review" | "no
   const armed = (cases ?? []).some((c) => isShield(c) && shieldInfo(c).armedUntil > now);
   const rs = review?.status;
   return [
-    { view: "cases", label: "Cases", count: cases ? String(cases.length) : "—" },
     { view: "shield", label: "Scam Shield", count: armed ? "Armed" : undefined, alert: armed },
-    { view: "estates", label: "Estates" },
-    { view: "review", label: "Policy review", count: rs === "proposed" ? "1 new" : rs === "running" ? "Running" : undefined, alert: rs === "proposed" },
-    { view: "safety", label: "Safety" },
+    { view: "estates", label: "Estate desk" },
+    { view: "cases", label: "Overnight holds", count: cases ? String(cases.length) : "—" },
+    { view: "review", label: "Morning review", count: rs === "proposed" ? "1 new" : rs === "running" ? "Running" : undefined, alert: rs === "proposed" },
+    { view: "safety", label: "Proof" },
   ];
 }
 
@@ -60,7 +60,7 @@ export function Sidebar(props: NavProps) {
         <div className="flex items-center gap-2.5 border-t border-line pt-4">
           <span className="grid size-7 flex-none place-items-center rounded-full border border-line text-[11px] font-medium text-muted" aria-hidden>AN</span>
           <div className="flex flex-col leading-[1.3]">
-            <span className="text-[13px] font-medium">Night analyst</span>
+            <span className="text-[13px] font-medium">Analyst &amp; controller</span>
             <span className="text-[12px] text-muted">On shift · after hours</span>
           </div>
         </div>
