@@ -126,7 +126,8 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
     toast(err ?? "All cases cleared.", Boolean(err));
   }
 
-  const single = "mx-auto w-full max-w-[1200px] px-8 py-10 max-sm:px-4";
+  // Panels were built for a stacked page and carry their own separator rules; a view alone does not need them.
+  const single = "mx-auto w-full max-w-[1200px] px-8 py-10 max-sm:px-4 [&>*]:border-y-0";
   return (
     <div className="flex">
       <Sidebar cases={cases} review={review} now={now} active={view} onNavigate={go} />
@@ -171,8 +172,8 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
         </main>
       </div>
       <Dialog open={scenario} onClose={() => setScenario(false)} title="Run a scenario" side>
-        {/* ponytail: ScenarioPanel brings its own padding, so cancel the dialog's. */}
-        <div className="-m-6"><ScenarioPanel /></div>
+        {/* ponytail: ScenarioPanel brings its own padding and heading; cancel the dialog's padding and hide the duplicate heading. */}
+        <div className="-m-6 [&_#scenario]:hidden [&>*]:border-b-0"><ScenarioPanel /></div>
       </Dialog>
       <Cinema detail={detail} open={cinema} onClose={() => setCinema(false)} onOpenChange={setCinema} />
       <PasscodeDialog open={passcode} onClose={() => setPasscodeOpen(false)} />
