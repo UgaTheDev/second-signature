@@ -170,10 +170,10 @@ collector.
 **Show:**
 - seeded members and accounts;
 - a 2-second watcher on purchases;
-- judge-run scenarios posting real purchases;
-- Harold's Social Security arriving as deposits after his death.
+- judge-run scenarios posting real purchases.
 
-The estate desk reconciles Nessie's deposits against Treasury's claim.
+Honest note: the estate desk reads Harold's deposit history from `server/estates.json`, not from Nessie.
+Wiring his post-death deposits into Nessie is the next step, not something to claim today.
 
 ## Armadin (security)
 

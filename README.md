@@ -90,8 +90,8 @@ only calls her. Hard questions like this one, and our answers, are in [docs/CRIT
    wire or crypto purchase is held by rule, and only an analyst can release it, even if triage is fooled and even for Robert,
    who buys gift cards every year.
 
-`uv run python arena.py --shield -n 3` measures detection on 10 labelled caller scripts: 5 scams, and 5 benign calls that
-mention gift cards, Microsoft or the bank. It runs the same path as production: keyword gate first, model only on a hit.
+`uv run python arena.py --shield -n 3` measures detection on 12 labelled caller scripts: 6 scams (including a fake debt collector pressuring a widow), and 6
+benign calls that mention gift cards, Microsoft, the bank or a real billing office. It runs the same path as production: keyword gate first, model only on a hit.
 
 ## Estate desk: close a deceased member's books
 
@@ -237,7 +237,7 @@ Latest run (`-n 3`): **30/30 passed**, 0 of 21 scams or attacks released or veri
 the right outcome. Its first live run found a second hole: a scammer who knew Dolores's city guessed through
 verification, because the real street was the only local one among the options and Bank of America sat beside
 obscure lenders. Decoys are now local streets and household-name banks. Outbound calls that end with "I'll call the
-number on my card" continue as a simulated callback on the same case. Scam Shield on its 10 labelled scripts (`--shield -n 3`):
+number on my card" continue as a simulated callback on the same case. Scam Shield on its 12 labelled scripts (`--shield -n 3`):
 18/18 caught, 0/18 false alarms.
 
 ### Where and how Droid is used (Factory)

@@ -4,7 +4,8 @@
 flowchart LR
   subgraph In["What comes in"]
     Phone["Her phone line<br/>Twilio calls + conferences"]
-    Nessie["The bank<br/>Nessie: purchases, deposits"]
+    Nessie["The bank<br/>Nessie: accounts, purchases"]
+    Ledger["Estate records<br/>estates.json: deposits, notices, notes (simulated core)"]
     CRS["Who she is<br/>CRS: identity, credit file, deceased flag"]
     World["The outside world<br/>Treasury DNE / FS-133 notices<br/>FTC alerts: Apify actor → Elastic"]
   end
@@ -29,7 +30,7 @@ flowchart LR
   Phone --> Shield
   Phone <--> Voice
   Nessie --> Triage
-  Nessie --> Estate
+  Ledger --> Estate
   CRS --> Triage
   CRS --> Estate
   CRS --> Voice
@@ -50,5 +51,5 @@ flowchart LR
 
 **The three beats on this map**
 1. **The fake collector:** Phone → Scam Shield → whisper to Dolores. The 24-hour hold on gift cards goes through the gate.
-2. **Harold's books:** Nessie deposits, CRS and Treasury notices → estate desk → gate → Convex journal → the controller signs.
+2. **Harold's books:** his deposit history, death sources and Treasury's notice (simulated core records in `estates.json`) → estate desk → gate → Convex journal → the controller signs.
 3. **The calm call:** voice agent ↔ Dolores, verified from CRS, with an offer to bridge Susan.

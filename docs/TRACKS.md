@@ -48,7 +48,7 @@ offers to connect Susan, the executor.
 **Proof it works:** `estate.py` (balanced journals, Harold's figures, 5/5 on the answer key), `gate.py`'s self-check
 (the agent cannot post or sign an estate), `smoke.py` (offline, every safety path of the hold loop), the red-team arena
 (30 simulated calls across 10 scenarios: 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with the
-right outcome), and Scam Shield detection on 10 labelled scripts run 3 times each (18/18 scams caught, 0/18 false alarms
+right outcome), and Scam Shield detection on 12 labelled scripts run 3 times each (18/18 scams caught, 0/18 false alarms
 at threshold 0.75).
 
 ## CRS Financial Intelligence Challenge (CRS Credit) — Best Identity / Fraud Innovation, Best Overall
