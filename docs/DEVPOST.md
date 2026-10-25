@@ -2,7 +2,7 @@
 
 ## Tagline
 
-An AI fraud desk for small credit unions: it catches scam calls while they're happening, settles the real debts, and never moves money on its own.
+A fraud desk for small credit unions that warns members during scam calls and never moves a dollar without a person signing off.
 
 **The seat it fills:** the back office a small credit union can't afford to staff: the estate desk and the night fraud analyst.
 
@@ -10,46 +10,48 @@ Live dashboard: https://second-signature-ai.vercel.app · Code: https://github.c
 
 ## Inspiration
 
-In 2025, Americans over 60 reported $7.7 billion in fraud losses to the FBI, up 59% in a single year. The CFPB warns that fake debt collectors go after families right after a death. We built this for whoever picks up the next call.
+In 2025, Americans over 60 reported $7.7 billion in fraud losses to the FBI, which is 59% more than the year before (FBI IC3, 2025 Internet Crime Report). Most of that money leaves after a phone call that follows a familiar script, like a fake IRS agent, someone from "Microsoft support", a grandchild who needs bail or a debt collector who doesn't exist. The bank sees the money go, but nobody is on the call with the member while it's happening.
 
-Scam calls hit every older member: fake IRS agents, "Microsoft support", a grandchild in jail, romance and Bitcoin-ATM scams, fake debt collectors. The hardest week is the one after a death: scammers who read obituaries call the widow, and Treasury sends the credit union a reclamation notice (FS-133) for Social Security paid after the death. At a small credit union, answering it is a part-time job, and mistakes cost money either way. We wanted an agent trusted for what it can't do.
+Small credit unions also can't staff the back office that comes with fraud and with death. When a member dies, the US Treasury sends a reclamation notice (FS-133) for Social Security paid after the death, and answering it correctly is a part-time job where mistakes cost money either way. We wanted one agent that could help with both, and that a credit union could trust because of the things it has no power to do.
 
 ## What it does
 
-Scam Shield protects any member on any scam call. We show the whole product on its hardest case: Harold Whitcomb died in March, and his widow Dolores is 74.
+Second Signature watches over members in three ways and leaves every money decision to a person.
 
-1. **Scam Shield.** A fake debt collector tells Dolores to pay Harold's debts in gift cards. She hears, and he doesn't, a chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up."
-2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books the remaining $2,600 as the credit union's own loss (not Dolores's), because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.
-3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing and the credit union is handling the repayment with Treasury. It won't tell her she owes Treasury nothing: she withdrew after the death, so that isn't settled. It offers to connect Susan, the executor, then leaves the line.
+- **Scam Shield** listens to calls on a member's protected line. When a caller follows a scam script, the member hears a short chime and a warning that the caller can't hear: "It's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up." For the next day, gift card, wire and crypto purchases on the account wait for a person to review them.
+- **Overnight holds** pause risky purchases and call the member to confirm them, using questions from her own credit file. The agent can let a small, familiar purchase through once she's verified, and anything larger or unusual goes to an analyst in the morning.
+- **The estate desk** answers the Treasury when a member dies. It works out what is actually owed under 31 CFR 210, drafts the journal entries and the reply, and waits for the controller to sign. Claude explains each figure, and every sentence of that explanation has to cite a rule or a source.
+
+Our demo follows the hardest case. Harold Whitcomb died in March, and his widow Dolores is 74. A fake debt collector calls her demanding gift cards for Harold's "debts", and Scam Shield warns her before he finishes his sentence. Meanwhile the Treasury claims $4,180 of Harold's Social Security. The agent finds that $1,045 of it was already returned, so it protests that part and returns the $535 still in the account, and the remaining $2,600 falls on the credit union because a rep recorded Harold's death on March 20, before those payments arrived. Then a calm Cartesia voice calls Dolores, checks her identity with a question from her credit file, tells her she owes the scammer nothing and that the credit union is handling the Treasury, and offers to connect her with her daughter Susan, who is the executor.
 
 ## How we built it
 
-- **Estate desk:** `estate.py`, plain arithmetic with cited rules; Claude Opus 5.5 only explains.
-- **Safety:** `gate.py`: the agent may hold, call, draft and explain; only a human releases, posts, signs or moves money.
-- **Scam Shield:** Twilio streams the caller's side only; Cartesia Ink transcribes; a keyword gate, then Claude Haiku 5.5; the whisper plays to her leg only.
-- **Voice:** Twilio, Pipecat, Cartesia Ink → Claude Haiku 5.5 → Cartesia Sonic.
-- **Identity:** CRS sandbox; questions from her credit file, answers kept in `verify.py`.
-- **Record:** Convex (cases, estate drafts, append-only journal), Next.js on Vercel.
-- **Overnight holds:** Nessie, Elastic, our Apify actor, Factory Droid SDK.
+- **Scam Shield:** Twilio streams only the caller's side of the call to our server. Cartesia Ink transcribes it as it arrives, a keyword filter decides when to ask Claude Haiku 5.5, and the whisper plays only on the member's leg of the call.
+- **Calls:** Pipecat connects Twilio, Cartesia Ink, Claude Haiku 5.5 and Cartesia Sonic. Sonic is slowed to 0.9× for older listeners, and Ink gets each call's expected answers as keyterms.
+- **Estate desk:** `estate.py` does the arithmetic in plain Python with a cited rule for each step. Claude Opus 5.5 writes the explanation, and our code rejects it if any citation or dollar amount isn't in the record.
+- **Safety:** `gate.py` checks every action the agent takes. It can hold, call, draft and explain, while releasing larger holds, posting, signing and moving money all need a person.
+- **Identity:** the CRS sandbox supplies the credit-file questions, and the answers stay in `verify.py`, where the model never sees them.
+- **Record:** Convex stores cases, transcripts, estate drafts and an append-only journal, and the Next.js dashboard on Vercel reads it all live.
+- **Overnight holds:** Capital One's Nessie API stands in for the bank, Elastic and our Apify actor supply purchase history and FTC scam alerts for triage, and Factory's Droid SDK proposes policy changes for a person to approve.
 
 ## Challenges we ran into
 
-- **A fact-check against 31 CFR 210 changed our liability rule.** Without prior knowledge, liability is the lesser of the 45-day amount and the unrecovered total, and only if Treasury can't collect from the withdrawers.
-- **Our first call told a grieving widow something false.** It said she owed "nothing". But she'd withdrawn post-death deposits, and the credit union must name her to Treasury. Now it says it isn't settled, and the red-team arena fails any call that says otherwise.
-- **Scaling the red-team arena from 30 to 500 calls found a hole 30 never showed.** At 2-of-3, impostors guessed through verification (the real card year was always the second-oldest option). Now every answer is required, and decoys copy the bureau's format: the CRS sandbox anonymizes lenders as "Former Lender 3", and a household bank name beside that gave the answer away.
-- **Keeping the agent unable to post or move money.** Rules live in `gate.py`, not the prompt. The bot never sees verification answers, and the estate call has no hold tools.
+- **Reading 31 CFR 210 ourselves changed our liability rule.** When the credit union had no prior knowledge of the death, it owes the lesser of the 45-day amount and the unrecovered total, and only if the Treasury can't collect from the people who withdrew the money.
+- **Our first estate call told the widow she owed "nothing", which wasn't true.** She had withdrawn deposits that arrived after Harold died, and the credit union has to name her to the Treasury. The call now tells her that part isn't settled yet, and the red-team arena fails any call that promises otherwise.
+- **Growing the red-team arena from 30 calls to 500 exposed a hole the small run never hit.** With two of three answers required, impostors could guess their way through, because the real answer kept landing in the same spot among the options. Our tests now require every answer, and the decoys follow the credit bureau's own format so the real one doesn't stand out. The live demo asks a single question to keep the call short.
+- **Keeping the agent unable to post or move money took discipline.** The rules are checked in `gate.py` on every action, the bot never sees verification answers, and the estate call has no tools that touch a hold.
 
 ## Accomplishments that we're proud of
 
-Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. Claude's explanations reach the controller only if every citation and dollar amount exists in the record. Across 500 red-team calls, no scam or impostor got money or verification. Kill the server mid-case and it resumes with the gate as strict as before.
+Harold's figures match the cited rules to the dollar, and the estate desk catches all five planted errors in our test estates. Claude's explanations only reach the controller when every citation and dollar amount exists in the record. In 500 red-team calls, no scammer or impostor got money released or passed verification, and Scam Shield caught all 140 scam calls in its test set without a false alarm. If the server restarts in the middle of a case, it picks up again with the same restrictions in place.
 
 ## What we learned
 
-The math belongs in code; the model explains it. Checking rules against primary sources changed real numbers, and our own policy choices are cited as policy.
+We learned to keep every calculation in code and have the model explain it, because a function can be audited in a way a generated number can't. Reading the regulations ourselves changed real figures in our output, and wherever a number comes from our own policy choice, the explanation labels it as policy.
 
 ## What's next
 
-Real FS-133 and death-notice intake, a scheduled Convex function for Treasury's 60-day response clock, a core banking feed instead of Nessie, per-analyst SSO, and the arena in CI.
+We want to take in real FS-133 and death notices, add a scheduled Convex function that tracks the Treasury's 60-day response deadline, replace Nessie with a core banking feed, add single sign-on for analysts, and run the red-team arena on every change.
 
 ## Built with
 
@@ -57,31 +59,31 @@ Python, Claude Opus 5.5, Claude Haiku 5.5, Cartesia Sonic, Cartesia Ink, Pipecat
 
 ## Track fit
 
-**Hyphenate: Autonomous Systems for Finance.** The seat: the estate desk at a credit union under $500M in assets, answering FS-133 notices, with a controller who signs. `estate.py` picks the death date, finds what wasn't due or was already returned, and sets liability under 31 CFR 210.10 or the 210.11 cap. Limited access: the agent drafts; only a human posts the journal, signs a loss over $250 or closes the estate. Clean record in Convex. Accuracy: 5/5. The moment: one rep's note sets the liability at $2,600 instead of $1,045.
+**Anthropic.** Claude Haiku 5.5 runs every live call and the mid-sentence scam check, and Claude Opus 5.5 writes the cited estate explanations. Neither model can move money, because every action passes through `gate.py`.
 
-**CRS.** Identity messages decide whether and how strictly to verify; questions come from her credit file.
+**Cartesia.** Cartesia Ink transcribes the caller in real time with per-call keyterms, which is what makes the mid-sentence warning possible. Cartesia Sonic at 0.9× speed is the voice of the whisper, the verification call and the hand-off to the member's family.
 
-**Cartesia.** The whisper, the calm call, the bridge intro: Sonic at `speed=0.9`, Ink with per-call keyterms.
+**Hyphenate: Autonomous Systems for Finance.** The agent fills the estate desk at a credit union under $500M in assets. It picks the date of death, finds what wasn't due or was already returned, and sets liability under 31 CFR 210.10 or the 210.11 cap, while only a person can post the journal, sign a loss over $250 or close the estate. It scored 5/5 on planted errors, and in Harold's case a single rep's note moves the credit union's liability from $1,045 to $2,600.
 
-**Anthropic.** Haiku listens and speaks; Opus explains with citations. None moves money.
+**CRS.** Identity signals from CRS decide whether and how strictly to verify a member, and the questions come from her own credit file.
 
-**Convex.** Case file, estate drafts, append-only journal, restart recovery.
+**Convex.** Convex holds the case file, the estate drafts and the append-only journal, and lets the server recover open cases after a restart.
 
-**Microsoft.** A $1,045 over-claim caught, a $2,600 liability surfaced; path to production in `docs/TRACKS.md`.
+**Microsoft.** On Harold's estate the agent caught a $1,045 over-claim and surfaced a $2,600 liability, and our path to production is in `docs/TRACKS.md`.
 
-**Meta.** Scams isolate; the agent brings Susan in, then steps away.
+**Meta.** Scammers try to cut their targets off from family, so the agent offers to bring the member's family onto the call and then leaves the line.
 
-**Factory.** Droid edits one policy file on a trigger; a human approves the diff.
+**Factory.** A Droid proposes an edit to one policy file when a trigger fires, and a person approves the diff before it ships.
 
-**Apify / Elastic.** FTC alerts and her purchase history, cited in triage.
+**Apify and Elastic.** FTC scam alerts and the member's purchase history are cited in overnight triage.
 
-**Nessie.** The bank: seeded members, a 2-second watcher, judge-run purchases.
+**Nessie.** Capital One's Nessie API is the bank in our demo, with seeded members, a watcher that checks for new purchases every two seconds, and purchases judges can trigger themselves.
 
 ## Proof it works
 
-- **Estate desk:** 5/5 planted errors against an answer key.
-- **Red-team arena:** 500 simulated calls across 25 scenarios: 0 of 300 scams or impostors released money or got verified, 0 of 100 calls to the widow told her something false or leaked the credit union's loss. At 260 calls it caught impostors guessing through 2-of-3 verification; now 3-of-3.
-- **Scam Shield:** 140/140 scam calls caught, 0/140 false alarms (28 distinct scripts, half of them real calls built to look suspicious, 10 runs each), at threshold 0.75.
+- **Estate desk:** 5 of 5 planted errors caught against an answer key.
+- **Red-team arena:** 500 simulated calls across 25 scenarios. None of the 300 scam and impostor calls got money released or passed verification, and none of the 100 calls to the widow told her something false or mentioned the credit union's loss.
+- **Scam Shield:** all 140 scam calls caught, with no false alarms on 140 real calls written to sound suspicious, across 28 scripts run 10 times each at a 0.75 threshold.
 
 | Real | Simulated |
 |---|---|
