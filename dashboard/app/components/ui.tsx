@@ -3,40 +3,6 @@
 import { X } from "lucide-react";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
-type Variant = "primary" | "quiet" | "danger";
-
-const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-[15px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50";
-const VARIANT: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:brightness-110",
-  quiet: "border border-line text-ink hover:bg-raise",
-  danger: "border border-danger text-danger hover:bg-danger/10",
-};
-
-export function Button({
-  variant = "quiet",
-  className = "",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }) {
-  return <button type="button" {...props} className={`${BASE} ${VARIANT[variant]} ${className}`} />;
-}
-
-export function IconButton({
-  label,
-  className = "",
-  ...props
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      {...props}
-      className={`inline-flex size-10 items-center justify-center rounded-md text-ink-2 hover:bg-raise hover:text-ink ${className}`}
-    />
-  );
-}
-
 /** Native <dialog>: focus is trapped, Esc closes, and the page behind is inert. */
 export function Dialog({
   open,
@@ -65,13 +31,14 @@ export function Dialog({
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={`${position} border border-line bg-surface p-0 ${side ? "" : "rounded-lg"}`}
+      className={`${position} border border-line bg-panel p-0`}
     >
       <div className="flex items-center justify-between border-b border-line px-6 py-4">
-        <h2 className="font-display text-xl font-semibold">{title}</h2>
-        <IconButton label="Close" onClick={onClose}>
-          <X size={18} strokeWidth={1.75} />
-        </IconButton>
+        <h2 className="font-serif text-[24px] tracking-[-.01em]">{title}</h2>
+        <button type="button" aria-label="Close" title="Close" onClick={onClose}
+          className="inline-flex size-10 items-center justify-center text-muted hover:bg-panel2 hover:text-ink">
+          <X size={18} strokeWidth={1.75} aria-hidden />
+        </button>
       </div>
       <div className="p-6">{children}</div>
     </dialog>
@@ -97,7 +64,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role={t.bad ? "alert" : "status"}
-            className={`rounded-md border bg-raise px-4 py-3 text-[15px] shadow-lg ${t.bad ? "border-danger" : "border-line"}`}
+            className={`border bg-panel2 px-4 py-3 text-[15px] shadow-lg ${t.bad ? "border-red" : "border-line"}`}
           >
             {t.text}
           </div>
