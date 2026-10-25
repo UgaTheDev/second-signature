@@ -21,7 +21,8 @@ REQUIRED = ["ANTHROPIC_API_KEY", "CARTESIA_API_KEY", "TWILIO_ACCOUNT_SID", "TWIL
             "LOCAL_SERVER_URL", "MEMBER_PHONE", "FAMILY_PHONE", "NESSIE_KEY", "CRS_USERNAME", "CRS_PASSWORD",
             "CONVEX_URL", "CONVEX_WRITE_SECRET", "ANALYST_TOKEN"]
 OPTIONAL = ["CARTESIA_VOICE_ID", "ROBERT_PHONE", "SHIELD_NUMBER", "APIFY_TOKEN", "APIFY_ACTOR", "ELASTIC_URL",
-            "ELASTIC_API_KEY", "FACTORY_API_KEY", "DEEPGRAM_API_KEY"]
+            "ELASTIC_API_KEY", "FACTORY_API_KEY", "DEEPGRAM_API_KEY", "QBO_CLIENT_ID", "QBO_CLIENT_SECRET",
+            "QBO_REALM_ID", "QBO_REFRESH_TOKEN"]
 
 results: list[tuple[str, bool | None, str]] = []  # (name, ok / None = skipped, detail)
 
@@ -137,6 +138,12 @@ async def factory():
     return "key set, droid CLI found"
 
 
+async def quickbooks_():
+    import quickbooks
+
+    return f"company {await quickbooks.company()!r}"
+
+
 async def main(with_crs: bool) -> int:
     missing = [k for k in REQUIRED if not os.getenv(k)]
     note("required env", not missing, f"missing: {', '.join(missing)}" if missing else f"all {len(REQUIRED)} set")
@@ -155,6 +162,7 @@ async def main(with_crs: bool) -> int:
             ("Elastic", elastic, have("ELASTIC_URL", "ELASTIC_API_KEY"), False),
             ("Apify", lambda: apify(http), have("APIFY_TOKEN", "APIFY_ACTOR"), False),
             ("Factory", factory, True, False),
+            ("QuickBooks", quickbooks_, have("QBO_CLIENT_ID", "QBO_CLIENT_SECRET", "QBO_REALM_ID", "QBO_REFRESH_TOKEN"), False),
         ]
         for name, fn, ready, required in checks:
             if ready:
