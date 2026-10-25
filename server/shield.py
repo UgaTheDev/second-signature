@@ -137,7 +137,7 @@ async def render(text: str) -> str | None:
                 "model_id": "sonic-3.6", "transcript": text,
                 "voice": {"mode": "id", "id": os.getenv("CARTESIA_VOICE_ID", "71a7ad14-091c-4e8e-a314-022ece01c121")},
                 "output_format": {"container": "wav", "encoding": "pcm_s16le", "sample_rate": 8000},
-                "generation_config": {"speed": 0.9, "emotion": "content"}})
+                "generation_config": {"speed": 0.9, "emotion": "content", "volume": 1.8}})
             r.raise_for_status()
         clip = uuid.uuid4().hex
         AUDIO[clip] = r.content

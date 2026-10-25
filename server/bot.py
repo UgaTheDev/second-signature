@@ -52,7 +52,7 @@ def services(system: str | None = None, keyterms: list[str] | None = None):
         api_key=os.environ["CARTESIA_API_KEY"],
         settings=CartesiaTTSService.Settings(
             voice=os.getenv("CARTESIA_VOICE_ID", "71a7ad14-091c-4e8e-a314-022ece01c121"),
-            generation_config=GenerationConfig(speed=0.9, emotion="content"),  # slower helps older listeners
+            generation_config=GenerationConfig(speed=0.9, emotion="content", volume=1.8),  # slower and louder for older listeners on a phone line
         ),
     )
     if system is None:
@@ -154,7 +154,9 @@ async def member_call(transport, serializer: HandoffSerializer, runner_args, cas
 
     @asst_agg.event_handler("on_assistant_turn_stopped")
     async def _(aggregator, message):
-        asyncio.create_task(store.line(case.id, "agent", message.content or ""))
+        # Twilio buffers audio ahead of playback, so an interrupted turn's text can run past what she actually heard
+        text = (message.content or "") + (" [cut off]" if message.interrupted and message.content else "")
+        asyncio.create_task(store.line(case.id, "agent", text))
 
     @transport.event_handler("on_client_connected")
     async def _(transport, client):
