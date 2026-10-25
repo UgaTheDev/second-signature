@@ -166,7 +166,7 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
             </>
           )}
           {view === "shield" && <div className={single}><ShieldPanel cases={cases} /></div>}
-          {view === "estates" && <div className={single}><EstatesPanel /></div>}
+          {view === "estates" && <EstatesPanel />}
           {view === "customers" && <CustomersPanel cases={cases} />}
           {view === "review" && <div className={single}><ReviewPanel /></div>}
           {view === "safety" && (

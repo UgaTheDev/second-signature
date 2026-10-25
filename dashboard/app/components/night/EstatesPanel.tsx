@@ -1,6 +1,6 @@
 "use client";
 
-// 08 Estate desk: closes a deceased member's books against Treasury's FS-133 (server/estate.py writes compute() output).
+// Estate desk: closes a deceased member's books against Treasury's FS-133 (server/estate.py writes compute() output).
 import { useContext, useState } from "react";
 import { post, postJson } from "../../lib/api";
 import { DemoContext, useEstateJournal, useEstates } from "../../lib/data";
@@ -46,94 +46,117 @@ export function EstatesPanel() {
   }
   const run = () => act("run", () => post("/estates/run"), "Estate desk ran. Drafts are below.");
 
+  // Same two panes as the cases view: estates on the left, the selected one on the right, each scrolling on its own.
   return (
-    <section className="flex flex-col gap-8">
-      <SectionHead
-        title="Estate desk"
-        aside={
-          <div className="flex items-center gap-3">
-            {score && <Stamp label={`${score.correct}/${score.total} planted errors caught`} tone={score.correct === score.total ? "green" : "red"} size="sm" />}
-            <Btn size="sm" variant="quiet" disabled={busy !== null} onClick={run}>{busy === "run" ? "Running…" : "Run estate desk"}</Btn>
-          </div>
-        }
-      />
-      <p className="-mt-4 max-w-[680px] text-[14px] text-pretty text-muted">
-        Two people want Harold&apos;s money: a scammer and the US Treasury. Only one of them is owed it. The desk drafts; only the controller posts.
-      </p>
-
-      {rows === undefined ? (
-        <p className="text-[14px] text-muted">Loading…</p>
-      ) : !row ? (
-        <div className="flex flex-col items-start gap-3 border-y border-line py-10">
-          <span className="text-[15px]">No estates yet.</span>
-          <span className="text-[13px] text-muted">Run the estate desk to reconcile Harold Whitcomb&apos;s death, his Social Security deposits and Treasury&apos;s reclamation notice.</span>
-          <Btn size="sm" disabled={busy !== null} onClick={run}>{busy === "run" ? "Running…" : "Run estate desk"}</Btn>
-        </div>
-      ) : (
-        <>
-          <EstateTabs rows={rows} active={row.key} onSelect={setSel} />
-          <EstateView
-            row={row}
-            why={why[row.key]}
-            busy={busy}
-            onWhy={() =>
-              act("why", async () => {
-                const r = await postJson<{ text: string }>(`/estates/${row.key}/why`);
-                if (typeof r === "string") return r;
-                setWhy((w) => ({ ...w, [row.key]: r.text }));
-                return null;
-              }, "Explanation ready.")
-            }
-            onSign={() => setConfirm(true)}
-            onCall={() => act("call", () => post(`/estates/${row.key}/call`), "Calling Dolores.")}
-          />
-          <Dialog open={confirm} onClose={() => setConfirm(false)} title="Sign as controller">
-            <p className="mb-6 text-[14px] text-muted">
-              Posts {row.data.journal.length} journal lines to the ledger
-              {row.data.cu_liability > 0 && <> and signs a <span className="num font-mono text-ink">{cents(row.data.cu_liability)}</span> reclamation loss</>}. This can&apos;t be undone here.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Btn variant="quiet" onClick={() => setConfirm(false)}>Cancel</Btn>
-              <Btn
-                variant="ink"
-                onClick={() => {
-                  setConfirm(false);
-                  act("sign", () => post(`/estates/${row.key}/sign`, { by: "Controller" }), "Signed and posted.");
-                }}
-              >
-                Sign and post
-              </Btn>
+    <div className="flex flex-wrap lg:h-full lg:flex-nowrap">
+      <aside aria-label="Estates" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line lg:overflow-y-auto">
+        <EstateList rows={rows} active={row?.key} onSelect={setSel} score={score} busy={busy} onRun={run} />
+      </aside>
+      <section aria-label="The estate" className="min-w-0 flex-[3_1_640px] lg:overflow-y-auto">
+        <div className="px-10 pt-8 pb-14 max-sm:px-4">
+          {rows === undefined ? (
+            <p className="text-[14px] text-muted">Loading…</p>
+          ) : !row ? (
+            <div className="flex flex-col items-start gap-3 border-y border-line py-10">
+              <span className="text-[15px]">No estates yet.</span>
+              <span className="text-[13px] text-muted">Run the estate desk to reconcile Harold Whitcomb&apos;s death, his Social Security deposits and Treasury&apos;s reclamation notice.</span>
+              <Btn size="sm" disabled={busy !== null} onClick={run}>{busy === "run" ? "Running…" : "Run estate desk"}</Btn>
             </div>
-          </Dialog>
-        </>
-      )}
-    </section>
+          ) : (
+            <>
+              <EstateView
+                row={row}
+                why={why[row.key]}
+                busy={busy}
+                onWhy={() =>
+                  act("why", async () => {
+                    const r = await postJson<{ text: string }>(`/estates/${row.key}/why`);
+                    if (typeof r === "string") return r;
+                    setWhy((w) => ({ ...w, [row.key]: r.text }));
+                    return null;
+                  }, "Explanation ready.")
+                }
+                onSign={() => setConfirm(true)}
+                onCall={() => act("call", () => post(`/estates/${row.key}/call`), "Calling Dolores.")}
+              />
+              <Dialog open={confirm} onClose={() => setConfirm(false)} title="Sign as controller">
+                <p className="mb-6 text-[14px] text-muted">
+                  Posts {row.data.journal.length} journal lines to the ledger
+                  {row.data.cu_liability > 0 && <> and signs a <span className="num font-mono text-ink">{cents(row.data.cu_liability)}</span> reclamation loss</>}. This can&apos;t be undone here.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <Btn variant="quiet" onClick={() => setConfirm(false)}>Cancel</Btn>
+                  <Btn
+                    variant="ink"
+                    onClick={() => {
+                      setConfirm(false);
+                      act("sign", () => post(`/estates/${row.key}/sign`, { by: "Controller" }), "Signed and posted.");
+                    }}
+                  >
+                    Sign and post
+                  </Btn>
+                </div>
+              </Dialog>
+            </>
+          )}
+        </div>
+      </section>
+    </div>
   );
 }
 
-function EstateTabs({ rows, active, onSelect }: { rows: EstateRow[]; active: string; onSelect: (k: string) => void }) {
+/** Left pane: the run button, the planted-error score and one row per estate (selected row styled like the Ledger's). */
+function EstateList({ rows, active, onSelect, score, busy, onRun }: {
+  rows: EstateRow[] | undefined; active?: string; onSelect: (k: string) => void;
+  score?: Estate["score"]; busy: string | null; onRun: () => void;
+}) {
   return (
-    <div className="flex flex-wrap gap-2" role="tablist" aria-label="Estates">
-      {rows.map((r) => {
-        const d = DECISION[r.data.decision] ?? DECISION.return_in_full;
-        const on = r.key === active;
-        return (
-          <button
-            key={r.key}
-            type="button"
-            role="tab"
-            aria-selected={on}
-            onClick={() => onSelect(r.key)}
-            className={`flex cursor-pointer flex-col items-start gap-1 rounded-[6px] border px-3 py-2 text-left transition-colors hover:bg-panel2 ${on ? "border-ink/40 bg-panel2" : "border-line"}`}
-          >
-            <span className="text-[14px]">{r.data.name}</span>
-            <span className="flex items-center gap-2 text-[12px] text-muted">
-              <Stamp label={d.label} tone={d.tone} size="sm" />
-              {r.status === "signed" ? "Signed" : r.data.cu_liability > 0 ? <span className="num font-mono">{cents(r.data.cu_liability)}</span> : null}
-            </span>
-          </button>
-        );
-      })}
+    <div>
+      <div className="px-6 pt-6 pb-4">
+        <SectionHead
+          title="Estate desk"
+          aside={<Btn size="sm" variant="quiet" disabled={busy !== null} onClick={onRun}>{busy === "run" ? "Running…" : "Run estate desk"}</Btn>}
+        />
+        {score && (
+          <div className="mt-4">
+            <Stamp label={`${score.correct}/${score.total} planted errors caught`} tone={score.correct === score.total ? "green" : "red"} size="sm" />
+          </div>
+        )}
+        <p className="mt-3 text-[13px] text-pretty text-muted">
+          Two people want Harold&apos;s money: a scammer and the US Treasury. Only one of them is owed it. The desk drafts; only the controller posts.
+        </p>
+      </div>
+      {rows === undefined ? (
+        <p className="px-6 pt-2 pb-10 text-[14px] text-muted">Loading…</p>
+      ) : !rows.length ? (
+        <p className="px-6 pt-2 pb-10 text-[14px] text-muted">No estates yet.</p>
+      ) : (
+        <ul aria-label="Estates" className="flex flex-col border-t border-line pb-6">
+          {rows.map((r) => {
+            const d = DECISION[r.data.decision] ?? DECISION.return_in_full;
+            const on = r.key === active;
+            return (
+              <li key={r.key} className="border-b border-line">
+                <button
+                  type="button"
+                  onClick={() => onSelect(r.key)}
+                  aria-current={on ? "true" : undefined}
+                  className={`grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-l-2 py-3 pr-6 pl-6 text-left transition-colors hover:bg-panel2/60 ${on ? "border-l-amber bg-panel2" : "border-l-transparent"}`}
+                >
+                  <span className="flex min-w-0 flex-col gap-1">
+                    <span className="truncate text-[14px] leading-snug">{r.data.name}</span>
+                    <span className="text-[12px]" style={{ color: toneVar(d.tone) }}>{d.label}</span>
+                  </span>
+                  <span className="flex flex-col items-end gap-1">
+                    <span className={`num font-mono text-[13px] ${r.data.cu_liability > 0 ? "" : "text-muted"}`}>{cents(r.data.cu_liability)}</span>
+                    {r.status === "signed" && <Stamp label="Signed" tone="green" size="sm" />}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

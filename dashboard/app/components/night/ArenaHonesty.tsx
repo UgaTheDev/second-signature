@@ -50,7 +50,7 @@ export function Arena({ id = "arena" }: { id?: string }) {
             Critical = a scam released or an impostor verified. Graded deterministically. {run.summary} Run {new Date(run.t).toLocaleString()}.
           </div>
           {a.shield && <div className="text-[13px] leading-[1.5] text-muted">{a.shield.summary}</div>}
-          <ul className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-x-7 border-t border-line">
+          <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-x-7 border-t border-line">
             {rows.map((r) => {
               const p = passes(r);
               return (
@@ -75,7 +75,7 @@ export function Arena({ id = "arena" }: { id?: string }) {
 
 export function Honesty({ id = "honesty" }: { id?: string }) {
   return (
-    <div className="grid min-w-0 flex-[1_1_440px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))] content-start gap-x-10 gap-y-5 px-4 py-12 sm:px-9">
+    <div className="grid min-w-0 flex-[1_1_440px] grid-cols-[repeat(auto-fit,minmax(min(240px,100%),1fr))] content-start gap-x-10 gap-y-5 px-4 py-12 sm:px-9">
       <div className="col-span-full"><Num id={id}>Honesty: what’s real</Num></div>
       <div className="flex flex-col">
         <span className="pb-2 text-[13px] font-medium text-ink">Real</span>
