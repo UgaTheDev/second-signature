@@ -1,8 +1,17 @@
 export const SERVER = process.env.NEXT_PUBLIC_SERVER_URL;
 
 // The server's ANALYST_TOKEN, typed once by the analyst and kept in this browser only.
+// A bookmarked link ending #passcode=… saves it once, then strips it from the address bar.
+// The #fragment never leaves the browser, so it isn't in server or Vercel logs. Never bake it into the bundle:
+// the URL is public, and the passcode places real calls.
 export function getPasscode(): string {
   try {
+    const m = location.hash.match(/(?:^#|&)passcode=([^&]+)/);
+    if (m) {
+      localStorage.setItem("analystPasscode", decodeURIComponent(m[1]));
+      const view = location.hash.replace(/(?:^#|&)passcode=[^&]+/, "").replace(/^[#&]/, ""); // keeps #estates&passcode=… on estates
+      history.replaceState(null, "", location.pathname + location.search + (view ? `#${view}` : ""));
+    }
     return localStorage.getItem("analystPasscode") ?? "";
   } catch {
     return "";

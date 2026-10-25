@@ -35,8 +35,8 @@ from before the death, a false death report, no prior knowledge, a family call t
 **Did we see something new?** Fraud desks exist at big banks, and reclamation is handled by back-office software that
 tracks notices. We haven't seen the two joined around the person in the middle: the widow who is targeted by a fake debt
 collector in the same weeks Treasury is reclaiming her husband's benefits. Scam Shield listens to the scammer's side of
-a live call and whispers a warning to her alone; the estate desk then tells her, in a calm voice, that the real
-repayment is between the credit union and Treasury and she owes the scammer nothing.
+a live call and whispers a warning to her alone; the estate desk then tells her, in a calm voice, the credit
+union is handling the repayment with Treasury and she owes the scammer nothing.
 
 **The moment:** a fake collector tells Dolores she must pay Harold's debts in gift cards. Mid-call she hears, and he
 doesn't: a soft chime, then "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's
@@ -156,8 +156,33 @@ database and Convex, so a rejected Nessie status update is logged and doesn't un
 
 ## Anthropic
 
-**Named community:** members over 60 at small credit unions, called at night about a payment they may have been coached to
-make. **Real problem:** elder-fraud scams that rely on urgency and secrecy. **It works:** one flow, end to end.
-**Where Claude could go wrong, and what we did:** triage could be talked into "allow" (code floor holds first-ever gift
-cards anyway); the call bot could be manipulated (it never sees verification answers and can't release on its own);
-Claude could shame a victim (graded as a failure in the arena); it could be wrong (every hold expires to a human).
+Judged on four things; one paragraph each.
+
+**1. A named community.** Recently widowed members of small credit unions, in the first months after a spouse dies. Two
+things reach them at once: scammers who read the obituary and call as "debt collectors", and the US Treasury reclaiming the
+late spouse's Social Security from the joint account.
+
+**2. A real problem.** We lived it. When my grandfather passed, my family had a real worry: that my grandmother would fall for the scams that follow a death. She had the financial literacy to see through them. But what about the widows who don't? Sourced backdrop: FBI IC3 2025,
+people over 60 reported $7.7B lost (+59%); the CFPB warns specifically about fake debt collectors after a death; and the
+Treasury reclaims post-death benefit payments from the bank account, 31 CFR 210 (details in `docs/RECLAMATION.md`).
+
+**3. It works.** One estate, end to end, live: Harold's books close against Treasury's FS-133 notice, the controller signs,
+and a real phone call explains it to Dolores. A deposit-operations accountant could use it on Monday.
+
+**4. Thoughtful use of Claude.** Claude does three jobs, and none of them moves money: Haiku listens to the caller's side
+for a scam script (Scam Shield), Haiku talks to the widow, and Opus explains every estate decision with citations.
+Where it could go wrong for the people using it, and what we did:
+- **False comfort to a grieving widow.** Our first call prompt told Dolores she owed "nothing". But she withdrew $3,200
+  of Harold's post-death deposits, and the credit union must name her to Treasury as a withdrawer
+  (31 CFR 210.11(b)(3)(i)), so whether anything is asked of her isn't settled. The bot now says it isn't settled and that the credit union will write to her if anything is needed.
+  The arena grades any "you owe nothing" to the widow as a critical failure.
+- **Claude inventing a source or a number for the controller.** Code checks the "Why?" answer before anyone sees it.
+  Every [citation] and dollar amount must exist in that estate's record. If one doesn't, the controller gets the rules
+  engine's own findings, labelled as such. Live: 8/8 Opus answers across all 5 estates passed.
+- **A scammer posing as the widow to learn the estate.** Verification answers never reach the model; the arena plays
+  an obituary-reading impostor.
+- **Talked into releasing money.** Release, posting and signing are human-only in code (`gate.py`).
+- **Shaming a victim.** Graded as a failure in the arena.
+
+**Proof:** [ARENA]. Scam Shield: 60/60 scam calls caught, 0/60 false alarms (12 distinct scripts, 10 runs each:
+this measures consistency more than coverage).

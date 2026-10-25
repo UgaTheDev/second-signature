@@ -16,7 +16,7 @@ human signs, and **it can never move money on its own**.
    deposit the credit union already returned (R15), returns the $535 on hand, and books a $2,600 credit-union liability,
    because a rep's March 20 note shows the credit union knew he had died. Without that note the liability would be capped
    at $1,045, so the note cost $1,555. The agent drafts the journal entries; only the controller can sign them.
-3. **The call.** A gentle Cartesia voice calls Dolores: the real repayment is between the credit union and Treasury,
+3. **The call.** A gentle Cartesia voice calls Dolores: the credit union is handling the repayment with Treasury,
    she owes the scammer nothing, and would she like to be connected with Susan, the executor, right now?
 
 Underneath runs the older overnight loop, **Overnight holds**: a Nessie purchase, Claude triage, a hold, a verification

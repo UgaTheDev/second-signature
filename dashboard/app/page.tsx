@@ -27,7 +27,7 @@ const VIEWS: View[] = ["shield", "estates", "cases", "history", "customers", "re
 // Old section anchors still land on the view that holds them.
 const LEGACY: Record<string, View> = { matrix: "safety", arena: "safety", honesty: "safety" };
 const viewFromHash = (): View => {
-  const h = location.hash.slice(1);
+  const h = location.hash.slice(1).split("&")[0]; // "#estates&passcode=…" is the estates view
   return VIEWS.includes(h as View) ? (h as View) : LEGACY[h] ?? "shield";
 };
 
@@ -36,6 +36,7 @@ function useView() {
   const [view, setView] = useState<View>(viewFromHash);
   useEffect(() => {
     const sync = () => setView(viewFromHash());
+    getPasscode(); // saves a #passcode=… link and strips it from the address bar (after render, not during)
     window.addEventListener("hashchange", sync);
     window.addEventListener("popstate", sync);
     return () => {

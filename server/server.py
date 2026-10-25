@@ -9,6 +9,7 @@ import datetime
 import hmac
 import json
 import os
+import re
 import time
 from contextlib import asynccontextmanager
 
@@ -274,6 +275,15 @@ WHY_SYSTEM = ("You explain a credit union estate-desk decision to its controller
 _why_llm = None
 
 
+def grounded(text: str, d: dict) -> bool:
+    """Claude's Why? reaches the controller only if every [citation] and $amount in it is in the estate's own JSON."""
+    src = json.dumps(d, ensure_ascii=False)
+    money = lambda s: {round(float(n.replace(",", "")), 2) for n in re.findall(r"\d[\d,]*(?:\.\d+)?", s)}  # "1,555.00" is one number
+    cites = re.findall(r"\[([^\]]+)\]", text)  # rule ids contain commas, so a bracket passes whole or part by part
+    cited = all(b in src or all(p.strip() in src for p in re.split(r"[;,]", b)) for b in cites)
+    return bool(cites) and cited and money(" ".join(re.findall(r"\$\d[\d,]*(?:\.\d+)?", text))) <= money(src)
+
+
 @app.post("/estates/{key}/why", dependencies=[Depends(analyst)])
 async def estates_why(key: str):
     global _why_llm
@@ -283,9 +293,9 @@ async def estates_why(key: str):
         r = await _why_llm.messages.create(model=WHY_MODEL, max_tokens=2000, output_config={"effort": "low"}, system=WHY_SYSTEM,
                                            messages=[{"role": "user", "content": json.dumps(d)}])
         text = " ".join(b.text for b in r.content if b.type == "text").strip()
-        if text:
-            return {"text": text}
-        logger.warning(f"estate why: no text (stop_reason {r.stop_reason}); using the template")  # e.g. thinking used every token
+        if text and grounded(text, d):
+            return {"text": text, "checked": True}
+        logger.warning(f"estate why: {'ungrounded' if text else 'no'} text (stop_reason {r.stop_reason}); using the template")
     except Exception as e:
         logger.warning(f"estate why: {e}; using the template")
     # ponytail: template fallback straight from compute()'s findings

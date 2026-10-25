@@ -9,7 +9,7 @@ fraud alert); a CRS identity FAIL means no questions at all, so the call escalat
 import random
 import re
 
-NEEDED = 2
+NEEDED = 3  # all of them: at 2 of 3, a guesser passes ~16% (the arena caught 2 impostors at 260 calls); at 3 of 3, 1 in 64
 DECOY_STREETS = ["Maple Ave", "Harbor Blvd", "Cedar Ln", "Mission St", "Lincoln Way", "Elm St", "Pacific Ave"]
 # Decoys must be as plausible as the real answer: a caller who knows her city picks the one local-sounding street,
 # and the one household-name bank among obscure lenders. ponytail: hand lists for the demo cities; a street list per ZIP
@@ -53,7 +53,7 @@ def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | N
     years = [int(t["accountOpenedDate"][:4]) for t in lines if (t.get("accountOpenedDate") or "")[:4].isdigit()]
     if years:
         y = min(years)
-        qs.append(("About what year did you open your oldest credit account?", str(y), [str(y + d) for d in (-9, 6, 14)]))
+        qs.append(("About what year did you open your oldest credit account?", str(y), [str(y + d) for d in (-10, -7, -4, 4, 7, 10)]))  # real year at a random rank, never "the 2nd oldest"
 
     questions, answers = [], []
     for text, real, decoys in (qs if needed else []):
@@ -109,12 +109,12 @@ if __name__ == "__main__":
     assert r["correct"] and not r["verified"]
     assert check_answer("case1", 2, "bank of america").get("error")  # one try per question
     r = check_answer("case1", 3, "1978")
-    assert r["verified"] and not r["failed"]
+    assert not r["verified"] and not r["failed"]  # 2 of 3 is not enough
+    assert check_answer("case1", 1, "Elm St")["verified"]
 
     q2 = build("case2", report)
     wrong = lambda n: next(o for o in q2[n - 1]["options"] if o not in ("Elm St", "Bank Of America", "1978"))
-    assert not check_answer("case2", 1, wrong(1))["failed"]
-    assert check_answer("case2", 2, wrong(2))["failed"]
+    assert check_answer("case2", 1, wrong(1))["failed"]  # one miss: a staff member calls in the morning
 
     assert build("empty", None) == [] and check_answer("empty", 1, "x").get("error")
     assert build("fail", report, needed=0) == []  # CRS identity FAIL: nothing to ask
