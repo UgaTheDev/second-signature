@@ -6,7 +6,7 @@ Two people want Harold's money: a scammer and the US Treasury. Only one is owed 
 
 **The seat it fills:** the back office a small credit union can't afford to staff: the estate desk and the night fraud analyst.
 
-Live dashboard: https://second-signature-ai.vercel.app · Code: https://github.com/UgaTheDev/calhacks-winners-ouuu
+Live dashboard: https://second-signature-ai.vercel.app · Code: https://github.com/UgaTheDev/second-signature
 
 ## Inspiration
 
