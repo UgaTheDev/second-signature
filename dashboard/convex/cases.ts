@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { caseState, status } from "./schema";
+import { caseState, status, reviewCustomer } from "./schema";
 
 // Writes come only from the Python server. The deployment URL ships in the browser
 // bundle, so every mutation checks a shared secret set with
@@ -102,8 +102,9 @@ export const reviewSet = mutation({
   args: {
     secret: v.string(),
     reviewId: v.id("reviews"),
-    status: v.union(v.literal("running"), v.literal("proposed"), v.literal("approved"), v.literal("rejected"), v.literal("failed")),
+    status: v.union(v.literal("running"), v.literal("proposed"), v.literal("approved"), v.literal("rejected"), v.literal("failed"), v.literal("completed")),
     summary: v.optional(v.string()),
+    customers: v.optional(v.array(reviewCustomer)),
     diff: v.optional(v.string()),
   },
   handler: async (ctx, { secret, reviewId, ...patch }) => {

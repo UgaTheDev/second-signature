@@ -11,8 +11,8 @@ const passes = (r: ArenaRow) => r.passed === r.runs && r.critical === 0;
 function Num({ n, children, id }: { n: string; children: string; id?: string }) {
   return (
     <div id={id} className="flex scroll-mt-5 items-baseline gap-2.5">
-      <span className="font-serif text-[20px] text-muted" aria-hidden>{n}</span>
-      <h2 className="font-serif text-[20px] leading-[1.3] font-normal">{children}</h2>
+      <span className="font-sans text-[20px] text-muted" aria-hidden>{n}</span>
+      <h2 className="font-sans text-[20px] leading-[1.3] font-semibold">{children}</h2>
     </div>
   );
 }

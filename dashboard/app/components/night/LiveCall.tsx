@@ -2,7 +2,7 @@
 
 // Live call band: ringing / live / bridged / ended, derived from actions + transcript (deriveCall).
 import { useEffect, useState } from "react";
-import { deriveCall, familyName, firstName, toneVar, type QState, type Tone } from "../../lib/derive";
+import { deriveCall, firstName, toneVar, type QState, type Tone } from "../../lib/derive";
 import type { CaseDetail } from "../../lib/types";
 import { Waveform } from "./primitives";
 
@@ -40,14 +40,13 @@ export function LiveCall({ detail, now: outer }: { detail: CaseDetail; now?: num
   if (k === "none") return null;
 
   const first = firstName(detail.member_name);
-  const fam = familyName(detail.actions) ?? "Family";
   const bridged = k === "bridged";
-  const accentTone: Tone = bridged ? "family" : k === "ended" ? "muted" : "green";
+  const accentTone: Tone = bridged ? "muted" : k === "ended" ? "muted" : "green";
   const accent = toneVar(accentTone);
   const ok = call.qs.filter((q) => q.s === "ok").length;
   const verified = call.qs.length > 0 && ok === call.qs.length;
 
-  const title = k === "ringing" ? `Calling ${first}…` : k === "live" ? `On the line with ${first}` : bridged ? `${first} and ${fam} are talking` : "Call ended";
+  const title = k === "ringing" ? `Calling ${first}…` : k === "live" ? `On the line with ${first}` : bridged ? "Call transferred" : "Call ended";
   const sub = k === "ringing" ? "Twilio · ringing" : bridged ? "Private · not recorded" : k === "live" ? `Call in progress · ${call.startedAt ? mmss(now - call.startedAt) : "0:00"}` : "No one on the line";
   const speaking = k === "live" ? (call.speaking === "agent" ? "Agent speaking" : call.speaking === "member" ? `${first} speaking` : "Listening") : "";
 
@@ -101,18 +100,9 @@ export function LiveCall({ detail, now: outer }: { detail: CaseDetail; now?: num
             <span className={LANE}>Bayview agent{bridged && <span className="sr-only"> (left the line)</span>}</span>
             <span aria-hidden className="h-0 flex-1 border-t border-ink" style={{ borderTopStyle: bridged ? "dashed" : "solid" }} />
           </div>
-          <div className="flex items-center gap-3">
-            <span className={LANE} style={{ color: bridged ? "var(--family)" : undefined }}>{fam}{!bridged && <span className="sr-only"> (not on the call)</span>}</span>
-            <span aria-hidden className="h-px flex-1 transition-colors duration-1000" style={{ background: bridged ? "var(--family)" : "var(--line)" }} />
-          </div>
         </div>
       </div>
 
-      {bridged ? (
-        <p className="ss-in font-serif text-[18px] leading-snug text-family italic">The agent leaves the line.</p>
-      ) : (
-        <p className="text-[13px] text-muted">Family can join only if {first} is verified and asks.</p>
-      )}
     </section>
   );
 }

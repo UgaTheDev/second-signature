@@ -212,11 +212,11 @@ async def run_review():
     return {"ok": True}
 
 
-@app.post("/review/{decision}", dependencies=[Depends(analyst)])
-async def decide_review(decision: str):
+@app.post("/review/{review_id}/{member_id}/{decision}", dependencies=[Depends(analyst)])
+async def decide_review(review_id: str, member_id: str, decision: str):
     if decision not in ("approve", "reject"):
         raise HTTPException(404)
-    if why := await review.decide(decision == "approve"):
+    if why := await review.decide(decision == "approve", review_id, member_id):
         raise HTTPException(409, why)
     return {"ok": True}
 

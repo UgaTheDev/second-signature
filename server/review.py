@@ -7,15 +7,14 @@ What Droid can touch, enforced here rather than in its prompt:
   so a Read tool could reach server/.env.
 - Tools are restricted to Edit, autonomy is OFF (every action asks), and `_guard` approves
   only edits to that one scratch file and rejects everything else.
-- The approved file is the only thing copied back, and only if policy.md hasn't changed
-  since the review started. Hard hold rules live in gate.py; policy can't change them.
+- Approval replaces only the selected customer note, if that note is unchanged
+  since the review started. Shared guidance and other customer notes are preserved. Hard hold rules live in gate.py; policy can't change them.
 
 Triggers: 7am daily (server.py), the dashboard's "Run review now", or analysts overriding the agent
 (overrides.py: OVERRIDE_REVIEW_AT releases of the agent's holds since the last review).
 """
 
 import asyncio
-import difflib
 import json
 import pathlib
 import shutil
@@ -28,6 +27,9 @@ from droid_sdk import (
 from loguru import logger
 
 import store
+from members import MEMBERS
+from review_summary import parse_summary
+from customer_policy import proposal_notes, apply_note
 
 POLICY = pathlib.Path(__file__).with_name("policy.md")
 PROMPT = """You are the morning reviewer for a small credit union's overnight fraud desk.
@@ -35,12 +37,15 @@ Attached: cases.json (last night's cases: purchase, triage decision, signals, ra
 (the human-approved guidance triage reads). policy.md is also in your working directory; edit that file only.
 
 1. Find false positives (holds the member or an analyst released) and misses (purchases later confirmed as fraud).
-2. If the evidence supports it, make small edits to policy.md: refine member notes or guidance, citing the case outcome
+2. If the evidence supports it, edit ONLY the existing member note for the customer in cases.json.
+   Preserve all shared guidance and other member notes byte-for-byte. Cite the case outcome
    in a short parenthetical. Never weaken guidance on gift cards, wire transfers or crypto. Don't create other files.
    If nothing is warranted, change nothing.
-3. End with 2-3 plain sentences: what you changed and why, or why you changed nothing."""
+3. End with a JSON object only: {"summary": "Plain-language overview", "customers": [
+   {"member_id": "member value from cases.json", "summary": "What changed for this customer and why, or why no change was needed"}]}.
+   Include every customer in cases.json. Use plain sentences, no Markdown, code, file names, or literal policy edits."""
 
-_pending: dict = {}  # the proposal waiting for an analyst: {"review_id", "base", "new"}
+_pending: dict = {}  # review ID, customer statuses, and isolated member-note proposals
 _lock = asyncio.Lock()
 
 
@@ -76,58 +81,79 @@ async def run_review(cases: list[dict], trigger: str) -> str:
 
         overrides.reset_count()
         rid = await store.review_open(trigger)
-        base = POLICY.read_text()
-        work = pathlib.Path(tempfile.mkdtemp(prefix="ss-review-"))
-        (work / "policy.md").write_text(base)
-        summary = ""
-        try:
-            session = Session(
-                cwd=work,
-                config=SessionConfig(restrict_tools=["Edit"], autonomy=Autonomy.OFF),
-                interactions=InteractionHandlers(on_permission=_guard(work, rid)),
-            )
-            await store.review_step(rid, f"Droid started: {len(cases)} cases, policy.md ({len(base.splitlines())} lines)")
-            async with session:
-                try:  # make Droid's actual permissions part of the visible record
-                    tools = await session.list_tools()
-                    await store.review_step(rid, "tools: " + ", ".join(f"{t.id}{'' if t.allowed else ' (off)'}" for t in tools))
-                except Exception as e:
-                    await store.review_step(rid, f"tools: could not list ({e})")
-                async with session.stream(PROMPT, files=[
-                    Document.from_text(json.dumps(cases, indent=1), name="cases.json"),
-                    Document.from_text(base, name="policy.md"),
-                ]) as stream:
-                    async for ev in stream:
-                        if tool := getattr(ev, "tool_name", None):
-                            await store.review_step(rid, f"tool: {tool}")
-                        elif isinstance(ev, AssistantMessage) and ev.text:
-                            summary = ev.text
-                            await store.review_step(rid, ev.text[:300])
-            new = (work / "policy.md").read_text()
-            diff = "".join(difflib.unified_diff(base.splitlines(True), new.splitlines(True), "policy.md", "policy.md (proposed)"))
-            _pending.clear()
-            if diff:
-                _pending.update(review_id=rid, base=base, new=new)
-            await store.review_set(rid, "proposed", summary=summary.strip(), diff=diff)
-        except Exception as e:
-            logger.exception("review failed")
-            await store.review_set(rid, "failed", summary=f"Review failed: {e}")
-        finally:
-            shutil.rmtree(work, ignore_errors=True)
+        customers = [{"member_id": mid, "member_name": MEMBERS.get(mid, {}).get("name", mid),
+                      "summary": "", "status": "running"} for mid in sorted({c["member"] for c in cases})]
+        _pending.clear()
+        _pending.update(review_id=rid, customers=customers, proposals={})
+        await store.review_set(rid, "running", customers=customers)
+        for customer in customers:
+            mid = customer["member_id"]
+            base = POLICY.read_text()
+            work = pathlib.Path(tempfile.mkdtemp(prefix="ss-review-"))
+            (work / "policy.md").write_text(base)
+            summary = ""
+            try:
+                session = Session(
+                    cwd=work,
+                    config=SessionConfig(restrict_tools=["Edit"], autonomy=Autonomy.OFF),
+                    interactions=InteractionHandlers(on_permission=_guard(work, rid)),
+                )
+                member_cases = [c for c in cases if c["member"] == mid]
+                await store.review_step(rid, f"Reviewing {customer['member_name']}: {len(member_cases)} cases")
+                async with session:
+                    async with session.stream(PROMPT + f"\nCustomer note to edit: {customer['member_name']}. Member ID: {mid}.", files=[
+                        Document.from_text(json.dumps(member_cases, indent=1), name="cases.json"),
+                        Document.from_text(base, name="policy.md"),
+                    ]) as stream:
+                        async for ev in stream:
+                            if tool := getattr(ev, "tool_name", None):
+                                await store.review_step(rid, f"tool: {tool}")
+                            elif isinstance(ev, AssistantMessage) and ev.text:
+                                summary = ev.text
+                new = (work / "policy.md").read_text()
+                old_note, new_note = proposal_notes(base, new, customer["member_name"])
+                _, parsed = parse_summary(summary, [customer])
+                customer["summary"] = parsed[0]["summary"]
+                if not customer["summary"]:
+                    raise ValueError("Customer summary unavailable; run a new review.")
+                customer["status"] = "proposed" if old_note != new_note else "no_change"
+                if old_note != new_note:
+                    _pending["proposals"][mid] = {"base": old_note, "new": new_note}
+            except Exception:
+                logger.exception("customer review failed")
+                customer.update(status="failed", summary="This customer's review could not be completed. Run a new review.")
+            finally:
+                shutil.rmtree(work, ignore_errors=True)
+            await store.review_set(rid, "running", customers=customers)
+        await store.review_set(rid, _review_status(customers), customers=customers)
         return rid
 
 
-async def decide(approve: bool) -> str | None:
-    """Analyst approves or rejects the waiting proposal. Returns a refusal reason, or None."""
-    if not _pending:
-        return "no proposal is waiting"
-    if approve:
-        if POLICY.read_text() != _pending["base"]:
-            return "policy.md changed since this review ran; run the review again"
-        POLICY.write_text(_pending["new"])
-    await store.review_set(_pending["review_id"], "approved" if approve else "rejected")
-    _pending.clear()
-    return None
+def _review_status(customers: list[dict]) -> str:
+    return "proposed" if any(c["status"] == "proposed" for c in customers) else "completed"
+
+
+async def decide(approve: bool, review_id: str, member_id: str) -> str | None:
+    """Apply only the selected member's note; unrelated proposals remain pending."""
+    if _lock.locked():
+        return "a review or decision is in progress; try again"
+    async with _lock:
+        if not _pending or _pending["review_id"] != review_id:
+            return "this review is no longer available; run a new review"
+        customer = next((c for c in _pending["customers"] if c["member_id"] == member_id), None)
+        proposal = _pending["proposals"].get(member_id)
+        if not customer or customer["status"] != "proposed" or not proposal:
+            return "no proposal is waiting for this customer"
+        if approve:
+            try:
+                updated = apply_note(POLICY.read_text(), customer["member_name"], proposal["base"], proposal["new"])
+            except ValueError as e:
+                return str(e)
+            POLICY.write_text(updated)
+        customer["status"] = "approved" if approve else "rejected"
+        del _pending["proposals"][member_id]
+        await store.review_set(review_id, _review_status(_pending["customers"]), customers=_pending["customers"])
+        return None
 
 
 def case_files(cases) -> list[dict]:

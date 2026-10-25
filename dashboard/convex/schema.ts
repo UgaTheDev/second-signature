@@ -19,6 +19,8 @@ export const caseState = v.object({
   bridged: v.boolean(),
 });
 
+export const reviewCustomer = v.object({ member_id: v.string(), member_name: v.string(), summary: v.string(), status: v.optional(v.union(v.literal("running"), v.literal("proposed"), v.literal("approved"), v.literal("rejected"), v.literal("no_change"), v.literal("failed"))) });
+
 export default defineSchema({
   cases: defineTable({
     member_id: v.string(),
@@ -50,9 +52,10 @@ export default defineSchema({
   reviews: defineTable({
     started_at: v.number(),
     trigger: v.string(), // schedule | analyst | overrides
-    status: v.union(v.literal("running"), v.literal("proposed"), v.literal("approved"), v.literal("rejected"), v.literal("failed")),
+    status: v.union(v.literal("running"), v.literal("proposed"), v.literal("approved"), v.literal("rejected"), v.literal("failed"), v.literal("completed")),
     steps: v.array(v.string()), // Droid's visible steps (bounded)
     summary: v.string(),
+    customers: v.optional(v.array(reviewCustomer)),
     diff: v.string(), // unified diff of policy.md; empty if no change proposed
   }),
 

@@ -118,6 +118,7 @@ export function sampleDesk(now = Date.now()) {
   };
 
   const review: Review = {
+    _id: "sample-review",
     started_at: now - 3 * 60 * MIN, trigger: "overrides", status: "proposed",
     steps: [
       "Droid started: 5 cases, policy.md (14 lines)",
@@ -126,6 +127,10 @@ export function sampleDesk(now = Date.now()) {
       "I changed one line: Dolores has now bought a bike for a grandchild's birthday, so small sporting goods purchases are weaker evidence.",
     ],
     summary: "Changed one member note: a $300 bike for her grandson's birthday was a false positive. Gift card guidance is unchanged.",
+    customers: [
+      { member_id: "dolores", member_name: "Dolores Whitcomb", status: "proposed", summary: "Treat small sporting-goods gifts around her grandson’s birthday as weaker risk signals. Her verified $300 bicycle purchase was a false positive. Gift-card safeguards remain unchanged." },
+      { member_id: "robert", member_name: "Robert Chen", status: "no_change", summary: "No change proposed. Small gift-card purchases remain consistent with his established spending history." },
+    ],
     diff:
       "--- policy.md\n+++ policy.md (proposed)\n@@ -11,2 +11,3 @@\n ## Member notes\n - Dolores Whitcomb: groceries, pharmacy, utilities, church and the occasional cafe. No gift cards, electronics or wires ever.\n+  Her grandson Leo's birthday is Oct 26, so a small gift such as a bike is expected (case Bay Cycles $300, released by her).\n",
   };
