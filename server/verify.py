@@ -9,6 +9,7 @@ fraud alert); a CRS identity FAIL means no questions at all, so the call escalat
 import random
 import re
 
+LIVE_QUESTIONS = 1  # ponytail: demo speed. Live calls ask one question (a guesser passes 1 in 4); raise to 3 for production
 NEEDED = 3  # all of them: at 2 of 3, a guesser passes ~16% (the arena caught 2 impostors at 260 calls); at 3 of 3, 1 in 64
 DECOY_STREETS = ["Maple Ave", "Harbor Blvd", "Cedar Ln", "Mission St", "Lincoln Way", "Elm St", "Pacific Ave"]
 # Decoys must be as plausible as the real answer: a caller who knows her city picks the one local-sounding street,
@@ -32,7 +33,7 @@ def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", str(s).lower())
 
 
-def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | None = None) -> list[dict]:
+def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | None = None, max_q: int = 3) -> list[dict]:
     """Make up to 3 multiple-choice questions from a CRS standard-format credit report."""
     report = report or {}
     rng = random.Random(case_id)
@@ -61,7 +62,7 @@ def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | N
         qs.append(("About what year did you open your oldest credit account?", str(y), [str(y + d) for d in (-10, -7, -4, 4, 7, 10)]))  # real year at a random rank, never "the 2nd oldest"
 
     questions, answers = [], []
-    for text, real, decoys in (qs if needed else []):
+    for text, real, decoys in (qs[:max_q] if needed else []):
         options = rng.sample(decoys, 3) + [real]
         rng.shuffle(options)
         questions.append({"number": len(questions) + 1, "question": text, "options": options})
@@ -81,7 +82,7 @@ def check_answer(case_id: str, number: int, answer: str) -> dict:
     """Returns {"correct", "verified", "failed"}; never the right answer."""
     s = _state.get(case_id)
     if not s or not 1 <= number <= len(s["answers"]):
-        return {"error": "no such question"}
+        return {"error": "no such question: call check_answer again with question_number and the option she picked; this is not a failure"}
     if number in s["asked"]:
         return {"error": "that question was already answered; ask a different one"}
     if _norm(answer) not in {_norm(o) for o in s["questions"][number - 1]["options"]}:
@@ -135,6 +136,7 @@ if __name__ == "__main__":
     opts = qa[0]["options"]  # exactly one of hers among same-format decoys, no bank names to give it away
     assert all(o.startswith("Former Lender") for o in opts) and sum(int(o.split()[-1]) <= 6 for o in opts) == 1, opts
     assert _state["anon"]["needed"] == 2  # sandbox file: lender + year, both required
+    assert len(build("one", report, max_q=1)) == 1 and _state["one"]["needed"] == 1  # live calls: one question, and it must be right
     build("empty", {}, needed=2)
     assert _state["empty"]["needed"] == 2 and not check_answer("empty", 1, "x").get("verified")  # nothing to ask != verified
     print("verify ok")
