@@ -1,4 +1,4 @@
-// 07 The walls: permission matrix. Static content from derive.MATRIX (enforced in server/gate.py). No hooks.
+// The walls: permission matrix. Static content from derive.MATRIX (enforced in server/gate.py). No hooks.
 import { MATRIX, type MatrixCell } from "../../lib/derive";
 import { Stamp } from "./primitives";
 
@@ -26,7 +26,7 @@ export function Walls({ id = "matrix" }: { id?: string }) {
     <section aria-labelledby={`${id}-title`} className="border-t border-line px-4 py-12 sm:px-9">
       <div className="flex max-w-[1100px] flex-col gap-6">
         <div id={id} className="flex scroll-mt-5 flex-col gap-1.5">
-          <span className="text-[13px] text-muted">07 · The walls · permission matrix</span>
+          <span className="text-[13px] text-muted">The walls · permission matrix</span>
           <h2 id={`${id}-title`} className="font-sans text-[20px] leading-[1.3] font-semibold text-balance">
             It can <em className="text-red">never</em> move money on its own.
           </h2>

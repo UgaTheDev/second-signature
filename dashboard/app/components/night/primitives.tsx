@@ -56,7 +56,7 @@ export function Kicker({ children, tone = "muted", className }: { children: Reac
   );
 }
 
-/** "01  Tonight's ledger": small muted number + 20px serif title + hairline. `id` is the nav anchor. */
+/** Section title + optional aside + hairline. `id` is the nav anchor. */
 export function SectionHead({ title, aside, id, className }: { title: ReactNode; aside?: ReactNode; id?: string; className?: string }) {
   return (
     <div id={id} className={cx("flex scroll-mt-5 items-baseline gap-3 border-b border-line pb-3", className)}>

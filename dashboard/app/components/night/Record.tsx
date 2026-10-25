@@ -1,6 +1,6 @@
 "use client";
 
-// 03 The record: actions + transcript merged by time. Auto-scrolls to the newest entry.
+// The record: actions + transcript merged by time. Auto-scrolls to the newest entry.
 import { useEffect, useRef } from "react";
 import { actionLabel, actionTone, firstName, toneVar, type Tone } from "../../lib/derive";
 import { clock } from "../../lib/format";
