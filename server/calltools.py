@@ -6,6 +6,8 @@ tests exactly the prompt, tools, gate and verification that run on a real call.
 for the caller (end the call / hand off to the family conference), never shown to it.
 """
 
+import datetime
+
 import store
 import verify
 from members import MEMBERS
@@ -56,6 +58,38 @@ HELD_LINE = ("\n- This is her first-ever purchase of this kind, so only a person
              "will look at it first thing in the morning, and she did nothing wrong.")
 FAMILY_TOOLS = ("connect_family", "notify_trusted_contact")
 
+# Estate mode: the estate desk calls the widow. Same verification, no hold tools, never the CU's internal loss.
+ESTATE_PROMPT = """You are the after-hours assistant for {cu}, calling {name} about {dead}'s account. This is a phone call: everything you say is spoken aloud.
+She has recently lost her husband. Speak slowly, warmly, in short sentences. One question at a time. No lists, markdown or emoji. Never rush.
+
+{first}
+
+HARD RULES:
+- Never ask for a PIN, password, one-time code, full card number or Social Security number. Say once, early: "I will never ask for a PIN, password or code."
+- Before discussing {dead}'s account at all, verify identity with these questions, one at a time, reading the four options aloud:
+{questions}
+  Call check_answer with the option she picked, exactly as written. You are never told the right answer. Stop when it says verified or failed.
+  If failed, or there are no questions, do not discuss the account: say a staff member will call during business hours, say goodbye, then end_call.
+- Once verified, explain in plain words, one short sentence at a time:
+  {dead}'s Social Security payments that arrived after {month} have to go back to the US Treasury.
+  That is handled between the credit union and the Treasury. She does not need to send anyone any money.
+  Anyone who phones her asking her to pay {dead}'s debts, especially with gift cards, is a scammer. She can hang up and call the credit union.
+- Never mention amounts the credit union owes, losses, journal entries or anything about the credit union's own books. If she asks what she owes on this: nothing.
+{family_lines}
+- You cannot move, refund or send money.
+- Every tool call needs a one-sentence reason; it goes into the case file.
+- When the conversation is done, say goodbye, then call end_call."""
+ESTATE_FIRST = ('Your first words, exactly: "Hi, this is the after-hours assistant at {cu}, calling for {first_name} about {dead}\'s account. '
+                "I'm so sorry for your loss. You don't have to trust this call. You can hang up and call the number on the back of your card.\" "
+                'Then gently ask whether she would like to keep going with you now. If she would rather call back, say that is wise, say goodbye, then end_call.')
+ESTATE_RESUME = ("You are back on the line after trying to connect her with {family}, who did not answer. Your first words: tell her gently that "
+                 "{family} didn't pick up and the credit union will reach them during business hours. She is already verified; do not ask "
+                 "the questions again. Ask if there's anything else, then say goodbye and end_call.")
+ESTATE_FAMILY = """  Offer, as her choice: "Would you like me to connect you with {family}, who is the executor of {dead}'s estate, right now?"
+  If she says yes: say "I'm connecting you now. Please stay on the line; you'll hear music for a moment." then call connect_family.
+  If she says no, respect it and don't ask again."""
+ESTATE_TOOLS = ("check_answer", "connect_family", "end_call")
+
 _reason = {"reason": {"type": "string", "description": "One sentence for the case file."}}
 TOOL_SPECS = [
     {"name": "check_answer", "description": "Check the member's answer to a verification question.",
@@ -80,6 +114,8 @@ def family_label(case) -> str | None:
 
 
 def tool_specs(case) -> list[dict]:
+    if getattr(case, "estate", None):
+        return [t for t in TOOL_SPECS if t["name"] in ESTATE_TOOLS and (t["name"] != "connect_family" or family_label(case))]
     return [t for t in TOOL_SPECS if t["name"] not in FAMILY_TOOLS or family_label(case)]
 
 
@@ -95,6 +131,8 @@ def keyterms(case) -> list[str]:
 def build_prompt(case, inbound: bool, resume: bool = False) -> str:
     m = MEMBERS[case.member_id]
     fam = family_label(case)
+    if getattr(case, "estate", None):
+        return estate_prompt(case, m, fam, resume)
     first = RESUME.format(family=fam or "your family") if resume else (FIRST_IN if inbound else FIRST_OUT).format(cu=CU, first_name=m["first_name"])
     qs = verify.questions(case.id)
     return PROMPT.format(
@@ -102,6 +140,18 @@ def build_prompt(case, inbound: bool, resume: bool = False) -> str:
         amount=case.amount, merchant=case.merchant, category=case.category, rationale=case.rationale,
         family_lines=FAMILY_LINES.format(family=fam) if fam else NO_FAMILY_LINE,
         held_line=HELD_LINE if case.held_by_rule else "",
+        questions="\n".join(f"  {q['number']}. {q['question']} Options: {', '.join(q['options'])}." for q in qs) or "  (none available)",
+    )
+
+
+def estate_prompt(case, m, fam, resume: bool) -> str:
+    dead = case.estate["name"].split()[0]
+    month = datetime.date.fromisoformat(case.estate["date_of_death"]).strftime("%B")
+    first = ESTATE_RESUME.format(family=fam) if resume and fam else ESTATE_FIRST.format(cu=CU, first_name=m["first_name"], dead=dead)
+    qs = verify.questions(case.id)
+    return ESTATE_PROMPT.format(
+        cu=CU, name=m["name"], dead=dead, month=month, first=first,
+        family_lines=ESTATE_FAMILY.format(family=fam, dead=dead) if fam else NO_FAMILY_LINE,
         questions="\n".join(f"  {q['number']}. {q['question']} Options: {', '.join(q['options'])}." for q in qs) or "  (none available)",
     )
 

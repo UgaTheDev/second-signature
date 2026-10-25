@@ -6,6 +6,7 @@ import { ArenaHonesty } from "./components/night/ArenaHonesty";
 import { CasePanel } from "./components/night/CasePanel";
 import { Cinema } from "./components/night/Cinema";
 import { Dossier } from "./components/night/Dossier";
+import { EstatesPanel } from "./components/night/EstatesPanel";
 import { HeaderStrip } from "./components/night/HeaderStrip";
 import { KpiBand } from "./components/night/KpiBand";
 import { Ledger } from "./components/night/Ledger";
@@ -21,7 +22,7 @@ import { DemoContext, useCaseDetail, useCases, useReview, useStats } from "./lib
 
 const noop = () => () => {};
 
-const VIEWS: View[] = ["cases", "shield", "review", "safety"];
+const VIEWS: View[] = ["cases", "shield", "estates", "review", "safety"];
 // Old section anchors still land on the view that holds them.
 const LEGACY: Record<string, View> = { matrix: "safety", arena: "safety", honesty: "safety" };
 const viewFromHash = (): View => {
@@ -162,6 +163,7 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
             </>
           )}
           {view === "shield" && <div className={single}><ShieldPanel cases={cases} /></div>}
+          {view === "estates" && <div className={single}><EstatesPanel /></div>}
           {view === "review" && <div className={single}><ReviewPanel /></div>}
           {view === "safety" && (
             <div className={`${single} flex flex-col gap-12`}>

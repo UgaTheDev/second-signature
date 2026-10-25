@@ -64,6 +64,28 @@ export default defineSchema({
     rows: v.array(v.object({ scenario: v.string(), kind: v.string(), passed: v.number(), runs: v.number(), critical: v.number(), misses: v.string() })),
   }),
 
+  // Estate desk: compute() output per estate (data mirrors server/estate.py); the controller signs it.
+  estates: defineTable({
+    key: v.string(),
+    data: v.any(), // ponytail: shape owned by server/estate.py; typed on the dashboard side (lib/types.ts)
+    status: v.union(v.literal("drafted"), v.literal("signed")),
+    signed_by: v.optional(v.string()),
+    signed_at: v.optional(v.number()),
+    updated_at: v.number(),
+  }).index("by_key", ["key"]),
+
+  // append-only general ledger: written once, on sign
+  journal: defineTable({
+    estate_key: v.string(),
+    t: v.number(),
+    account: v.string(),
+    dr: v.number(),
+    cr: v.number(),
+    memo: v.string(),
+    source: v.string(),
+    by: v.string(),
+  }).index("by_estate_t", ["estate_key", "t"]),
+
   transcript: defineTable({
     caseId: v.id("cases"),
     t: v.number(),

@@ -3,6 +3,7 @@
 The prompt and tool effects live in calltools.py (shared with arena.py). Modes, chosen
 from the stream parameters set in server.py /twiml:
 - member (outbound call, or inbound callback to the card number): verify, then talk it through
+- estate: like member, but the case carries an estate (calltools.estate_prompt): verify, then explain the Treasury reclamation
 - family: one-way Cartesia message to the trusted contact, then hang up
 - bridge: short Cartesia intro to the trusted contact, then she joins the member in a live call
 - no open case on an inbound call: short message, then hang up
@@ -192,9 +193,10 @@ async def bot(runner_args: RunnerArguments):
     elif mode == "bridge" and case and fam:
         await store.action(case.id, "family_bridge", "agent", f"{fam['name']} answered; joining her to {m['first_name']}'s call. The agent leaves the line.")
         serializer.hand_off()
+        about = f"{case.estate['name']}'s estate" if getattr(case, "estate", None) else "a payment we paused tonight"
         await one_way(transport, runner_args,
                       f"Hi {fam['name']}, this is the after-hours assistant at {CU}. Your {kin} {m['first_name']} is on the line "
-                      "and asked to talk with you about a payment we paused tonight. We will never ask you for codes or passwords. "
+                      f"and asked to talk with you about {about}. We will never ask you for codes or passwords. "
                       "Connecting you now.")
     elif case:
         try:

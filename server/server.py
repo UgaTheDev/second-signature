@@ -7,7 +7,9 @@ Twilio number's inbound Voice webhook at {LOCAL_SERVER_URL}/twiml (POST).
 import asyncio
 import datetime
 import hmac
+import json
 import os
+import time
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
@@ -24,12 +26,17 @@ from twilio.request_validator import RequestValidator  # noqa: E402
 from twilio.twiml.voice_response import Connect, Dial, Stream, VoiceResponse  # noqa: E402
 
 import agent  # noqa: E402
+import anthropic  # noqa: E402
+import crs  # noqa: E402
+import estate  # noqa: E402
+import gate  # noqa: E402
 import intel  # noqa: E402
 import nessie  # noqa: E402
 import review  # noqa: E402
 import shield  # noqa: E402
 import store  # noqa: E402
-from members import MEMBERS, by_phone, seed  # noqa: E402
+import verify  # noqa: E402
+from members import MEMBERS, by_phone, member_phone, seed  # noqa: E402
 
 
 @asynccontextmanager
@@ -106,7 +113,7 @@ async def twiml(request: Request):
     connect.append(stream)
     response = VoiceResponse()
     response.append(connect)
-    if case_id and mode in ("member", "bridge"):
+    if case_id and mode in ("member", "bridge", "estate"):
         # Only reached if the bot ends its stream WITHOUT hanging up, i.e. when bridging to family (bot.py)
         dial = Dial()
         # member waits with hold music until family joins and starts the conference
@@ -219,6 +226,94 @@ async def decide_review(decision: str):
     if why := await review.decide(decision == "approve"):
         raise HTTPException(409, why)
     return {"ok": True}
+
+
+def estate_data(key: str | None = None):
+    """compute() for one estate (404 if unknown) or all of them, each with the planted-error score."""
+    correct, total = estate.score()
+    out = [estate.compute(e) | {"score": {"correct": correct, "total": total}} for e in estate.load() if key in (None, e["key"])]
+    if key and not out:
+        raise HTTPException(404, f"no estate {key!r}")
+    return out
+
+
+def estate_case(d: dict, cid: str) -> gate.Case:
+    return gate.Case(cid, "dolores", cid, f"{d['name']} estate", "estate", d["return_now"], estate=d)
+
+
+@app.post("/estates/run", dependencies=[Depends(analyst)])
+async def estates_run():
+    ds = estate_data()
+    await asyncio.gather(*(store.estate_upsert(d["key"], d) for d in ds))
+    return [{k: d[k] for k in ("key", "decision", "cu_liability")} for d in ds]
+
+
+class Signer(BaseModel):
+    by: str = Field("Controller", min_length=1, max_length=60)
+
+
+@app.post("/estates/{key}/sign", dependencies=[Depends(analyst)])
+async def estates_sign(key: str, s: Signer | None = None):
+    d = estate_data(key)[0]
+    case = estate_case(d, f"estate-{key}")
+    for action in ("post_journal",) + (("sign_loss",) if d["needs_controller"] else ()):
+        if why := gate.check(action, case, "human"):
+            raise HTTPException(409, why)
+    await store.estate_upsert(key, d)  # sign posts the journal stored in Convex: make it this one (no-op once signed)
+    try:
+        await store.estate_sign(key, (s or Signer()).by)
+    except Exception as e:
+        raise HTTPException(502, f"signature not recorded: {e}")
+    return {"ok": True}
+
+
+WHY_MODEL = "claude-opus-5-5"
+WHY_SYSTEM = ("You explain a credit union estate-desk decision to its controller. Use ONLY the JSON you are given; add no facts, "
+              "no law and no numbers that are not in it. 3 to 5 short plain sentences, no markdown. End every sentence with the "
+              "source id or rule it rests on, in brackets, e.g. [rep_note-1] or [31 CFR 210.11], exactly as written in the JSON.")
+_why_llm = None
+
+
+@app.post("/estates/{key}/why", dependencies=[Depends(analyst)])
+async def estates_why(key: str):
+    global _why_llm
+    d = estate_data(key)[0]
+    try:
+        _why_llm = _why_llm or anthropic.AsyncAnthropic(timeout=30, max_retries=1)
+        r = await _why_llm.messages.create(model=WHY_MODEL, max_tokens=700, system=WHY_SYSTEM,
+                                           messages=[{"role": "user", "content": json.dumps(d)}])
+        text = " ".join(b.text for b in r.content if b.type == "text").strip()
+        if text:
+            return {"text": text}
+    except Exception as e:
+        logger.warning(f"estate why: {e}; using the template")
+    # ponytail: template fallback straight from compute()'s findings
+    lead = f"Decision: {d['decision'].replace('_', ' ')}, credit union liability ${d['cu_liability']:,.2f} [{d['liability_basis']}]."
+    return {"text": " ".join([lead] + [f"{f['text']} [{f['rule']}]" for f in d["findings"]])}
+
+
+@app.post("/estates/{key}/call", dependencies=[Depends(analyst)])
+async def estates_call(key: str):
+    """The estate desk calls Dolores (real Twilio call, mode "estate", same /twiml + bot pipeline)."""
+    d = estate_data(key)[0]
+    if d["decision"] == "recipient_alive":
+        raise HTTPException(409, "the recipient is alive: there is no estate to call about")
+    if not (member_phone("dolores") and os.getenv("LOCAL_SERVER_URL") and os.getenv("TWILIO_NUMBER")):
+        raise HTTPException(409, "MEMBER_PHONE, LOCAL_SERVER_URL and TWILIO_NUMBER must be set to place the call")
+    m = MEMBERS["dolores"]
+    txn_id = f"estate-{key}-{int(time.time())}"
+    # status "allowed": a case file for the transcript, never a held purchase the watcher or resume() picks up
+    cid = await store.open_case(member_id="dolores", member_name=m["name"], txn_id=txn_id, merchant=f"{d['name']} estate",
+                                category="estate", amount=float(d["return_now"]), status="allowed", risk_signals=[],
+                                plan="Estate desk: tell her the Treasury repayment is the credit union's, not hers",
+                                decision_rationale=f"Estate {key}: {d['decision'].replace('_', ' ')}")
+    case = estate_case(d, cid)
+    agent.CASES[cid] = case
+    data = await crs.pull("dolores", m["crs"])
+    verify.build(cid, data.get("report"), crs.answers_needed(data), city=m.get("city"))
+    await store.action(cid, "call", "agent", f"Estate desk calling {m['first_name']} about {d['name']}'s account")
+    await agent.dial(case, member_phone("dolores"), "estate")
+    return {"ok": True, "case_id": cid}
 
 
 @app.post("/reset", dependencies=[Depends(analyst)])

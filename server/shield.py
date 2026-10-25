@@ -58,7 +58,8 @@ PREFILTER = re.compile(
     r"gift ?cards?|read (me )?the (numbers|codes)|don'?t tell|keep (this|it) (a )?secret|microsoft|apple support|"
     r"tech(nical)? support|hacked|virus|remote access|irs|social security|warrant|arrest|police|bail|jail|"
     r"wire (the )?money|bitcoin|crypto|western union|zelle|grand(son|daughter|ma)|your bank (may be|is) involved|"
-    r"one[- ]time (pass)?code|verification code|fraud department|suspicious activity|medicare|amazon|cash ?app|venmo",
+    r"one[- ]time (pass)?code|verification code|fraud department|suspicious activity|medicare|amazon|cash ?app|venmo|"
+    r"debts?|collections?|widow",
     re.I)
 
 SESSIONS: dict[str, dict] = {}  # conference name -> live call state (in memory only)
@@ -72,7 +73,7 @@ _TASKS: set = set()  # keep background whisper retries referenced until they fin
 class Verdict(BaseModel):
     scam: bool
     confidence: float
-    scam_type: str  # tech_support | government_impersonation | family_emergency | romance | other | none
+    scam_type: str  # tech_support | government_impersonation | family_emergency | romance | debt_collection | other | none
     evidence: str  # the caller's exact words that show it (case file only, never spoken to her)
 
 
@@ -251,9 +252,12 @@ async def classify(transcript: str) -> Verdict:
     r = await _llm.messages.parse(
         model=MODEL, max_tokens=600, output_format=Verdict, output_config={"effort": "low"},
         system=("You listen to the CALLER's side of a phone call to an older adult and decide whether it is a scam script "
-                "(tech support, government or bank impersonation, family emergency, romance, prize). Asking for gift cards, "
+                "(tech support, government or bank impersonation, family emergency, romance, prize, or a fake debt collector, "
+                "including one telling a widow or relative she must pay a deceased person's debts). Asking for gift cards, "
                 "wires, crypto or cash, secrecy from the bank or family, urgency, or remote computer access are strong signs. "
-                "A relative chatting about a birthday gift card is not a scam. Quote the caller's exact words as evidence."),
+                "Real creditors of someone who died bill the estate or executor in writing and never demand gift cards. A relative chatting about a birthday gift card, or a "
+                "billing office asking the executor to call back with no payment demanded, is not a scam. "
+                "Quote the caller's exact words as evidence."),
         messages=[{"role": "user", "content": f"Caller so far:\n{transcript}"}],
     )
     return r.parsed_output or Verdict(scam=False, confidence=0, scam_type="none", evidence="")

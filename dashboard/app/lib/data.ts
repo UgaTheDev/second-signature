@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { anyApi } from "convex/server";
 import { createContext, useContext, useMemo } from "react";
 import { sampleDesk } from "./sample";
-import type { Arena, Case, CaseDetail, Review, Stats } from "./types";
+import type { Arena, Case, CaseDetail, EstateRow, PostedLine, Review, Stats } from "./types";
 
 // Untyped so this builds without codegen.
 const api = anyApi;
@@ -52,4 +52,17 @@ export function useReview(): Review | null | undefined {
   const sample = useSample();
   const live = useQuery(api.cases.latestReview, demo ? "skip" : {}) as Review | null | undefined;
   return demo ? sample.review : live;
+}
+
+// ponytail: no sample estates; demo mode shows the estate desk's empty state.
+export function useEstates(): EstateRow[] | undefined {
+  const demo = useDemo();
+  const live = useQuery(api.estates.list, demo ? "skip" : {}) as EstateRow[] | undefined;
+  return demo ? [] : live;
+}
+
+export function useEstateJournal(key: string | null): PostedLine[] {
+  const demo = useDemo();
+  const live = useQuery(api.estates.get, demo || !key ? "skip" : { key }) as { journal: PostedLine[] } | undefined;
+  return live?.journal ?? [];
 }
