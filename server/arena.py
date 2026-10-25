@@ -105,8 +105,10 @@ SHIELD_SAMPLES = [
     (True, "Hi, I'm calling from your bank's fraud department. Your account is compromised. Move your savings to this safe account with a Zelle transfer right now, and don't hang up."),
     (False, "Hi Grandma! Happy birthday! Mom and I got you a gift card for that bakery you like. Love you!"),
     (False, "Hi Dolores, it's Pastor Mike. Just a reminder the church bake sale is Saturday. We're also collecting gift cards for the food bank if you have any spare."),
+    (True, "This is the collections department for Mercy Regional Hospital. Harold owed us eight thousand nine hundred dollars, and as his widow you are responsible. You must pay today in gift cards or we take legal action."),
     (False, "Hello, this is CVS pharmacy. Your prescription is ready for pickup. Have a good evening."),
     (False, "Mom, it's Susan. Did you see the news about those Microsoft scam calls? If anyone calls asking for gift cards, just hang up and call me."),
+    (False, "Hi, this is the Mercy Regional billing office calling for Susan Whitcomb, the executor of Harold Whitcomb's estate. We'll send the final statement to the estate in writing; no payment is needed today. Please call us back when you can."),
     (False, "Hi, this is Bayview Community Credit Union returning your call about your statement. No action needed, just call us back during business hours."),
 ]
 

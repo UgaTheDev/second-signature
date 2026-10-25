@@ -5,7 +5,7 @@ import { caseState, status, reviewCustomer } from "./schema";
 // Writes come only from the Python server. The deployment URL ships in the browser
 // bundle, so every mutation checks a shared secret set with
 // `npx convex env set CASE_WRITE_SECRET <value>`.
-function auth(secret: string) {
+export function auth(secret: string) {
   if (!process.env.CASE_WRITE_SECRET || secret !== process.env.CASE_WRITE_SECRET) {
     throw new Error("forbidden");
   }
@@ -178,7 +178,7 @@ export const reset = mutation({
   args: { secret: v.string() },
   handler: async (ctx, { secret }) => {
     auth(secret);
-    for (const table of ["actions", "transcript", "cases", "reviews"] as const) {
+    for (const table of ["actions", "transcript", "cases", "reviews", "estates", "journal"] as const) {
       for (const doc of await ctx.db.query(table).take(4000)) await ctx.db.delete(doc._id);
     }
   },

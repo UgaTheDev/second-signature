@@ -1,0 +1,125 @@
+{
+  "estates": [
+    {
+      "key": "harold",
+      "member_id": "dolores",
+      "deceased": {"name": "Harold Whitcomb", "full_name": "Harold James Whitcomb", "ssn_last4": "4417", "born": "1944-11-02", "executor": "Susan Whitcomb"},
+      "account": {"name": "Joint share account ...0418", "owner_names": ["Harold Whitcomb", "Dolores Whitcomb"], "balance_at_notice": 535.00},
+      "sources": [
+        {"id": "cert-hw", "kind": "certificate", "date": "2026-03-19", "dod": "2026-03-14", "says": "CA certificate of death no. 3202638147 (Santa Barbara County): Harold James Whitcomb died 03/14/2026, Cottage Hospital"},
+        {"id": "note-hw", "kind": "rep_note", "date": "2026-03-20", "says": "MSR M. Alvarez, branch 02: 'daughter called, Harold passed. Sent bereavement packet. No change to acct per Dolores.'"},
+        {"id": "crs-hw", "kind": "crs", "date": "2026-04-22", "dod": "2026-03-15", "says": "CRS credit file: deceased indicator X reported by CHASE CARD 04/22/2026, date of death 03/15/2026"},
+        {"id": "card-hw", "kind": "card_activity", "date": "2026-03-11", "in_person": false, "says": "Debit card ...7720 (Harold): last use 03/11/2026 SAFEWAY #1187 GOLETA; no activity since"},
+        {"id": "dne-hw", "kind": "dne", "date": "2026-06-10", "received": "2026-06-10", "dod": "2026-03-14", "says": "ACH DNE from SSA via FRB: payee HAROLD J WHITCOMB, SSN xxx-xx-4417, date of death 031426"}
+      ],
+      "deposits": [
+        {"id": "dep-hw-0303", "date": "2026-03-03", "amount": 1045.00, "trace": "031036030318227", "payee": "SSA TREAS 310 XXSOC SEC HAROLD J WHITCOMB", "returned_r15": false},
+        {"id": "dep-hw-0403", "date": "2026-04-03", "amount": 1045.00, "trace": "031036030409114", "payee": "SSA TREAS 310 XXSOC SEC HAROLD J WHITCOMB", "returned_r15": false},
+        {"id": "dep-hw-0503", "date": "2026-05-03", "amount": 1045.00, "trace": "031036030501762", "payee": "SSA TREAS 310 XXSOC SEC HAROLD J WHITCOMB", "returned_r15": false},
+        {"id": "dep-hw-0603", "date": "2026-06-03", "amount": 1045.00, "trace": "031036030602908", "payee": "SSA TREAS 310 XXSOC SEC HAROLD J WHITCOMB", "returned_r15": false},
+        {"id": "dep-hw-0703", "date": "2026-07-03", "amount": 1045.00, "trace": "031036030703345", "payee": "SSA TREAS 310 XXSOC SEC HAROLD J WHITCOMB", "returned_r15": true}
+      ],
+      "withdrawals": [
+        {"id": "wd-hw-0407", "date": "2026-04-07", "amount": 900.00, "by": "Dolores Whitcomb"},
+        {"id": "wd-hw-0506", "date": "2026-05-06", "amount": 1200.00, "by": "Dolores Whitcomb"},
+        {"id": "wd-hw-0605", "date": "2026-06-05", "amount": 1100.00, "by": "Dolores Whitcomb"}
+      ],
+      "fs133": {"id": "FS133-26-0720-0911", "received": "2026-07-20", "claimed": ["dep-hw-0403", "dep-hw-0503", "dep-hw-0603", "dep-hw-0703"], "total": 4180.00}
+    },
+    {
+      "key": "eleanor",
+      "member_id": "m-20417",
+      "deceased": {"name": "Eleanor Marsh", "full_name": "Eleanor Ruth Marsh", "ssn_last4": "0962", "born": "1939-06-21", "executor": "Thomas Marsh"},
+      "account": {"name": "Share savings ...2275", "owner_names": ["Eleanor Marsh"], "balance_at_notice": 5870.22},
+      "sources": [
+        {"id": "dne-em", "kind": "dne", "date": "2026-07-14", "received": "2026-07-14", "dod": "2026-04-02", "says": "ACH DNE from SSA via FRB: payee ELEANOR R MARSH, SSN xxx-xx-0962, date of death 040226"},
+        {"id": "cert-em", "kind": "certificate", "date": "2026-05-08", "dod": "2026-05-02", "says": "CA certificate of death no. 3202641905 (Santa Clara County): Eleanor Ruth Marsh died 05/02/2026, filed by son Thomas"},
+        {"id": "crs-em", "kind": "crs", "date": "2026-06-30", "dod": "2026-05-02", "says": "CRS credit file: deceased indicator X reported by WELLS FARGO 06/30/2026, date of death 05/02/2026"}
+      ],
+      "deposits": [
+        {"id": "dep-em-0408", "date": "2026-04-08", "amount": 1612.00, "trace": "031036030408551", "payee": "SSA TREAS 310 XXSOC SEC ELEANOR R MARSH", "returned_r15": false},
+        {"id": "dep-em-0513", "date": "2026-05-13", "amount": 1612.00, "trace": "031036030513096", "payee": "SSA TREAS 310 XXSOC SEC ELEANOR R MARSH", "returned_r15": false},
+        {"id": "dep-em-0610", "date": "2026-06-10", "amount": 1612.00, "trace": "031036030610774", "payee": "SSA TREAS 310 XXSOC SEC ELEANOR R MARSH", "returned_r15": false},
+        {"id": "dep-em-0708", "date": "2026-07-08", "amount": 1612.00, "trace": "031036030708230", "payee": "SSA TREAS 310 XXSOC SEC ELEANOR R MARSH", "returned_r15": false}
+      ],
+      "withdrawals": [
+        {"id": "wd-em-0519", "date": "2026-05-19", "amount": 650.00, "by": "Thomas Marsh (POA)"}
+      ],
+      "fs133": {"id": "FS133-26-0721-1480", "received": "2026-07-21", "claimed": ["dep-em-0408", "dep-em-0513", "dep-em-0610", "dep-em-0708"], "total": 6448.00}
+    },
+    {
+      "key": "frank",
+      "member_id": "m-31188",
+      "deceased": {"name": "Frank Delgado", "full_name": "Francisco J Delgado", "ssn_last4": "5530", "born": "1948-01-30"},
+      "account": {"name": "Checking ...6031", "owner_names": ["Frank Delgado"], "balance_at_notice": 2214.67},
+      "sources": [
+        {"id": "dne-fd", "kind": "dne", "date": "2026-08-27", "received": "2026-08-27", "dod": "2026-07-19", "says": "ACH DNE from SSA via FRB: payee FRANCISCO J DELGADO, SSN xxx-xx-5530, date of death 071926"},
+        {"id": "crs-fd", "kind": "crs", "date": "2026-08-29", "dod": "2026-07-19", "says": "CRS credit file: deceased indicator X reported 08/29/2026 (SSA DMF match), date of death 07/19/2026"},
+        {"id": "card-fd", "kind": "card_activity", "date": "2026-09-01", "in_person": true, "says": "Debit card ...3349: chip+PIN at Bayview branch 05 teller line, CA DL checked by teller K. Ng, $200.00 cash withdrawal by Frank Delgado"}
+      ],
+      "deposits": [
+        {"id": "dep-fd-0722", "date": "2026-07-22", "amount": 1388.00, "trace": "031036030722683", "payee": "SSA TREAS 310 XXSOC SEC FRANCISCO J DELGADO", "returned_r15": false},
+        {"id": "dep-fd-0826", "date": "2026-08-26", "amount": 1388.00, "trace": "031036030826117", "payee": "SSA TREAS 310 XXSOC SEC FRANCISCO J DELGADO", "returned_r15": false}
+      ],
+      "withdrawals": [
+        {"id": "wd-fd-0901", "date": "2026-09-01", "amount": 200.00, "by": "Frank Delgado"}
+      ],
+      "fs133": {"id": "FS133-26-0908-2207", "received": "2026-09-08", "claimed": ["dep-fd-0826"], "total": 1388.00}
+    },
+    {
+      "key": "margaret",
+      "member_id": "m-11904",
+      "deceased": {"name": "Margaret Chen", "full_name": "Margaret L Chen", "ssn_last4": "8126", "born": "1937-09-14"},
+      "account": {"name": "Share draft ...9902", "owner_names": ["Margaret Chen"], "balance_at_notice": 212.40},
+      "sources": [
+        {"id": "cert-mc", "kind": "certificate", "date": "2026-02-17", "dod": "2026-02-09", "says": "CA certificate of death no. 3202627733 (San Mateo County): Margaret L Chen died 02/09/2026"},
+        {"id": "dne-mc", "kind": "dne", "date": "2026-07-06", "received": "2026-07-06", "dod": "2026-02-09", "says": "ACH DNE from SSA via FRB: payee MARGARET L CHEN, SSN xxx-xx-8126, date of death 020926"},
+        {"id": "crs-mc", "kind": "crs", "date": "2026-07-09", "dod": "2026-02-09", "says": "CRS credit file: deceased indicator X reported 07/09/2026 (SSA DMF match)"}
+      ],
+      "deposits": [
+        {"id": "dep-mc-0203", "date": "2026-02-03", "amount": 1190.00, "trace": "031036030203401", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false},
+        {"id": "dep-mc-0303", "date": "2026-03-03", "amount": 1190.00, "trace": "031036030303958", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false},
+        {"id": "dep-mc-0403", "date": "2026-04-03", "amount": 1190.00, "trace": "031036030403266", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false},
+        {"id": "dep-mc-0501", "date": "2026-05-01", "amount": 1190.00, "trace": "031036030501839", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false},
+        {"id": "dep-mc-0603", "date": "2026-06-03", "amount": 1190.00, "trace": "031036030603512", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false},
+        {"id": "dep-mc-0702", "date": "2026-07-02", "amount": 1190.00, "trace": "031036030702044", "payee": "SSA TREAS 310 XXSOC SEC MARGARET L CHEN", "returned_r15": false}
+      ],
+      "withdrawals": [
+        {"id": "wd-mc-0306", "date": "2026-03-06", "amount": 1100.00, "by": "Kevin Chen (ATM, card ...4410)"},
+        {"id": "wd-mc-0407", "date": "2026-04-07", "amount": 1200.00, "by": "Kevin Chen (ATM, card ...4410)"},
+        {"id": "wd-mc-0504", "date": "2026-05-04", "amount": 1150.00, "by": "Kevin Chen (ATM, card ...4410)"},
+        {"id": "wd-mc-0605", "date": "2026-06-05", "amount": 1180.00, "by": "Kevin Chen (ATM, card ...4410)"},
+        {"id": "wd-mc-0703", "date": "2026-07-03", "amount": 1100.00, "by": "Kevin Chen (ATM, card ...4410)"}
+      ],
+      "fs133": {"id": "FS133-26-0714-0376", "received": "2026-07-14", "claimed": ["dep-mc-0303", "dep-mc-0403", "dep-mc-0501", "dep-mc-0603", "dep-mc-0702"], "total": 5950.00}
+    },
+    {
+      "key": "george",
+      "member_id": "m-40552",
+      "deceased": {"name": "George Patel", "full_name": "George R Patel", "ssn_last4": "2290", "born": "1945-03-08", "executor": "Raj Patel"},
+      "account": {"name": "Share savings ...1157", "owner_names": ["George Patel"], "balance_at_notice": 1500.00},
+      "sources": [
+        {"id": "call-gp", "kind": "family_call", "date": "2026-05-22", "says": "Inbound call, son Raj Patel: father George died 05/20, asked how to close the account; call logged by contact center"},
+        {"id": "cert-gp", "kind": "certificate", "date": "2026-05-29", "dod": "2026-05-20", "says": "CA certificate of death no. 3202643318 (Alameda County): George R Patel died 05/20/2026"},
+        {"id": "dne-gp", "kind": "dne", "date": "2026-07-01", "received": "2026-07-01", "dod": "2026-05-20", "says": "ACH DNE from SSA via FRB: payee GEORGE R PATEL, SSN xxx-xx-2290, date of death 052026"}
+      ],
+      "deposits": [
+        {"id": "dep-gp-0422", "date": "2026-04-22", "amount": 2034.00, "trace": "031036030422310", "payee": "SSA TREAS 310 XXSOC SEC GEORGE R PATEL", "returned_r15": false},
+        {"id": "dep-gp-0527", "date": "2026-05-27", "amount": 2034.00, "trace": "031036030527885", "payee": "SSA TREAS 310 XXSOC SEC GEORGE R PATEL", "returned_r15": false},
+        {"id": "dep-gp-0624", "date": "2026-06-24", "amount": 2034.00, "trace": "031036030624149", "payee": "SSA TREAS 310 XXSOC SEC GEORGE R PATEL", "returned_r15": false},
+        {"id": "dep-gp-0722", "date": "2026-07-22", "amount": 2034.00, "trace": "031036030722902", "payee": "SSA TREAS 310 XXSOC SEC GEORGE R PATEL", "returned_r15": true}
+      ],
+      "withdrawals": [
+        {"id": "wd-gp-0626", "date": "2026-06-26", "amount": 2900.00, "by": "Raj Patel (check 1043, payee Oakview Funeral Home)"}
+      ],
+      "fs133": {"id": "FS133-26-0729-1662", "received": "2026-07-29", "claimed": ["dep-gp-0422", "dep-gp-0527", "dep-gp-0624"], "total": 6102.00}
+    }
+  ],
+  "answer_key": {
+    "harold": {"date_of_death": "2026-03-14", "knowledge_date": "2026-03-20", "decision": "return_and_protest", "protest_amount": 1045.00, "return_now": 535.00, "cu_liability": 2600.00},
+    "eleanor": {"date_of_death": "2026-05-02", "knowledge_date": "2026-07-14", "decision": "return_and_protest", "protest_amount": 1612.00, "return_now": 4836.00, "cu_liability": 0.00},
+    "frank": {"date_of_death": null, "knowledge_date": null, "decision": "recipient_alive", "protest_amount": 1388.00, "return_now": 0.00, "cu_liability": 0.00},
+    "margaret": {"date_of_death": "2026-02-09", "knowledge_date": "2026-07-06", "decision": "return_in_full", "protest_amount": 0.00, "return_now": 212.40, "cu_liability": 1190.00},
+    "george": {"date_of_death": "2026-05-20", "knowledge_date": "2026-05-22", "decision": "return_and_protest", "protest_amount": 2034.00, "return_now": 1500.00, "cu_liability": 2568.00}
+  }
+}

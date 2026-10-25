@@ -61,3 +61,35 @@ export type Review = {
   customers?: ReviewCustomer[];
   diff: string;
 };
+
+// Estate desk: mirrors server/estate.py compute().
+export type EstateSource = { id: string; kind: string; says: string; trusted: boolean; why: string };
+export type JournalLine = { account: string; dr: number; cr: number; memo: string; source: string };
+export type Estate = {
+  key: string;
+  name: string;
+  decision: "return_and_protest" | "return_in_full" | "recipient_alive";
+  date_of_death: string | null;
+  dod_source: string | null;
+  knowledge_date: string | null;
+  knowledge_source: string | null;
+  claimed: number;
+  not_due: { id: string; amount: number; why: string }[];
+  already_returned: { id: string; amount: number; why?: string }[];
+  valid_claim: number;
+  on_hand: number;
+  return_now: number;
+  shortfall: number;
+  cu_liability: number;
+  liability_basis: "knowledge" | "limited_45_day" | "none";
+  liability_without_note?: number;
+  withdrawers: string[];
+  sources: EstateSource[];
+  findings: { text: string; rule: string }[];
+  journal: JournalLine[];
+  needs_controller: boolean;
+  timeline: { date: string; label: string; kind: string }[];
+  score?: { correct: number; total: number };
+};
+export type EstateRow = { _id: string; key: string; data: Estate; status: "drafted" | "signed"; signed_by?: string; signed_at?: number; updated_at: number };
+export type PostedLine = JournalLine & { _id: string; t: number; by: string };

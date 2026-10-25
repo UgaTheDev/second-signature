@@ -1,6 +1,6 @@
 "use client";
 
-// Floating tools keep demo controls out of the dashboard layout.
+// Floating tools keep demo controls out of the dashboard layout (Run a scenario and Cinema mode live here, reachable from every view).
 import { KeyRound, SlidersHorizontal } from "lucide-react";
 import { useRef, useState, useSyncExternalStore } from "react";
 
@@ -26,13 +26,15 @@ function useTheme() {
 const ITEM = "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-panel2 focus-visible:outline-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40";
 
 export function HeaderStrip({
-  demo, onToggleDemo, onScenario, onReset, onPasscode,
+  demo, onToggleDemo, onScenario, onCinema, onReset, onPasscode,
 }: {
   demo: boolean;
   /** Omit when live data isn't available (no Convex): the toggle is hidden. */
   onToggleDemo?: () => void;
   /** Opens the scenario sheet: an action available from every view. */
   onScenario: () => void;
+  /** Opens the selected case full-screen. */
+  onCinema: () => void;
   onReset: () => void;
   onPasscode: () => void;
 }) {
@@ -71,6 +73,7 @@ export function HeaderStrip({
       >
         <p className="px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Demo tools</p>
         <button type="button" onClick={() => run(onScenario)} className={ITEM}>Run a scenario</button>
+        <button type="button" onClick={() => run(onCinema)} className={ITEM}>Cinema mode</button>
         {onToggleDemo && (
           <button type="button" onClick={() => run(onToggleDemo)} aria-pressed={demo} className={ITEM}>
             {demo ? "Use live data" : "Use sample data"}

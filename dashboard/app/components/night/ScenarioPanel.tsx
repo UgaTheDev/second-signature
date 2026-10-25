@@ -1,6 +1,6 @@
 "use client";
 
-// Run a scenario: presets + a boxed custom form. POSTs /scenario with the same body as ScenarioSheet.
+// Run a scenario: presets + a boxed custom form. POSTs /scenario (a real Nessie purchase); opened from the Demo tools button (bottom right).
 import { useContext, useState } from "react";
 import { post } from "../../lib/api";
 import { DemoContext } from "../../lib/data";

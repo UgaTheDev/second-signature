@@ -33,6 +33,7 @@ class Case:
     plan: str = ""
     rationale: str = ""
     opened_at: float = field(default_factory=time.time)
+    estate: dict | None = None  # estate.compute() output (+ "status": "signed" once the controller posts it)
 
 
 HIGH_RISK = {"gift_card", "wire_transfer", "crypto"}  # what scammers ask for
@@ -91,6 +92,19 @@ def check(action: str, case: Case, by: str) -> str | None:
         if case.amount >= RELEASE_LIMIT:
             return f"${case.amount:,.0f} is at or over ${RELEASE_LIMIT:,}; an analyst must release it"
         return None
+    if action == "draft_estate":
+        return None if by in ("agent", "human") else "estates are drafted by the agent"
+    if action in ("post_journal", "sign_loss", "close_estate"):
+        if by != "human":
+            return "only the controller can post, sign or close an estate"
+        e = case.estate or {}
+        if not e:
+            return "no estate on this case"
+        if action == "sign_loss" and not e.get("needs_controller"):
+            return "loss is under materiality; no controller signature needed"
+        if action == "close_estate" and e.get("cu_liability") and e.get("status") != "signed":
+            return "reclamation liability is not posted yet"
+        return None
     if action == "confirm_fraud":
         return None if by == "human" and held else "only an analyst confirms fraud on a held case"
     return f"unknown action {action!r}"
@@ -132,4 +146,15 @@ if __name__ == "__main__":
     assert must_hold({"category": "groceries"}, [], call) is None
     coached = Case("c4", "dolores", "t4", "Target", "gift_card", 500, verified=True, held_by_rule=True)
     assert check("release", coached, "member") and check("release", coached, "human") is None
+    import estate
+
+    est = Case("e1", "dolores", "", "", "", 0, estate=estate.compute(estate.load()[0]))
+    assert check("draft_estate", est, "agent") is None and check("draft_estate", est, "member")
+    assert check("post_journal", est, "agent") and check("sign_loss", est, "agent")  # the agent never posts or signs
+    assert check("post_journal", est, "human") is None and check("sign_loss", est, "human") is None
+    assert check("close_estate", est, "human")  # $2,600 liability unposted
+    est.estate["status"] = "signed"
+    assert check("close_estate", est, "human") is None and check("close_estate", est, "agent")
+    small = Case("e2", "x", "", "", "", 0, estate={"cu_liability": 100.0, "needs_controller": False})
+    assert check("sign_loss", small, "human") and check("sign_loss", c, "human")  # under materiality; no estate
     print("gate ok")

@@ -124,3 +124,22 @@ for i in range(overrides.THRESHOLD):
     assert c.post(f"/cases/o{i}/release").status_code == 200
 assert len(overrides._since_review) == overrides.THRESHOLD   # would have fired with FACTORY_API_KEY set
 print("overrides ok")
+
+# --- estate desk: routes behind the passcode, the gate on signing, and the widow's call prompt ---
+import calltools
+assert TestClient(server.app).post("/estates/run").status_code == 401
+r = c.post("/estates/run"); assert r.status_code == 200 and len(r.json()) == 5, r.text
+h = next(e for e in r.json() if e["key"] == "harold"); assert h["decision"] == "return_and_protest" and h["cu_liability"] > 0, h
+assert c.post("/estates/nobody/sign").status_code == 404
+assert c.post("/estates/harold/sign", json={"by": "Controller"}).status_code == 200   # human controller; Convex off
+assert c.post("/estates/harold/call").status_code == 409                # no TWILIO_NUMBER: never dials here
+assert "[" in c.post("/estates/harold/why").json()["text"]             # bad key -> cited template
+d = server.estate_data("harold")[0]
+assert agent.gate.check("sign_loss", server.estate_case(d, "e"), "agent")  # the agent never signs
+ec = server.estate_case(d, "estate-smoke")
+p = calltools.build_prompt(ec, inbound=False)
+assert "Harold's account" in p and "gift cards" in p and "Treasury" in p and "release_hold" not in p, p
+assert f"{d['cu_liability']:,.2f}" not in p and f"{d['cu_liability']:,.0f}" not in p
+assert [t["name"] for t in calltools.tool_specs(ec)] == ["check_answer", "connect_family", "end_call"]
+assert "case-estate-smoke" in twiml("case_id=estate-smoke&mode=estate", {"From": "+15551234567", "To": "+15550000000", "Direction": "outbound-api"})  # estate call can bridge to Susan
+print("estates ok")

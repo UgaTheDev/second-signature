@@ -2,52 +2,51 @@
 
 ## Tagline
 
-An AI fraud analyst for small credit unions: it holds a suspicious payment, calls the older member in a calm voice, and can never move money on its own.
+Two people want Harold's money: a scammer and the US Treasury. Only one is owed it. An AI back office that tells them apart, and never moves money on its own.
 
-**The seat it fills:** the overnight fraud analyst a small credit union can't afford to staff.
+**The seat it fills:** the back office a small credit union can't afford to staff: the estate desk and the night fraud analyst.
 
 Live dashboard: https://second-signature-omega.vercel.app · Code: https://github.com/UgaTheDev/calhacks-winners-ouuu
 
 ## Inspiration
 
-Small credit unions serve the members most targeted by elder-fraud scams, and nobody watches from 6pm to 8am. Big banks have fraud desks; small credit unions don't. Scams work by urgency, secrecy and isolation: "don't tell the bank, don't tell your daughter." We wanted an agent trusted for what it can't do.
+When a member dies, scammers who read obituaries call the widow, and Treasury sends the credit union a reclamation notice (FS-133) for Social Security paid after the death. At a small credit union, answering it is a part-time job, and mistakes cost money either way. We wanted an agent trusted for what it can't do.
 
 ## What it does
 
-A scammer from "Microsoft" calls Dolores, 74, and tells her to buy gift cards and keep quiet. Mid-call she hears, and he doesn't, a soft chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up." She buys the gift cards anyway. The purchase is held by rule, even though triage was coached into "allow." A Cartesia voice calls and verifies her from her CRS credit file. She mentions secrecy; the agent offers to connect her daughter Susan. She says yes, and the agent leaves the line. An analyst reads the case file and makes the final call.
+Harold Whitcomb died in March. His widow Dolores is 74.
 
-- **Code floor:** a first-ever gift card, wire or crypto purchase is held whatever the model says; only an analyst releases it.
-- **Triage:** Claude cites signals from CRS, Elastic and FTC alerts. Any failure means hold.
-- **Case file:** every action and refusal logged with who and why; survives a restart.
-- **Morning review:** a Factory Droid proposes a policy diff a human approves.
+1. **Scam Shield.** A fake debt collector tells Dolores to pay Harold's debts in gift cards. She hears, and he doesn't, a chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up."
+2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books a $2,600 credit-union liability, because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.
+3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing; the real repayment is between the credit union and Treasury. It offers to connect Susan, the executor, then leaves the line.
 
 ## How we built it
 
-- **Bank:** Capital One Nessie, polled every 2 seconds.
-- **Identity:** CRS sandbox identity and credit file.
-- **Triage:** Claude Opus 5.5, Elastic history, FTC alerts from our Apify actor.
-- **Safety:** `gate.py`, permission matrix and code floor.
+- **Estate desk:** `estate.py`, plain arithmetic with cited rules; Claude Opus 5.5 only explains.
+- **Safety:** `gate.py`: the agent may hold, call, draft and explain; only a human releases, posts, signs or moves money.
+- **Scam Shield:** Twilio streams the caller's side only; Cartesia Ink transcribes; a keyword gate, then Claude Haiku 5.5; the whisper plays to her leg only.
 - **Voice:** Twilio, Pipecat, Cartesia Ink → Claude Haiku 5.5 → Cartesia Sonic.
-- **Record:** Convex case file, Next.js dashboard.
-- **Policy:** Factory Droid SDK.
+- **Identity:** CRS sandbox; questions from her credit file, answers kept in `verify.py`.
+- **Record:** Convex (cases, estate drafts, append-only journal), Next.js on Vercel.
+- **Overnight holds:** Nessie, Elastic, our Apify actor, Factory Droid SDK.
 
 ## Challenges we ran into
 
-- **Keeping the agent unable to move money.** Rules live in `gate.py`, not the prompt; the bot never sees verification answers.
-- **The arena found two holes.** A coached victim could release her own first-ever gift card; code-floor holds now need an analyst. And a scammer who knew Dolores's city guessed through verification, because the real street was the only local option. Decoys are now local streets and household-name banks.
-- **Locking down Droid.** SDK reads aren't permission-gated, so a Read tool could reach `.env`. Droid gets only Edit, on a copy of `policy.md`.
+- **A fact-check against 31 CFR 210 changed our liability rule.** Without prior knowledge, liability is the lesser of the 45-day amount and the unrecovered total, and only if Treasury can't collect from the withdrawers.
+- **The arena found a verification-guessing hole.** A scammer who knew Dolores's city guessed through, because the real street was the only local option. Decoys are now local streets and household-name banks.
+- **Keeping the agent unable to post or move money.** Rules live in `gate.py`, not the prompt. The bot never sees verification answers, and the estate call has no hold tools.
 
 ## Accomplishments that we're proud of
 
-Arena 30/30 passed. Scam Shield caught 15/15 scams with 0/15 false alarms. Kill the server mid-case and it resumes with the gate as strict as before.
+Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. The arena passes 30/30. Kill the server mid-case and it resumes with the gate as strict as before.
 
 ## What we learned
 
-Defences belong in code, not the prompt. A red-team arena graded from the gate's case state, with no judge model, finds holes a demo misses.
+The math belongs in code; the model explains it. Checking rules against primary sources changed real numbers, and our own policy choices are cited as policy.
 
 ## What's next
 
-A core banking feed instead of Nessie, holds sent to the card processor, per-analyst SSO, and the arena in CI on every prompt or policy change.
+Real FS-133 and death-notice intake, a scheduled Convex function for Treasury's 60-day response clock, a core banking feed instead of Nessie, per-analyst SSO, and the arena in CI.
 
 ## Built with
 
@@ -55,36 +54,46 @@ Python, Claude Opus 5.5, Claude Haiku 5.5, Cartesia Sonic, Cartesia Ink, Pipecat
 
 ## Track fit
 
-**Hyphenate: Autonomous Systems for Finance.** Limited access (`gate.py`), a clean record (Convex case file), knowing when to ask ($1,000+, first-ever gift cards/wires/crypto, red flags, failed verification), and the moment: the whisper, then the held purchase.
+**Hyphenate: Autonomous Systems for Finance.** The seat: the estate desk at a credit union under $500M in assets, answering FS-133 notices, with a controller who signs. `estate.py` picks the death date, finds what wasn't due or was already returned, and sets liability under 31 CFR 210.10 or the 210.11 cap. Limited access: the agent drafts; only a human posts the journal, signs a loss over $250 or closes the estate. Clean record in Convex. Accuracy: 5/5. The moment: one rep's note sets the liability at $2,600 instead of $1,045.
 
-**CRS Financial Intelligence.** CRS decides how the call goes: identity messages decide whether verification is allowed and how strict; questions come from her credit file and answers never leave `verify.py`. Fraud Finder scores flow into triage.
+**CRS.** Identity messages decide whether and how strictly to verify; questions come from her credit file.
 
-**Cartesia.** Voice is the product: every call, the bridge intro and the whisper. Sonic at `speed=0.9`, `emotion="content"` for older listeners; Ink with per-call keyterms so a one-try answer isn't misheard.
+**Cartesia.** The whisper, the calm call, the bridge intro: Sonic at `speed=0.9`, Ink with per-call keyterms.
 
-**Also:** Factory (one editable file, human-approved diff), Convex (case file, restart recovery), Meta (the family bridge), Armadin (arena attacks), Microsoft (path to production), Apify (FTC alerts), Elastic (her history), Nessie (the bank), Anthropic (Opus triage, Haiku calls, the arena).
+**Anthropic.** Haiku listens and speaks; Opus explains with citations. None moves money.
+
+**Convex.** Case file, estate drafts, append-only journal, restart recovery.
+
+**Microsoft.** A $1,045 over-claim caught, a $2,600 liability surfaced; path to production in `docs/TRACKS.md`.
+
+**Meta.** Scams isolate; the agent brings Susan in, then steps away.
+
+**Factory.** Droid edits one policy file on a trigger; a human approves the diff.
+
+**Apify / Elastic.** FTC alerts and her purchase history, cited in triage.
+
+**Nessie.** The bank: seeded members, a 2-second watcher, judge-run purchases.
 
 ## Proof it works
 
-- **Red-team arena:** 30/30 passed. 0 of 21 scams or attacks released or verified; 9 of 9 legitimate calls with the right outcome.
-- **Scam Shield:** 15/15 caught, 0/15 false alarms at threshold 0.75 (10 labelled scripts, 3 runs each).
+- **Estate desk:** 5/5 planted errors against an answer key.
+- **Red-team arena:** 30/30 calls passed; 0/21 scams or impostors released or verified.
+- **Scam Shield:** 18/18 scam calls caught, 0/18 false alarms at threshold 0.75.
 
 | Real | Simulated |
 |---|---|
-| Phone calls (Twilio), voice and STT (Cartesia), reasoning (Claude) | The credit union, and Dolores (CRS test identity P20) |
-| CRS sandbox calls against test identities | Nessie is Capital One's sandbox bank, not a real core |
-| FTC scam alerts, scraped live by our Apify actor | The scammer (a teammate) |
-| Holds, the code floor and the permission gate, enforced in our code | Holds don't reach a card network |
+| Twilio calls, Cartesia voice, Claude reasoning | The credit union; Dolores is CRS test identity P20 |
+| Live CRS calls for Dolores's identity verification | The estates' Treasury notices, death certificates and CRS deceased indicators |
+| Reclamation rules, cited per `docs/RECLAMATION.md` | The scammer (a teammate) |
 
 ## Demo video shot list (2:00)
 
 | Time | Shot |
 |---|---|
-| 0:00 | Scammer on Dolores's protected line: "This is Microsoft... buy gift cards... don't tell your bank." |
-| 0:20 | Dolores hears the whisper; he doesn't. Case appears on the dashboard with the quote. |
-| 0:30 | Judge Scenario: Dolores, Target, gift card, $500. Held by rule. |
-| 0:40 | Her phone rings: Cartesia voice, questions from her CRS credit file. |
-| 1:00 | She mentions secrecy; agent offers Susan; Susan joins, agent leaves. |
-| 1:20 | Dashboard: case file, gate refusals, arena scoreboard. |
-| 1:35 | Restart the server; case resumes. Analyst clicks Confirm fraud. |
-| 1:45 | Policy review: Droid's steps stream, a diff waits for Approve. |
-| 1:55 | "Second Signature: the overnight fraud analyst a small credit union can't afford." |
+| 0:00 | Cold open: "Pay today in gift cards." The chime, the whisper. He doesn't hear it. |
+| 0:15 | Title card: the two-people line. |
+| 0:25 | Estate desk, Harold: sources, the March 20 note. |
+| 0:45 | Reclamation: $1,045 protested, $535 returned, $2,600 liability. "Without that note: $1,045." |
+| 1:00 | Why?, then Sign as controller. |
+| 1:15 | Call Dolores: she verifies, owes the scammer nothing, says yes to Susan. |
+| 1:45 | Proof numbers. "It drafts; a human signs." |

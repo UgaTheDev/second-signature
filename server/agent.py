@@ -34,7 +34,7 @@ MACHINE: set[tuple[str, str]] = set()  # (case_id, mode) calls a voicemail/fax a
 def machine_answered(form, case_id: str, mode: str) -> bool:
     """/twiml: Twilio AMD says a machine picked up a member or bridge call. Caller hangs up instead of talking."""
     by = form.get("AnsweredBy", "")
-    if mode in ("member", "bridge") and (by.startswith("machine") or by == "fax"):
+    if mode in ("member", "bridge", "estate") and (by.startswith("machine") or by == "fax"):
         MACHINE.add((case_id, mode))
         return True
     return False
@@ -125,7 +125,7 @@ async def dial(case: Case, to: str | None, mode: str):
             to=to, from_=frm, url=f"{base}/twiml?{q}", method="POST",
             status_callback=f"{base}/call-status?{q}", status_callback_event=["completed"],
             # Opt-in: on a Twilio trial the "press any key" preamble makes AMD call a person a machine, and we hang up.
-            **({"machine_detection": "Enable"} if mode in ("member", "bridge") and os.getenv("MACHINE_DETECTION") == "1" else {}),
+            **({"machine_detection": "Enable"} if mode in ("member", "bridge", "estate") and os.getenv("MACHINE_DETECTION") == "1" else {}),
         )
         logger.info(f"dialed {mode} for {case.id}: {call.sid}")
     except Exception as e:

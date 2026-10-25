@@ -9,6 +9,7 @@
  */
 
 import type * as cases from "../cases.js";
+import type * as estates from "../estates.js";
 
 import type {
   ApiFromModules,
@@ -18,6 +19,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   cases: typeof cases;
+  estates: typeof estates;
 }>;
 
 /**

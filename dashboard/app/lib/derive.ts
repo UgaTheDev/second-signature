@@ -9,8 +9,6 @@ export type Tone = "amber" | "green" | "red" | "family" | "brand" | "muted" | "i
 export const toneVar = (t: Tone) => `var(--${t})`;
 
 export const firstName = (name: string) => name.trim().split(/\s+/)[0] ?? "";
-export const initials = (name: string) =>
-  name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
 export const isShield = (c: Pick<Case, "category">) => c.category === "scam_call";
 
 // ---- status -------------------------------------------------------------------------------------
@@ -135,41 +133,7 @@ export const SOURCE_LABEL: Record<string, string> = {
 };
 export const sourceLabel = (s: string) => SOURCE_LABEL[s] ?? s.toUpperCase();
 
-// ---- hero -------------------------------------------------------------------------------------------
-
-export type Headline = { a: string; b: string; tone: Tone; kicker: string; sub: string; stamp: string };
-
-/** Hero copy from case state (README copy table). Call state outranks status while a call is on. */
-export function heroHeadline(c: Case | null | undefined, call?: DerivedCall | null, family?: string | null, now = Date.now()): Headline {
-  if (!c) return { a: "Nothing needs", b: "a second signature.", tone: "muted", kicker: "ALL QUIET", sub: "Watching every purchase overnight. It can never move money on its own.", stamp: "WATCHING" };
-  const f = firstName(c.member_name);
-  const amt = money(c.amount);
-  const k = call?.state ?? "none";
-  const H = (a: string, b: string, sub: string, kicker: string, tone: Tone, stamp: string): Headline => ({ a, b, sub, kicker, tone, stamp });
-  if (isShield(c))
-    return H(`${f}’s phone call`, "was a scam.", "Scam Shield whispered a warning only she could hear. Gift card, wire and crypto purchases are held for 24 hours.", "SCAM SHIELD", "red", "FLAGGED");
-  if (k === "bridged") return H(`${f} is talking`, `to ${family ?? "family"}.`, `The agent leaves the line. Private, not recorded. The ${amt} stays held until an analyst decides.`, "FAMILY BRIDGE", "family", statusMeta(c.status).label);
-  if (k === "live") {
-    const ok = call!.qs.filter((q) => q.s === "ok").length;
-    return H("On the line", `with ${f}.`, `Checking one purchase before it goes through. Identity ${ok} of ${call!.qs.length} confirmed.`, "CALL IN PROGRESS", "green", "HELD");
-  }
-  if (k === "ringing") return H(`${f}’s ${amt}`, "is on hold.", "Calling her now. Nothing is wrong with her account; we just want to check on her.", "RINGING", "amber", "HELD");
-  switch (c.status) {
-    case "confirmed_fraud":
-      return H(`${amt} never reached`, "the scammer.", "Confirmed by an analyst. The AI held it, the human signed.", "CLOSED · FRAUD", "red", "FRAUD");
-    case "released":
-      return H(`${f}’s ${amt}`, "went through.", "Verified and released.", "RESOLVED", "green", "RELEASED");
-    case "allowed":
-      return H(`${f}’s ${amt}`, "went straight through.", c.decision_rationale || "Matched her normal spending.", "ALLOWED · NO CALL", "muted", "ALLOWED");
-    case "escalated":
-      return H(`${f}’s ${amt}`, "waits for a human.", "The agent’s authority ends here. Only an analyst can release it or confirm fraud.", "ESCALATED", "red", "ESCALATED");
-  }
-  // open: "just arrived" for its first two minutes with no call yet, then "is on hold"
-  if (k === "none" && now - c.opened_at < 120_000) return H(`${f}’s ${amt}`, "just arrived.", `${c.merchant}. Reading the signals: her history, her credit file, tonight’s scam alerts.`, "TRIAGE · LIVE", "brand", "HELD");
-  return H(`${f}’s ${amt}`, "is on hold.", `${c.merchant}. Paused, not declined. It can never move money on its own.`, "HELD · LIVE", "amber", "HELD");
-}
-
-// ---- actions / ticker ---------------------------------------------------------------------------------
+// ---- actions ---------------------------------------------------------------------------------
 
 const FAMILY_TYPES = ["family_call", "family_bridge", "connect_family", "call_family"];
 export function actionTone(type: string, by: string): Tone {
@@ -182,25 +146,6 @@ export function actionTone(type: string, by: string): Tone {
 /** Mono label for an action: "PERMISSION GATE", "CODE FLOOR", else the type in caps ("CALL MEMBER"). */
 export const actionLabel = (type: string) =>
   type === "deny" ? "PERMISSION GATE" : type === "override" ? "CODE FLOOR" : type.replace(/_/g, " ").toUpperCase();
-
-export type TickerEvent = { id: string; t: number; time: string; label: string; tone: Tone; text: string };
-const hm = (t: number) => new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-
-/** Newest-first ticker items: one per case arrival (from the list) plus the given actions, max 12. */
-export function tickerEvents(cases: Case[] = [], actions: Action[] = []): TickerEvent[] {
-  const fromCases = cases.map((c) => {
-    const m = statusMeta(c.status);
-    return {
-      id: `c-${c._id}`, t: c.opened_at, time: hm(c.opened_at),
-      label: isShield(c) ? "SCAM SHIELD" : m.label, tone: isShield(c) ? ("red" as Tone) : m.tone,
-      text: isShield(c) ? `${firstName(c.member_name)} · ${c.merchant}` : `${firstName(c.member_name)} · ${money(c.amount)} at ${c.merchant}`,
-    };
-  });
-  const fromActions = actions.map((a) => ({
-    id: `a-${a._id}`, t: a.t, time: hm(a.t), label: actionLabel(a.type), tone: actionTone(a.type, a.by), text: a.detail,
-  }));
-  return [...fromCases, ...fromActions].sort((x, y) => y.t - x.t).slice(0, 12);
-}
 
 // ---- heard on the call ----------------------------------------------------------------------------------
 
@@ -357,10 +302,7 @@ export function __selfcheck() {
   ok(riskScore([{ source: "x", fact: "", weight: 0.5 }, { source: "y", fact: "", weight: 0.5 }]) === 75, "1-(.5*.5) = 75");
   ok(riskScore([{ source: "x", fact: "", weight: 1.4 }]) === 100, "weights clamp");
   ok(riskTone(80) === "red" && riskTone(50) === "amber" && riskTone(49) === "green", "risk tones");
-  ok(heroHeadline(null).a === "Nothing needs", "no case");
   const c: Case = { _id: "1", member_name: "Ada Lovelace", merchant: "M", category: "gift_card", amount: 250, opened_at: 0, status: "escalated", risk_signals: [], plan: "", decision_rationale: "" };
-  ok(heroHeadline(c).b === "waits for a human." && heroHeadline(c).a.startsWith("Ada’s $250"), "escalated copy uses name + amount");
-  ok(heroHeadline(c, { state: "bridged", startedAt: 0, qs: [], speaking: null, agentLeft: true }, "Grace").b === "to Grace.", "bridged");
   const d: CaseDetail = { ...c, actions: [{ _id: "a", t: 1000, type: "call_member", by: "agent", detail: "Calling Ada" }], transcript: [] };
   ok(deriveCall(d, 2000).state === "ringing", "ringing after dial");
   ok(deriveCall({ ...d, transcript: [{ _id: "l", t: 3000, speaker: "member", text: "hi" }] }, 4000).state === "live", "line => live");

@@ -1,5 +1,6 @@
 "use client";
 
+// Policy review: a Factory Droid reads the night's cases and proposes policy changes per customer; an analyst approves or rejects each one.
 import { useContext, useState } from "react";
 import { post } from "../../lib/api";
 import { DemoContext, useReview } from "../../lib/data";

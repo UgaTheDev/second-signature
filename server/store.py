@@ -78,3 +78,15 @@ async def review_step(review_id: str, text: str):
 
 async def review_set(review_id: str, status: str, **fields):
     await _m("cases:reviewSet", reviewId=review_id, status=status, **fields)
+
+
+async def estate_upsert(key: str, data: dict):
+    await _m("estates:upsert", key=key, data=data)
+
+
+async def estate_sign(key: str, by: str):
+    """Unlike _m, raises: a controller's signature must never silently fail."""
+    if not _client:
+        logger.info(f"[convex off] estates:sign {key} by {by}")
+        return
+    await asyncio.to_thread(_client.mutation, "estates:sign", {"secret": os.environ["CONVEX_WRITE_SECRET"], "key": key, "by": by})

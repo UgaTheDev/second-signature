@@ -33,7 +33,7 @@ export function Walls({ id = "matrix" }: { id?: string }) {
           <span className="text-[13px] text-muted">Enforced in code, not in the prompt.</span>
         </div>
         {/* ponytail: native table + overflow-x instead of the prototype's div grid; scrolls under 760px */}
-        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Permission matrix (scrolls sideways)">
+        <div className="relative overflow-x-auto" tabIndex={0} role="region" aria-label="Permission matrix (scrolls sideways)">
           <table className="w-full min-w-[760px] border-collapse text-left">
             <colgroup>
               <col className="w-[40%]" />

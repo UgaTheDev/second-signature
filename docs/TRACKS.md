@@ -3,40 +3,53 @@
 One section per track, written against that track's judging criteria. Paste into Devpost and trim as needed.
 Numbers in [brackets] come from the live run and the arena; fill them in before submitting.
 
-**One line, for every track:** Second Signature is the overnight fraud analyst a small credit union can't afford to staff.
-It holds a suspicious payment, calls the older member in a calm voice, verifies her from her credit file, offers to put
-her daughter on the line, and writes a case file a human can sign. It can never move money on its own.
+**One line, for every track:** Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.
+Second Signature is the back office a small credit union can't afford to staff. It whispers a warning to a widow during
+a scam call, closes her late husband's books against Treasury's reclamation with every number cited to a rule, and calls
+her in a calm voice to explain. Overnight, it also holds suspicious payments and calls the member to check. The agent
+drafts; a human signs. It can never move money on its own.
 
 ## The Hyphenated Enterprise: Autonomous Systems for Finance (Hyphenate)
 
-**Seat it fills:** overnight fraud analyst at a credit union with under $500M in assets, where nobody watches from 6pm to 8am.
+**Seat it fills:** the estate desk at a credit union with under $500M in assets: the back-office clerk who answers
+Treasury's reclamation notices (FS-133) when a Social Security recipient dies, and the controller who signs off. Today
+that is a part-time job squeezed between other jobs, and getting it wrong costs real money either way. Beside it, the
+overnight fraud analyst nobody staffs from 6pm to 8am.
 
-**Is it real enough?** Real phone calls (Twilio), real voice (Cartesia), real CRS sandbox identities and credit files,
-FTC scam alerts scraped by our Apify actor, and purchases posted to Capital One's Nessie sandbox. The README's
-"Real vs simulated" table lists exactly what isn't real: the credit union, Dolores, the scammer, and the card network.
+**Is it real enough?** The reclamation rules are checked against primary sources in [RECLAMATION.md](RECLAMATION.md):
+31 CFR 210.2(n), 210.10 and 210.11, CRS 93-792 on arrears, and the 60-day response window via SSA POMS GN 02408.635.
+Where a rule is our choice rather than regulation (the death certificate beats the DNE; a false death report means
+"recipient alive"; the journal entries), the engine cites it as institution policy, not a CFR section. The five estates
+and their FS-133 notices are simulated; the README's "Real vs simulated" table lists what else isn't real. Real phone
+calls (Twilio), real voice (Cartesia), real CRS sandbox identities.
 
-**Would you hire it?** Limited access: `gate.py` is a permission matrix in code. The agent can hold, call and escalate;
-it can't release a hold on its own, can't move money, and can't call family without red flags or two unanswered calls.
-A clean record: every action, every refusal and every override lands in the Convex case file with who did it and why,
-and survives a server restart. Knowing when to ask: amounts of $1,000 or more, first-ever gift cards, wires and crypto,
-red flags on the call, and failed verification all go to a human analyst.
+**Would you hire it?** The math is plain code (`estate.py`), not the model: which death date to trust, what Treasury
+claimed that wasn't due or was already returned (R15), what to return from the balance on hand, and the liability under
+210.10 (knowledge) or the 210.11 45-day cap. Claude only explains the result, and every sentence must cite a source id or
+rule from it. Limited access: `gate.py` lets the agent draft an estate, but only a human can post the journal, sign a loss
+over $250, or close the estate; the same gate keeps the hold loop's agent from releasing a hold or moving money. A clean
+record: drafts, signatures and posted journal lines live in Convex. Accuracy: five estates with planted errors (a deposit
+from before the death, a false death report, no prior knowledge, a family call that starts the knowledge clock) score
+**5/5** against an answer key (`uv run python estate.py`).
 
-**Did we see something new?** Fraud desks exist at big banks. Small credit unions have members most targeted by
-elder-fraud scams and no one on shift at night. Two things we haven't seen automated: Scam Shield listening to the
-scammer's side of a live call and whispering a warning to her alone, and the family bridge, which answers the scammer's
-"don't tell anyone" by connecting her with her daughter, as her choice.
+**Did we see something new?** Fraud desks exist at big banks, and reclamation is handled by back-office software that
+tracks notices. We haven't seen the two joined around the person in the middle: the widow who is targeted by a fake debt
+collector in the same weeks Treasury is reclaiming her husband's benefits. Scam Shield listens to the scammer's side of
+a live call and whispers a warning to her alone; the estate desk then tells her, in a calm voice, that the real
+repayment is between the credit union and Treasury and she owes the scammer nothing.
 
-**The moment:** a scammer from "Microsoft" tells Dolores to buy gift cards and keep quiet. Mid-call she hears, and he
-doesn't: a soft chime, then "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up." Ten minutes later she tries to buy the gift cards
-anyway. The purchase is held by rule, even though triage was coached into "allow" (the smoke test proves this path), and
-she's offered a call with her daughter. Recovery: we kill the server mid-case, restart it, and the case picks up with its
-gate state intact.
+**The moment:** a fake collector tells Dolores she must pay Harold's debts in gift cards. Mid-call she hears, and he
+doesn't: a soft chime, then "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's
+okay to hang up." Then the estate desk closes Harold's books: protest the $1,045 already returned (R15), return the $535
+on hand, and book a $2,600 liability because a rep's March 20 note shows the credit union knew. Without that note the
+210.11 cap would have limited it to $1,045: the note cost $1,555. The controller signs, and the agent calls Dolores and
+offers to connect Susan, the executor.
 
-**Proof it works:** `smoke.py` (offline, every safety path), the red-team arena (30 simulated calls across 10 scenarios: 0 of 21 scams or attacks
-released or verified, 9 of 9 legitimate calls with the right outcome), Scam Shield detection on 10 labelled scripts run 3 times
-each (15/15 scams caught, 0/15 false alarms at threshold 0.75), and the live demo. The arena earned its keep: its first real
-run caught a scammer who knew Dolores's city guessing through verification, because the real street was the only local one
-among the options. Decoys are now local streets and household-name banks.
+**Proof it works:** `estate.py` (balanced journals, Harold's figures, 5/5 on the answer key), `gate.py`'s self-check
+(the agent cannot post or sign an estate), `smoke.py` (offline, every safety path of the hold loop), the red-team arena
+(30 simulated calls across 10 scenarios: 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with the
+right outcome), and Scam Shield detection on 12 labelled scripts run 3 times each (18/18 scams caught, 0/18 false alarms
+at threshold 0.75).
 
 ## CRS Financial Intelligence Challenge (CRS Credit) — Best Identity / Fraud Innovation, Best Overall
 
@@ -57,7 +70,7 @@ inquiries and file freezes flow into triage as cited signals.
 
 **Voice is the product.** Nobody reads an app at 11pm when a scammer has them on the phone. Every touchpoint is a
 Cartesia voice: the outbound check, the inbound callback on the card number, the family message, the bridge intro,
-and the Scam Shield whisper.
+the Scam Shield whisper, and the estate desk's call to the widow, slow and gentle, explaining that she owes nobody anything.
 
 - Sonic TTS over Twilio Media Streams at 8 kHz, `speed=0.9`, `emotion="content"`: slower and warmer for older listeners.
 - Ink STT (`ink-2`) with per-call keyterms: her four answer options, her name, the merchant and scam words, so a
@@ -77,7 +90,8 @@ dashboard, then the unified diff. Nothing applies until an analyst clicks Approv
 
 ## Best use of Convex
 
-Convex is the system of record: the case file (cases, append-only actions and transcript tables), the live dashboard via
+Convex is the system of record: the case file (cases, append-only actions and transcript tables), the estate desk's
+drafts, controller signatures and posted journal lines (`convex/estates.ts`), the live dashboard via
 `useQuery`, restart recovery (gate state saved after every action and reloaded on startup), the night-in-numbers query,
 the Droid review's streamed steps, and the arena scoreboard. Writes come only from our server and check a shared secret.
 
