@@ -26,8 +26,8 @@ Three beats, opening on the whisper. Three people: **Dolores** (a teammate's pho
 | 0:55 | Point at **Reclamation**: claimed $4,180, already returned (R15) $1,045, return now $535, liability $2,600. | "We protest the $1,045 we already sent back. We return the $535 on hand. We owe the other $2,600, because a rep wrote down on March 20 that he had died. Without that note it's capped at $1,045. That note cost $1,555." |
 | 1:10 | Click **Why?** | "Claude explains it, and every sentence cites a source or a rule. It never computes a number." |
 | 1:20 | Click **Sign as controller**, confirm. Journal shows posted. | "The agent drafted the entries. Only the controller can sign them." |
-| 1:30 | Click **Call Dolores**. Her phone rings: Cartesia voice, she verifies, it explains gently. It offers Susan; she says yes. | "The real repayment is between us and Treasury. She owes the scammer nothing. And she isn't alone with this." |
-| 1:50 | — | "Five estates with planted errors: 5 of 5. Second Signature drafts; a human signs. It can never move money on its own." |
+| 1:30 | Click **Call Dolores**. Her phone rings: Cartesia voice, she verifies, it explains gently. It offers Susan; she says yes. | "We handle the repayment with Treasury. She owes the scammer nothing. And she isn't alone with this." |
+| 1:50 | — | "Five planted errors, five caught. It drafts; a human signs. When my grandfather passed, we worried my grandmother would fall for exactly this. She knew better. This is for the ones who don't." |
 
 ## If a judge brings their own scenario
 

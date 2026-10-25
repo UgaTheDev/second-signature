@@ -10,6 +10,8 @@ Live dashboard: https://second-signature-ai.vercel.app · Code: https://github.c
 
 ## Inspiration
 
+When my grandfather passed, my family had a real worry: that my grandmother would fall for the scams that follow a death. She had the financial literacy to see through them. But what about the widows who don't?
+
 When a member dies, scammers who read obituaries call the widow, and Treasury sends the credit union a reclamation notice (FS-133) for Social Security paid after the death. At a small credit union, answering it is a part-time job, and mistakes cost money either way. We wanted an agent trusted for what it can't do.
 
 ## What it does
@@ -18,7 +20,7 @@ Harold Whitcomb died in March. His widow Dolores is 74.
 
 1. **Scam Shield.** A fake debt collector tells Dolores to pay Harold's debts in gift cards. She hears, and he doesn't, a chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up."
 2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books a $2,600 credit-union liability, because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.
-3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing; the real repayment is between the credit union and Treasury. It offers to connect Susan, the executor, then leaves the line.
+3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing; the credit union is handling the repayment with Treasury. It offers to connect Susan, the executor, then leaves the line.
 
 ## How we built it
 

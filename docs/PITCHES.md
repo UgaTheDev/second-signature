@@ -83,17 +83,25 @@ false death report when the 'deceased' member is still using his card."
 **Community:** recently widowed members of small credit unions. They're targeted by scammers who
 read obituaries, and buried in their late spouse's paperwork.
 
+**Real problem, in our words:** "When my grandfather passed, we were genuinely worried my grandmother would fall
+for these scams. She had the literacy to avoid them. This is for the ones who don't."
+
 **Say:** "Claude does three jobs, and none of them is moving money."
 1. **Haiku** listens for a scam script as the call happens.
 2. **Haiku** speaks to the widow.
-3. **Opus** explains every estate decision with citations.
+3. **Opus** explains every estate decision with citations, and code checks every citation before the
+   controller sees it.
 
-**Where it could go wrong, and what we did:**
-- **A prompt injection in a merchant name:** the code gate holds the money anyway, and the smoke
-  test covers it.
+**Lead with the one we caught in ourselves:** "Our first version told Dolores she owed nothing. That's
+the kind thing to say, and it was wrong: she'd withdrawn $3,200 after Harold died, and the credit union
+has to name her to Treasury. Now it tells her it isn't settled and the credit union will write. Our
+red-team arena fails any call that says she owes nothing."
+
+**Where else it could go wrong, and what we did:**
+- **Claude invents a source or a number:** every [citation] and dollar amount in "Why?" must exist in
+  the estate's record, or the controller gets the rules engine's findings instead, labelled.
 - **A model talked into "release":** releasing is human-only in code.
-- **A coached victim:** the red-team arena has Claude playing scammers against our own bot, 30/30
-  passed. Its first run caught an impostor guessing through verification, which we fixed.
+- **An impostor posing as the widow, or a coached victim:** [ARENA].
 
 ## Convex ($5k)
 
