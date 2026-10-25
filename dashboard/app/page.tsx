@@ -5,10 +5,9 @@ import { HAS_CONVEX } from "./ConvexClientProvider";
 import { ArenaHonesty } from "./components/night/ArenaHonesty";
 import { CasePanel } from "./components/night/CasePanel";
 import { Cinema } from "./components/night/Cinema";
-import { Dossier } from "./components/night/Dossier";
+import { CustomersPanel } from "./components/night/CustomersPanel";
 import { EstatesPanel } from "./components/night/EstatesPanel";
 import { HeaderStrip } from "./components/night/HeaderStrip";
-import { KpiBand } from "./components/night/KpiBand";
 import { Ledger } from "./components/night/Ledger";
 import { Btn } from "./components/night/primitives";
 import { ReviewPanel } from "./components/night/ReviewPanel";
@@ -18,14 +17,13 @@ import { Sidebar, ViewTabs, type View } from "./components/night/Sidebar";
 import { Walls } from "./components/night/Walls";
 import { Dialog, ToastProvider, useToast } from "./components/ui";
 import { getPasscode, post, setPasscode } from "./lib/api";
-import { DemoContext, useCaseDetail, useCases, useReview, useStats } from "./lib/data";
-import { shortClock } from "./lib/format";
-import type { Case } from "./lib/types";
+import { DemoContext, useCaseDetail, useCases, useReview } from "./lib/data";
+import { isActiveCase } from "./lib/ledger";
 
 const noop = () => () => {};
 
-// Demo order: Scam Shield (beat 1), Estate desk (beat 2), then the overnight purchase loop and the proof.
-const VIEWS: View[] = ["shield", "estates", "cases", "review", "safety"];
+// Demo order: Scam Shield (beat 1), Estate desk (beat 2), then the desk (per-customer issues, history, profiles, policy) and the proof.
+const VIEWS: View[] = ["shield", "estates", "cases", "history", "customers", "review", "safety"];
 // Old section anchors still land on the view that holds them.
 const LEGACY: Record<string, View> = { matrix: "safety", arena: "safety", honesty: "safety" };
 const viewFromHash = (): View => {
@@ -48,12 +46,11 @@ function useView() {
   const go = (v: View) => {
     if (v !== viewFromHash()) history.pushState(null, "", `#${v}`);
     setView(v);
-    window.scrollTo(0, 0);
   };
   return [view, go] as const;
 }
 
-/** One ticking clock for the whole page: header seconds, "just arrived", call timeouts, shield window. */
+/** One ticking clock for the sidebar's Scam Shield "Armed" count. */
 function useClock() {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -61,24 +58,6 @@ function useClock() {
     return () => clearInterval(id);
   }, []);
   return now;
-}
-
-/** Overnight holds toolbar: the purchase-loop actions, kept out of the global header. */
-function HoldsToolbar({ cases, onScenario, onCinema }: { cases?: Case[]; onScenario: () => void; onCinema: () => void }) {
-  const members = new Set((cases ?? []).map((c) => c.member_name)).size;
-  const last = (cases ?? []).reduce((m, c) => Math.max(m, c.opened_at), 0);
-  return (
-    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-line px-8 py-2.5 max-sm:px-4">
-      <div className="flex flex-wrap gap-x-3 text-[13px] text-muted">
-        <span>Watching {members} member{members === 1 ? "" : "s"}</span>
-        <span>Last purchase <span className="font-mono">{last ? shortClock(last) : "—"}</span></span>
-      </div>
-      <div className="flex items-center gap-3">
-        <Btn variant="ink" size="sm" onClick={onScenario}>Run a scenario</Btn>
-        <Btn variant="quiet" size="sm" onClick={onCinema}>Cinema mode</Btn>
-      </div>
-    </div>
-  );
 }
 
 /** In-page dialog, not prompt(): embedded browsers and previews block the native one. */
@@ -115,19 +94,21 @@ function PasscodeDialog({ open, onClose }: { open: boolean; onClose: () => void 
 
 function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void }) {
   const cases = useCases();
-  const stats = useStats();
   const review = useReview();
   const toast = useToast();
   const now = useClock();
   const [selected, setSelected] = useState<string | null>(null);
   const [fresh, setFresh] = useState<string | null>(null);
-  const [cinema, setCinema] = useState(false);
   const [passcode, setPasscodeOpen] = useState(false);
   const [scenario, setScenario] = useState(false);
+  const [cinema, setCinema] = useState(false);
   const [view, go] = useView();
 
+  const historyView = view === "history";
+  const visibleCases = cases?.filter((c) => historyView ? !isActiveCase(c) : isActiveCase(c));
+
   // Follow the newest case as it arrives, and flash it once (adjusting state during render, no effect needed).
-  const newestId = cases?.[0]?._id ?? null;
+  const newestId = visibleCases?.[0]?._id ?? null;
   const [seenNewest, setSeenNewest] = useState<string | null>(null);
   if (newestId !== seenNewest) {
     setSeenNewest(newestId);
@@ -141,7 +122,9 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
     setSelected(newestId);
   }
 
-  const detail = useCaseDetail(selected);
+  // A resolved case leaves the active queue immediately, including its detail panel.
+  const selectedId = visibleCases?.some((c) => c._id === selected) ? selected : newestId;
+  const detail = useCaseDetail(selectedId);
 
   async function reset() {
     const err = await post("/reset");
@@ -151,31 +134,32 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
   // Panels were built for a stacked page and carry their own separator rules; a view alone does not need them.
   const single = "mx-auto w-full max-w-[1200px] px-8 py-10 max-sm:px-4 [&>*]:border-y-0";
   return (
-    <div className="flex">
+    <div className="flex h-dvh overflow-hidden">
       <Sidebar cases={cases} review={review} now={now} active={view} onNavigate={go} />
-      <div className="min-w-0 flex-1 overflow-x-clip">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <h1 className="sr-only">Bayview Community CU · Second Signature</h1>
         <HeaderStrip
-          now={now}
           demo={demo}
           onToggleDemo={onToggleDemo}
+          onScenario={() => setScenario(true)}
+          onCinema={() => setCinema(true)}
           onReset={reset}
           onPasscode={() => setPasscodeOpen(true)}
         />
         <ViewTabs cases={cases} review={review} now={now} active={view} onNavigate={go} />
-        <main key={view} className="ss-in">
-          {view === "cases" && (
+        {/* Each view scrolls inside the viewport; on wide screens its panes scroll independently. */}
+        <main key={view} className="ss-in min-h-0 flex-1 overflow-y-auto">
+          {(view === "cases" || historyView) && (
             <>
-              <HoldsToolbar cases={cases} onScenario={() => setScenario(true)} onCinema={() => setCinema(true)} />
-              <KpiBand stats={stats} cases={cases} />
-              <div className="flex flex-wrap">
-                <aside aria-label="Cases" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line">
-                  <Ledger cases={cases} selectedId={selected} onSelect={setSelected} fresh={fresh} />
+              <div className="flex flex-wrap lg:h-full lg:flex-nowrap">
+                <aside aria-label="Cases" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line lg:overflow-y-auto">
+                  <Ledger cases={visibleCases} selectedId={selectedId} onSelect={setSelected} fresh={fresh} history={historyView} />
                 </aside>
-                <section aria-label="The case" className="min-w-0 flex-[3_1_640px]">
-                  <Dossier cases={cases} selectedId={selected} />
+                <section aria-label="The case" className="min-w-0 flex-[3_1_640px] lg:overflow-y-auto">
                   <div className="px-10 pt-8 pb-14 max-sm:px-4">
-                    <CasePanel detail={detail} />
+                    {selectedId ? <CasePanel key={selectedId} detail={detail} /> : (
+                      <p className="text-[15px] text-muted">{!cases ? "Loading…" : historyView ? "No historical cases yet." : "No active issues. Resolved cases are in the historical log."}</p>
+                    )}
                   </div>
                 </section>
               </div>
@@ -183,6 +167,7 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
           )}
           {view === "shield" && <div className={single}><ShieldPanel cases={cases} /></div>}
           {view === "estates" && <div className={single}><EstatesPanel /></div>}
+          {view === "customers" && <CustomersPanel cases={cases} />}
           {view === "review" && <div className={single}><ReviewPanel /></div>}
           {view === "safety" && (
             <div className={`${single} flex flex-col gap-12`}>

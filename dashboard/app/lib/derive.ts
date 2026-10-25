@@ -220,7 +220,6 @@ export function kpis(stats: Stats | undefined, cases: Case[] | undefined): Kpi[]
     { label: "KEPT FROM SCAMMERS", value: loading ? "—" : money(kept), sub: "Held or confirmed fraud", tone: "brand", valueTone: "ink" },
     { label: "MEMBER CALLS", value: loading ? "—" : String(calls), sub: bridges ? `${bridges} family bridge${bridges > 1 ? "s" : ""} · agent left` : "Warm checks, not alarms", tone: "family", valueTone: "ink" },
     { label: "REFUSED BY CODE", value: refused === null ? "—" : String(refused), sub: "Gate denials + code-floor holds", tone: "red", valueTone: refused ? "red" : "ink" },
-    { label: "MOVED BY THE AGENT", value: "$0", sub: "Always. Only an analyst can.", tone: "green", valueTone: "green" }, // a gate guarantee, not a statistic
   ];
 }
 

@@ -25,7 +25,6 @@ export function ShieldPanel({ cases, className = "" }: { cases: Case[] | undefin
     <section className={`flex flex-col gap-5 border-b border-line px-7 py-8 ${className}`}>
       <SectionHead
         id="shield"
-        num="05"
         title="Scam Shield"
         aside={c && info ? <Stamp label={armed ? "Armed" : "Stood down"} tone={armed ? "amber" : "muted"} size="sm" rotate={0} /> : undefined}
       />

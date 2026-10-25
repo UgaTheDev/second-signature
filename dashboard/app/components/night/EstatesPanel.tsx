@@ -49,7 +49,6 @@ export function EstatesPanel() {
   return (
     <section className="flex flex-col gap-8">
       <SectionHead
-        num="08"
         title="Estate desk"
         aside={
           <div className="flex items-center gap-3">

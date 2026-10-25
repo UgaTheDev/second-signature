@@ -27,7 +27,7 @@ export function Walls({ id = "matrix" }: { id?: string }) {
       <div className="flex max-w-[1100px] flex-col gap-6">
         <div id={id} className="flex scroll-mt-5 flex-col gap-1.5">
           <span className="text-[13px] text-muted">07 · The walls · permission matrix</span>
-          <h2 id={`${id}-title`} className="font-serif text-[20px] leading-[1.3] font-normal text-balance">
+          <h2 id={`${id}-title`} className="font-sans text-[20px] leading-[1.3] font-semibold text-balance">
             It can <em className="text-red">never</em> move money on its own.
           </h2>
           <span className="text-[13px] text-muted">Enforced in code, not in the prompt.</span>

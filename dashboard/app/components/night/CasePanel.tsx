@@ -1,13 +1,13 @@
 "use client";
 
-// Centre column: the case head, pipeline ruler, analyst actions, live call, next/why, evidence, record.
+// Centre column: the case head, pipeline ruler, analyst actions, why, evidence, record.
 import { useState } from "react";
 import { post } from "../../lib/api";
 import { countdown, deriveCall, holdExpiry, riskScore, riskTone, sourceConflicts, statusMeta, toneVar, type Tone } from "../../lib/derive";
 import { clock, money, needsDecision, shortClock, words } from "../../lib/format";
 import type { CaseDetail } from "../../lib/types";
 import { EvidenceList } from "./EvidenceList";
-import { LiveCall, useNow } from "./LiveCall";
+import { useNow } from "./LiveCall";
 import { Kicker, Stamp } from "./primitives";
 import { RecordTimeline } from "./Record";
 
@@ -25,7 +25,6 @@ function Pipeline({ c }: { c: CaseDetail }) {
     ["Hold", has("hold") || (c.status !== "allowed" && has("triage"))],
     ["Call", has("call_member", "call")],
     ["Verified", Boolean(c.state?.verified) || c.actions.some((a) => a.type === "verify" && a.by === "member" && /verified from/i.test(a.detail))],
-    ["Family", Boolean(c.state?.bridged || c.state?.family_notified) || has("family_bridge", "family_call", "call_family", "connect_family")],
     [c.status === "escalated" ? "Analyst" : "Resolved", fin],
   ];
   let activeSet = false;
@@ -105,9 +104,9 @@ function CaseBody({ c }: { c: CaseDetail }) {
         <div className="flex flex-wrap items-start justify-between gap-6">
           <div className="flex min-w-0 flex-col gap-1">
             <Kicker>The case · {c.member_name}</Kicker>
-            <h2 className="mt-1 font-serif text-[28px] leading-tight font-normal tracking-[-.01em] [overflow-wrap:anywhere]">{c.merchant}</h2>
+            <h2 className="mt-1 font-sans text-[28px] leading-tight font-semibold tracking-[-.01em] [overflow-wrap:anywhere]">{c.merchant}</h2>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-              {c.amount > 0 && <span className="num font-serif text-[clamp(40px,5vw,56px)] leading-none tracking-[-.02em] text-ink">{money(c.amount)}</span>}
+              {c.amount > 0 && <span className="num font-sans text-[clamp(40px,5vw,56px)] leading-none tracking-[-.02em] text-ink">{money(c.amount)}</span>}
               <Stamp status={c.status} size="sm" />
             </div>
             <p className="mt-2 text-[13px] text-muted">
@@ -133,7 +132,7 @@ function CaseBody({ c }: { c: CaseDetail }) {
             )}
             {seal && (
               <div className="ss-in flex flex-col items-end gap-0.5 rounded-[6px] border px-3 py-1.5" style={{ borderColor: `color-mix(in oklch, ${sealColor} 45%, transparent)` }}>
-                <span className="font-serif text-[15px] italic" style={{ color: sealColor }}>Second signature</span>
+                <span className="font-sans text-[15px] italic" style={{ color: sealColor }}>Second signature</span>
                 <span className="text-[12px] text-muted">
                   Analyst · <span className="num font-mono">{shortClock(seal.t)}</span>
                 </span>
@@ -168,17 +167,9 @@ function CaseBody({ c }: { c: CaseDetail }) {
         )}
       </div>
 
-      <LiveCall detail={c} now={now} />
-
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-x-10 gap-y-6">
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-[13px] font-normal text-muted">What happens next</h3>
-          <p className="text-[15px] leading-relaxed text-pretty">{c.plan || "Waiting on triage…"}</p>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-[13px] font-normal text-muted">Why</h3>
-          <p className="text-[15px] leading-relaxed text-pretty">{c.decision_rationale || "Waiting on triage…"}</p>
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <h3 className="text-[13px] font-normal text-muted">Why</h3>
+        <p className="text-[15px] leading-relaxed text-pretty">{c.decision_rationale || "Waiting on triage…"}</p>
       </div>
 
       <EvidenceList signals={c.risk_signals} />
@@ -194,7 +185,7 @@ export function CasePanel({ detail }: { detail: CaseDetail | null | undefined })
   if (detail === null)
     return (
       <div className="flex flex-col gap-2 py-20">
-        <p className="font-serif text-[28px] leading-tight tracking-[-.01em]">Nothing needs a second signature.</p>
+        <p className="font-sans text-[28px] leading-tight tracking-[-.01em]">Nothing needs a second signature.</p>
         <p className="text-[14px] text-muted">Pick a case from the ledger, or run a scenario.</p>
       </div>
     );

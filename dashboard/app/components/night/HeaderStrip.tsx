@@ -1,11 +1,8 @@
 "use client";
 
-// Header strip: one quiet row. Name, clock and server status on the left; theme, sample/live, reset, passcode on the right.
-// Run a scenario and Cinema mode live in the Overnight holds toolbar (page.tsx), next to the cases they act on.
-import { KeyRound } from "lucide-react";
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { pingServer } from "../../lib/api";
-import { clock } from "../../lib/format";
+// Floating tools keep demo controls out of the dashboard layout (Run a scenario and Cinema mode live here, reachable from every view).
+import { KeyRound, SlidersHorizontal } from "lucide-react";
+import { useRef, useState, useSyncExternalStore } from "react";
 
 // Theme lives on <html data-theme>; layout.tsx restores it from localStorage("theme") before paint.
 function subscribeTheme(cb: () => void) {
@@ -26,79 +23,80 @@ function useTheme() {
   return [theme, toggle] as const;
 }
 
-function useServerUp(skip: boolean) {
-  const [up, setUp] = useState<boolean | null>(null);
-  useEffect(() => {
-    if (skip) return;
-    let alive = true;
-    const check = async () => {
-      const ok = await pingServer();
-      if (alive) setUp(ok);
-    };
-    check();
-    const id = setInterval(check, 8000);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
-  }, [skip]);
-  return up;
-}
-
-const SMALL = "cursor-pointer text-muted underline-offset-4 hover:text-ink hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:no-underline";
-const OUTLINE = "inline-flex h-8 cursor-pointer items-center rounded-[6px] border border-line px-3 text-[13px] whitespace-nowrap transition-colors hover:bg-panel2";
+const ITEM = "flex w-full cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-left text-[13px] text-ink hover:bg-panel2 focus-visible:outline-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40";
 
 export function HeaderStrip({
-  now, demo, onToggleDemo, onReset, onPasscode,
+  demo, onToggleDemo, onScenario, onCinema, onReset, onPasscode,
 }: {
-  now: number;
   demo: boolean;
   /** Omit when live data isn't available (no Convex): the toggle is hidden. */
   onToggleDemo?: () => void;
+  /** Opens the scenario sheet: an action available from every view. */
+  onScenario: () => void;
+  /** Opens the selected case full-screen. */
+  onCinema: () => void;
   onReset: () => void;
   onPasscode: () => void;
 }) {
   const [theme, toggleTheme] = useTheme();
-  const up = useServerUp(demo);
   const [confirming, setConfirming] = useState(false);
 
-  const [srvLabel, srvTone] = demo
-    ? ["Sample data", "var(--muted)"]
-    : up === null ? ["Checking server", "var(--muted)"] : up ? ["Server connected", "var(--green)"] : ["Server not reachable", "var(--red)"];
+  const panel = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  function run(action: () => void) {
+    panel.current?.hidePopover();
+    action();
+  }
 
   return (
-    <header className="relative z-[5] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line px-8 py-3.5 max-sm:px-4">
-      <div role="status" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
-        <span className="font-medium text-ink">Bayview Community CU · Second Signature</span>
-        <span className="num font-mono" suppressHydrationWarning>{clock(now)}</span>
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden className="size-1.5 rounded-full" style={{ background: srvTone }} />
-          {srvLabel}
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {/* ponytail: secondary controls as a small text row, not a menu: no open/close state to manage. */}
-        <div role="group" aria-label="Desk settings" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-          <button type="button" onClick={toggleTheme} className={SMALL}>{theme === "dark" ? "Light mode" : "Dark mode"}</button>
-          {onToggleDemo && (
-            <button type="button" onClick={onToggleDemo} aria-pressed={demo} className={SMALL}>{demo ? "Use live data" : "Use sample data"}</button>
-          )}
-          {confirming ? (
-            <span role="group" aria-label="Confirm reset" className="flex items-center gap-2 text-ink">
-              Wipe all cases?
-              <button type="button" autoFocus onClick={() => { setConfirming(false); onReset(); }} className="cursor-pointer rounded-[4px] border border-red/45 px-2 py-0.5 font-medium text-red hover:bg-red/10">Reset</button>
-              <button type="button" onClick={() => setConfirming(false)} className={SMALL}>Cancel</button>
-            </span>
-          ) : (
-            <button type="button" onClick={() => setConfirming(true)} disabled={demo} title={demo ? "Sample data can't be reset" : undefined} className={SMALL}>
-              Reset demo
-            </button>
-          )}
-        </div>
-        <button type="button" onClick={onPasscode} aria-label="Analyst passcode" title="Analyst passcode" className={`${OUTLINE} px-2 text-muted hover:text-ink`}>
+    <>
+      <button
+        type="button"
+        popoverTarget="demo-tools"
+        aria-label="Demo tools"
+        aria-expanded={open}
+        aria-controls="demo-tools"
+        title="Demo tools"
+        className="fixed right-4 bottom-4 z-30 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-panel text-muted shadow-md transition-colors hover:bg-panel2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+      >
+        <SlidersHorizontal size={18} strokeWidth={1.75} aria-hidden />
+      </button>
+      <div
+        ref={panel}
+        id="demo-tools"
+        popover="auto"
+        onToggle={(event) => {
+          setOpen(event.newState === "open");
+          if (event.newState === "closed") setConfirming(false);
+        }}
+        className="fixed inset-auto right-4 bottom-[68px] m-0 w-60 max-w-[calc(100vw-32px)] rounded-xl border border-line bg-panel p-2 text-ink shadow-xl"
+      >
+        <p className="px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Demo tools</p>
+        <button type="button" onClick={() => run(onScenario)} className={ITEM}>Run a scenario</button>
+        <button type="button" onClick={() => run(onCinema)} className={ITEM}>Cinema mode</button>
+        {onToggleDemo && (
+          <button type="button" onClick={() => run(onToggleDemo)} aria-pressed={demo} className={ITEM}>
+            {demo ? "Use live data" : "Use sample data"}
+          </button>
+        )}
+        {confirming ? (
+          <div role="group" aria-label="Confirm reset" className="rounded-lg bg-panel2 p-3">
+            <p className="mb-2 text-[13px]">Wipe all cases?</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => run(onReset)} className={`${ITEM} text-red`}>Reset</button>
+              <button type="button" onClick={() => setConfirming(false)} className={ITEM}>Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={() => setConfirming(true)} disabled={demo} title={demo ? "Sample data can't be reset" : undefined} className={ITEM}>Reset demo</button>
+        )}
+        <div className="my-1 border-t border-line" />
+        <button type="button" onClick={() => run(toggleTheme)} className={ITEM}>{theme === "dark" ? "Light mode" : "Dark mode"}</button>
+        <button type="button" onClick={() => run(onPasscode)} className={ITEM}>
           <KeyRound size={15} strokeWidth={1.75} aria-hidden />
+          Analyst passcode
         </button>
       </div>
-    </header>
+    </>
   );
 }

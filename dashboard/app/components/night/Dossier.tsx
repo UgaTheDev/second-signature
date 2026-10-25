@@ -2,28 +2,7 @@
 import type { Case } from "../../lib/types";
 import { Kicker } from "./primitives";
 
-type Profile = { age: number; sub: string; contact: string | null; shield: boolean; pattern: string[]; note: string };
-
-// ponytail: copied by hand from server/members.py (age, family, shield_env, notes) and server/policy.md
-// (normal spending). Keyed by member_name because Case has no member_id. Add a query if members grow past two.
-const MEMBER_PROFILES: Record<string, Profile> = {
-  "Dolores Whitcomb": {
-    age: 74,
-    sub: "Member since 1991 · Santa Barbara · lives alone",
-    contact: "Susan · daughter",
-    shield: true,
-    pattern: ["Groceries", "Pharmacy", "Utilities", "Church", "Café"],
-    note: "Never gift cards, electronics or wires. Grandson Leo’s birthday is Oct 26.",
-  },
-  "Robert Chen": {
-    age: 71,
-    sub: "Member",
-    contact: null,
-    shield: false,
-    pattern: ["Groceries", "Gift cards for grandkids, $50–100"],
-    note: "Buys gift cards every Christmas and birthday.",
-  },
-};
+import { MEMBER_PROFILES } from "../../lib/profiles";
 
 export function Dossier({ cases, selectedId }: { cases: Case[] | undefined; selectedId: string | null }) {
   const c = cases?.find((x) => x._id === selectedId) ?? cases?.[0];
@@ -43,10 +22,6 @@ export function Dossier({ cases, selectedId }: { cases: Case[] | undefined; sele
       {p && (
         <>
           <dl className="flex flex-col text-[14px]">
-            <div className="flex items-baseline justify-between gap-4 border-t border-line py-2">
-              <dt className="text-[12px] text-muted">Trusted contact</dt>
-              <dd className={p.contact ? "text-family" : "text-muted"}>{p.contact ?? "Not on file"}</dd>
-            </div>
             <div className="flex items-baseline justify-between gap-4 border-y border-line py-2">
               <dt className="text-[12px] text-muted">Scam Shield</dt>
               <dd className={p.shield ? "text-green" : "text-muted"}>{p.shield ? "On" : "Off"}</dd>

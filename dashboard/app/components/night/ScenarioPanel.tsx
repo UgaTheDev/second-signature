@@ -1,6 +1,6 @@
 "use client";
 
-// Run a scenario: presets + a boxed custom form. POSTs /scenario (a real Nessie purchase); opened from the Overnight holds toolbar.
+// Run a scenario: presets + a boxed custom form. POSTs /scenario (a real Nessie purchase); opened from the Demo tools button (bottom right).
 import { useContext, useState } from "react";
 import { post } from "../../lib/api";
 import { DemoContext } from "../../lib/data";
@@ -35,7 +35,7 @@ export function ScenarioPanel({ className = "" }: { className?: string }) {
 
   return (
     <section className={`flex flex-col gap-6 border-b border-line px-7 py-8 ${className}`}>
-      <SectionHead id="scenario" num="04" title="Run a scenario" aside={<span className="text-[13px] text-muted">Nessie sandbox</span>} />
+      <SectionHead id="scenario" title="Run a scenario" aside={<span className="text-[13px] text-muted">Nessie sandbox</span>} />
 
       <div className="flex flex-col">
         {PRESETS.map((p) => (

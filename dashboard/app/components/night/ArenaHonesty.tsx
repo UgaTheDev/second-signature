@@ -8,11 +8,10 @@ import type { ArenaRow } from "../../lib/types";
 // A scenario passes only if every run passed and none was critical (server/arena.py grades each run).
 const passes = (r: ArenaRow) => r.passed === r.runs && r.critical === 0;
 
-function Num({ n, children, id }: { n: string; children: string; id?: string }) {
+function Num({ children, id }: { children: string; id?: string }) {
   return (
     <div id={id} className="flex scroll-mt-5 items-baseline gap-2.5">
-      <span className="font-serif text-[20px] text-muted" aria-hidden>{n}</span>
-      <h2 className="font-serif text-[20px] leading-[1.3] font-normal">{children}</h2>
+      <h2 className="font-sans text-[20px] leading-[1.3] font-semibold">{children}</h2>
     </div>
   );
 }
@@ -27,7 +26,7 @@ export function Arena({ id = "arena" }: { id?: string }) {
 
   return (
     <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-4 border-line px-4 py-12 sm:px-9 min-[960px]:border-r">
-      <Num n="08" id={id}>Red-team arena</Num>
+      <Num id={id}>Red-team arena</Num>
       <span className="-mt-2 text-[13px] text-muted">Claude plays the scammer.</span>
       {a === undefined ? (
         <span className="text-[13px] text-muted">Loading arena results…</span>
@@ -77,7 +76,7 @@ export function Arena({ id = "arena" }: { id?: string }) {
 export function Honesty({ id = "honesty" }: { id?: string }) {
   return (
     <div className="grid min-w-0 flex-[1_1_440px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))] content-start gap-x-10 gap-y-5 px-4 py-12 sm:px-9">
-      <div className="col-span-full"><Num n="09" id={id}>Honesty: what’s real</Num></div>
+      <div className="col-span-full"><Num id={id}>Honesty: what’s real</Num></div>
       <div className="flex flex-col">
         <span className="pb-2 text-[13px] font-medium text-ink">Real</span>
         <ul>{REAL.map((t) => <li key={t} className="border-t border-line py-2.5 text-[14px] leading-[1.45] text-pretty">{t}</li>)}</ul>

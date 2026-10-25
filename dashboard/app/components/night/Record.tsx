@@ -7,7 +7,6 @@ import { clock } from "../../lib/format";
 import type { Action, CaseDetail, Line } from "../../lib/types";
 import { SectionHead } from "./primitives";
 
-const FAMILY = ["family_call", "family_bridge", "connect_family", "call_family"];
 const BY: Record<string, string> = { agent: "Agent", human: "Analyst", gate: "Gate" };
 
 type Item = { k: "a"; t: number; a: Action } | { k: "l"; t: number; l: Line };
@@ -27,7 +26,7 @@ function Said({ l, first }: { l: Line; first: string }) {
         <span className={TIME}>{clock(l.t)}</span>
       </span>
       {member ? (
-        <p className="font-serif text-[15px] leading-relaxed text-pretty italic">“{l.text}”</p>
+        <p className="font-sans text-[15px] leading-relaxed text-pretty italic">“{l.text}”</p>
       ) : (
         <p className="text-[15px] leading-relaxed text-pretty">{l.text}</p>
       )}
@@ -45,16 +44,6 @@ function Logged({ a, first }: { a: Action; first: string }) {
         </div>
         <p className="text-[14px] leading-normal text-pretty">{a.detail}</p>
         <p className="text-[11px] text-muted">Enforced in code, not in the prompt.</p>
-      </div>
-    );
-  if (FAMILY.includes(a.type))
-    return (
-      <div className="my-2 flex flex-col gap-1 border-l-[3px] border-family bg-family/8 py-3 pr-4 pl-4">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-          <span className="text-[12px] font-medium text-family">Family · {a.type.replace(/_/g, " ")}</span>
-          <span className={TIME}>{clock(a.t)}</span>
-        </div>
-        <p className="text-[14px] leading-normal text-pretty">{a.detail}</p>
       </div>
     );
   const t = actionTone(a.type, a.by);
@@ -87,7 +76,6 @@ export function RecordTimeline({ detail, live = false, className }: { detail: Ca
   return (
     <section aria-label="The record" className={`flex flex-col ${className ?? ""}`}>
       <SectionHead
-        num="03"
         title="The record"
         aside={live ? (
           <span className="flex items-center gap-1.5 text-[12px] text-green">

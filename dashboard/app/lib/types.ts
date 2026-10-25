@@ -10,6 +10,7 @@ export type CaseState = {
 };
 export type Case = {
   _id: string;
+  member_id?: string;
   member_name: string;
   merchant: string;
   category: string;
@@ -43,12 +44,21 @@ export type ArenaRow = { scenario: string; kind: string; passed: number; runs: n
 export type ArenaRun = { t: number; summary: string; rows: ArenaRow[] };
 export type Arena = { calls: ArenaRun | null; shield: ArenaRun | null };
 
+export type ReviewCustomer = {
+  member_id: string;
+  member_name: string;
+  summary: string;
+  status?: "running" | "proposed" | "approved" | "rejected" | "no_change" | "failed";
+};
+
 export type Review = {
+  _id?: string;
   started_at: number;
   trigger: string;
-  status: "running" | "proposed" | "approved" | "rejected" | "failed";
+  status: "running" | "proposed" | "approved" | "rejected" | "failed" | "completed";
   steps: string[];
   summary: string;
+  customers?: ReviewCustomer[];
   diff: string;
 };
 
