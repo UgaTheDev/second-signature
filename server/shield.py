@@ -159,8 +159,11 @@ def play_twiml(clip: str | None, fallback_text: str) -> str:
 
 def chime(wav: bytes) -> bytes:
     """Two soft bell tones ahead of the whisper, so she knows the next voice isn't the caller's."""
-    with wave.open(io.BytesIO(wav)) as w:
-        params, speech = w.getparams(), w.readframes(w.getnframes())
+    try:
+        with wave.open(io.BytesIO(wav)) as w:  # Cartesia streams: its header says "unknown length" (0xFFFFFFFF)
+            params, speech = w.getparams(), w.readframes(w.getnframes())
+    except Exception:
+        return wav
     if params.sampwidth != 2 or params.nchannels != 1:
         return wav
     rate = params.framerate
@@ -170,7 +173,7 @@ def chime(wav: bytes) -> bytes:
                         for i in range(n))
     out = io.BytesIO()
     with wave.open(out, "wb") as w:
-        w.setparams(params)
+        w.setparams(params._replace(nframes=0))  # the writer fills in the real length
         w.writeframes(tone(880, 0.3) + tone(660, 0.45) + bytes(int(rate * 0.35) * 2) + speech)
     return out.getvalue()
 
