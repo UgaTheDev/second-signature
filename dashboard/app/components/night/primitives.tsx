@@ -119,21 +119,13 @@ export function Waveform({ active, tone = "ink", bars = 28, height = 64, dashed 
 const STROKE = {
   mark: { box: "0 0 150 16", d: ["M2 11 C 20 2, 34 15, 54 8 S 92 2, 110 10 S 140 11, 148 4"], w: 1.8, dur: 1.8 },
   seal: { box: "0 0 240 40", d: ["M6 28 C 30 6, 48 34, 70 20 S 110 6, 128 24 S 170 30, 190 14 S 226 18, 234 10"], w: 1.6, dur: 2 },
-  hero: {
-    box: "0 0 1400 300",
-    d: [
-      "M10 210 C 120 40, 190 280, 300 150 S 420 30, 470 180 S 560 260, 640 120 C 700 20, 760 230, 830 170 S 960 60, 1010 190 S 1160 250, 1230 110 S 1340 90, 1390 60",
-      "M40 250 C 200 200, 380 270, 560 236 S 900 214, 1360 230",
-    ],
-    w: 3.2, dur: 3.2,
-  },
 } as const;
 
-/** Hand-drawn signature. `draw` animates it in (ss-draw); `glow` adds the amber drop-shadow. Size it with className (hero: preserveAspectRatio none). */
-export function SignatureStroke({ variant = "mark", draw = true, glow = false, tone = "amber", className }: { variant?: keyof typeof STROKE; draw?: boolean; glow?: boolean; tone?: Tone; className?: string }) {
+/** Hand-drawn signature. `draw` animates it in (ss-draw). Size it with className. */
+export function SignatureStroke({ variant = "mark", draw = true, tone = "amber", className }: { variant?: keyof typeof STROKE; draw?: boolean; tone?: Tone; className?: string }) {
   const s = STROKE[variant];
   return (
-    <svg viewBox={s.box} aria-hidden preserveAspectRatio={variant === "hero" ? "none" : undefined} className={cx("overflow-visible", className)}>
+    <svg viewBox={s.box} aria-hidden className={cx("overflow-visible", className)}>
       {s.d.map((d, i) => (
         <path
           key={i}
@@ -145,10 +137,7 @@ export function SignatureStroke({ variant = "mark", draw = true, glow = false, t
           strokeWidth={i ? 1.2 : s.w}
           strokeLinecap="round"
           strokeDasharray={1}
-          style={{
-            animation: draw ? `ss-draw ${s.dur}s ${variant === "hero" ? "cubic-bezier(.6,.1,.2,1)" : "ease-out"} ${i * 0.6}s both` : undefined,
-            filter: glow && !i ? `drop-shadow(0 0 14px ${toneVar(tone)})` : undefined,
-          }}
+          style={{ animation: draw ? `ss-draw ${s.dur}s ease-out ${i * 0.6}s both` : undefined }}
         />
       ))}
     </svg>

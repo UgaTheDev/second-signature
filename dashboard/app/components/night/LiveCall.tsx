@@ -59,7 +59,7 @@ export function LiveCall({ detail, now: outer }: { detail: CaseDetail; now?: num
     >
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2.5">
         <span className="inline-flex items-center gap-2 border-[1.5px] px-2.5 py-[5px] font-mono text-[11px] leading-none font-bold tracking-[.18em]" style={{ borderColor: accent, color: accent }}>
-          <span aria-hidden className={`size-[7px] rounded-full ${k === "ringing" || k === "live" ? "ss-ring" : ""}`} style={{ background: accent }} />
+          <span aria-hidden className="size-[7px] rounded-full" style={{ background: accent }} />
           {k === "ringing" ? "RING" : k === "ended" ? "END" : "LIVE"}
         </span>
         <h3 className="font-serif text-[34px] leading-none font-normal tracking-[-.02em]">{title}</h3>

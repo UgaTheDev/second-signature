@@ -97,7 +97,7 @@ export function RecordTimeline({ detail, live = false, className }: { detail: Ca
         title="The record"
         aside={live ? (
           <span className="flex items-center gap-2 font-mono text-[11px] font-bold tracking-[.18em] text-green">
-            <span aria-hidden className="ss-blink size-[7px] rounded-full bg-green" />LIVE TRANSCRIPT
+            <span aria-hidden className="size-[7px] rounded-full bg-green" />LIVE TRANSCRIPT
           </span>
         ) : undefined}
       />

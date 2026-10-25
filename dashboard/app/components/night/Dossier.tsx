@@ -38,7 +38,7 @@ export function Dossier({ cases, selectedId }: { cases: Case[] | undefined; sele
         size={200}
         stroke={1.2}
         italic
-        className="pointer-events-none absolute -top-5 -right-3.5 -z-10 opacity-50 select-none"
+        className="pointer-events-none absolute -top-5 -right-3.5 -z-10 opacity-[.12] select-none"
       />
       <Kicker>The member</Kicker>
       <div className="flex flex-col gap-1.5">

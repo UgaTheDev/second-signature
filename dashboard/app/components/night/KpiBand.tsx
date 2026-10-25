@@ -11,7 +11,7 @@ export function KpiBand({ stats, cases }: { stats?: Stats; cases?: Case[] }) {
             <span aria-hidden className="h-0.5 w-4" style={{ background: toneVar(k.tone) }} />
             {k.label}
           </span>
-          <span className="num font-serif text-[clamp(48px,4.4vw,78px)] leading-[.85] tracking-[-.045em]" style={{ color: toneVar(k.valueTone) }}>{k.value}</span>
+          <span className="num font-serif text-[clamp(34px,3.1vw,55px)] leading-[.85] tracking-[-.045em]" style={{ color: toneVar(k.valueTone) }}>{k.value}</span>
           <span className="text-[13.5px] text-pretty text-muted">{k.sub}</span>
         </div>
       ))}

@@ -1,7 +1,7 @@
 "use client";
 
 // Centre column: the case head, pipeline ruler, analyst actions, live call, next/why, evidence, record.
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { post } from "../../lib/api";
 import { countdown, deriveCall, holdExpiry, riskScore, riskTone, statusMeta, toneVar, type Tone } from "../../lib/derive";
 import { clock, money, needsDecision, shortClock, words } from "../../lib/format";
@@ -42,8 +42,8 @@ function Pipeline({ c }: { c: CaseDetail }) {
             <div className="flex items-center">
               <span
                 aria-hidden
-                className={`size-3 flex-none rotate-45 border-[1.5px] ${active ? "ss-pulse" : ""}`}
-                style={{ background: done ? col : "transparent", borderColor: col, borderStyle: skip ? "dashed" : "solid", boxShadow: done || active ? `0 0 18px -4px ${col}` : "none", ["--ss-pulse" as string]: col } as CSSProperties}
+                className="size-3 flex-none rotate-45 border-[1.5px]"
+                style={{ background: done ? col : "transparent", borderColor: col, borderStyle: skip ? "dashed" : "solid", boxShadow: done || active ? `0 0 18px -4px ${col}` : "none" }}
               />
               {!last && <span aria-hidden className="ml-1 h-0.5 flex-1" style={{ background: done ? "var(--brand)" : "var(--line)" }} />}
             </div>
