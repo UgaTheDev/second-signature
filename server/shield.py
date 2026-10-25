@@ -17,6 +17,7 @@ to it) run like this:
 
 import asyncio
 import io
+import math
 import os
 import re
 import time
@@ -156,6 +157,24 @@ def play_twiml(clip: str | None, fallback_text: str) -> str:
     return str(r)
 
 
+def chime(wav: bytes) -> bytes:
+    """Two soft bell tones ahead of the whisper, so she knows the next voice isn't the caller's."""
+    with wave.open(io.BytesIO(wav)) as w:
+        params, speech = w.getparams(), w.readframes(w.getnframes())
+    if params.sampwidth != 2 or params.nchannels != 1:
+        return wav
+    rate = params.framerate
+    def tone(hz, secs):
+        n = int(rate * secs)
+        return b"".join(int(7000 * math.sin(2 * math.pi * hz * i / rate) * math.exp(-5 * i / n)).to_bytes(2, "little", signed=True)
+                        for i in range(n))
+    out = io.BytesIO()
+    with wave.open(out, "wb") as w:
+        w.setparams(params)
+        w.writeframes(tone(880, 0.3) + tone(660, 0.45) + bytes(int(rate * 0.35) * 2) + speech)
+    return out.getvalue()
+
+
 def _whisper_text(member_id: str) -> str:
     return WHISPER.format(name=MEMBERS[member_id]["first_name"])
 
@@ -167,7 +186,7 @@ async def prerender():
     todo = [k for k in clips if k not in AUDIO]
     for key, clip in zip(todo, await asyncio.gather(*(render(clips[k]) for k in todo))):
         if clip:
-            AUDIO[key] = AUDIO.pop(clip)
+            AUDIO[key] = chime(AUDIO.pop(clip)) if key.startswith("whisper-") else AUDIO.pop(clip)
 
 
 async def caller_twiml(form: dict) -> str:
