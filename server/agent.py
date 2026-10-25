@@ -12,6 +12,7 @@ import time
 from loguru import logger
 from twilio.rest import Client as Twilio
 
+import books
 import crs
 import gate
 import intel
@@ -68,6 +69,7 @@ async def on_new_purchase(member_id: str, txn: dict, history: list[dict]):
     if floor:
         await store.action(cid, "override", "gate", f"Triage said allow, held anyway: {floor}")
     if not held:
+        await books.record(case, "allowed", "agent")
         return
     if await do(case, "hold", "agent", f"Paused ${case.amount:,.0f} at {case.merchant}. {t.plan}"):
         return
@@ -90,6 +92,7 @@ async def do(case: Case, action: str, by: str, reason: str) -> str | None:
     await store.action(case.id, action, by, reason)
     await _apply(case, action)
     await store.save_state(case)
+    await books.record(case, action, by)  # money events only: hold, release, confirm_fraud
     if by == "human" and action == "release":
         await overrides.note(case)
     return None

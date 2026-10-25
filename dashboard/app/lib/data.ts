@@ -3,8 +3,9 @@
 import { useQuery } from "convex/react";
 import { anyApi } from "convex/server";
 import { createContext, useContext, useMemo } from "react";
+import { sampleJournal } from "./books";
 import { sampleDesk } from "./sample";
-import type { Arena, Case, CaseDetail, Review, Stats } from "./types";
+import type { Arena, Books, Case, CaseDetail, Review, Stats } from "./types";
 
 // Untyped so this builds without codegen.
 const api = anyApi;
@@ -52,4 +53,12 @@ export function useReview(): Review | null | undefined {
   const sample = useSample();
   const live = useQuery(api.cases.latestReview, demo ? "skip" : {}) as Review | null | undefined;
   return demo ? sample.review : live;
+}
+
+export function useBooks(): Books | undefined {
+  const demo = useDemo();
+  const sample = useSample();
+  const live = useQuery(api.books.journal, demo ? "skip" : {}) as Books | undefined;
+  const fake = useMemo(() => ({ entries: sampleJournal(sample.details), cases: sample.cases }), [sample]);
+  return demo ? fake : live;
 }

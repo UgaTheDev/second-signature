@@ -51,3 +51,21 @@ export type Review = {
   summary: string;
   diff: string;
 };
+
+export type JournalLine = { account: string; name: string; debit: number; credit: number };
+export type JournalEntry = {
+  _id: string;
+  key: string;
+  caseId: string;
+  txn_id: string;
+  event: string;
+  by: string;
+  date: string;
+  t: number;
+  memo: string;
+  lines: JournalLine[];
+  ext_system?: string;
+  ext_id?: string;
+  ext_error?: string;
+};
+export type Books = { entries: JournalEntry[]; cases: Pick<Case, "_id" | "member_name" | "merchant" | "amount" | "status" | "opened_at">[] };

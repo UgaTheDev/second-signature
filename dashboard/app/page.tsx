@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { HAS_CONVEX } from "./ConvexClientProvider";
 import { ArenaHonesty } from "./components/night/ArenaHonesty";
+import { BooksPanel } from "./components/night/BooksPanel";
 import { CasePanel } from "./components/night/CasePanel";
 import { Cinema } from "./components/night/Cinema";
 import { Dossier } from "./components/night/Dossier";
@@ -21,7 +22,7 @@ import { DemoContext, useCaseDetail, useCases, useReview, useStats } from "./lib
 
 const noop = () => () => {};
 
-const VIEWS: View[] = ["cases", "shield", "review", "safety"];
+const VIEWS: View[] = ["cases", "shield", "review", "books", "safety"];
 // Old section anchors still land on the view that holds them.
 const LEGACY: Record<string, View> = { matrix: "safety", arena: "safety", honesty: "safety" };
 const viewFromHash = (): View => {
@@ -163,6 +164,7 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
           )}
           {view === "shield" && <div className={single}><ShieldPanel cases={cases} /></div>}
           {view === "review" && <div className={single}><ReviewPanel /></div>}
+          {view === "books" && <div className={single}><BooksPanel /></div>}
           {view === "safety" && (
             <div className={`${single} flex flex-col gap-12`}>
               <Walls />

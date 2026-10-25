@@ -78,3 +78,24 @@ async def review_step(review_id: str, text: str):
 
 async def review_set(review_id: str, status: str, **fields):
     await _m("cases:reviewSet", reviewId=review_id, status=status, **fields)
+
+
+async def journal(entry: dict):
+    """One balanced journal entry (books.py). Convex ignores a key it already has."""
+    logger.info(f"[books] {entry['key']} {entry['memo']}")
+    await _m("books:post", **entry)
+
+
+async def journal_posted(key: str, system: str, ext_id: str, error: str):
+    await _m("books:posted", key=key, system=system, ext_id=ext_id, error=error)
+
+
+async def journal_unposted() -> list[dict]:
+    """Entries no outside ledger has yet, oldest first (empty without CONVEX_URL or on error)."""
+    if not _client:
+        return []
+    try:
+        return await asyncio.to_thread(_client.query, "books:unposted") or []
+    except Exception as e:
+        logger.error(f"convex books:unposted: {e}")
+        return []

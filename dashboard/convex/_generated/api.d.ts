@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as books from "../books.js";
 import type * as cases from "../cases.js";
 
 import type {
@@ -17,6 +18,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  books: typeof books;
   cases: typeof cases;
 }>;
 

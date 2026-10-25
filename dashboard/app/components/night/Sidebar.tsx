@@ -1,10 +1,10 @@
-// 1. Sidebar: small wordmark + thin signature, the four views with muted counts, the promise, analyst chip.
+// 1. Sidebar: small wordmark + thin signature, the five views with muted counts, the promise, analyst chip.
 //    ViewTabs is the same nav as a tab row for screens where the sidebar is hidden.
 import { isShield, shieldInfo } from "../../lib/derive";
 import type { Case, Review } from "../../lib/types";
 import { SignatureStroke } from "./primitives";
 
-export type View = "cases" | "shield" | "review" | "safety";
+export type View = "cases" | "shield" | "review" | "books" | "safety";
 type NavProps = { cases?: Case[]; review?: Review | null; now: number; active: View; onNavigate: (v: View) => void };
 type NavRow = { view: View; label: string; count?: string; alert?: boolean };
 
@@ -15,6 +15,7 @@ function navRows({ cases, review, now }: Pick<NavProps, "cases" | "review" | "no
     { view: "cases", label: "Cases", count: cases ? String(cases.length) : "—" },
     { view: "shield", label: "Scam Shield", count: armed ? "Armed" : undefined, alert: armed },
     { view: "review", label: "Policy review", count: rs === "proposed" ? "1 new" : rs === "running" ? "Running" : undefined, alert: rs === "proposed" },
+    { view: "books", label: "Books" },
     { view: "safety", label: "Safety" },
   ];
 }
@@ -68,7 +69,7 @@ export function Sidebar(props: NavProps) {
   );
 }
 
-/** Same four views as a horizontal row, shown only below lg (where the sidebar is hidden). */
+/** Same five views as a horizontal row, shown only below lg (where the sidebar is hidden). */
 export function ViewTabs(props: NavProps) {
   return (
     <nav aria-label="Views" className="flex gap-1 overflow-x-auto border-b border-line px-8 py-2 max-sm:px-4 lg:hidden">

@@ -5,7 +5,7 @@ Twilio signature checks, the family bridge TwiML and the code floor."""
 import asyncio, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.update(ANTHROPIC_API_KEY="bad", TWILIO_AUTH_TOKEN="tok", LOCAL_SERVER_URL="https://example.ngrok.app", ANALYST_TOKEN="pass")
-for k in ("CONVEX_URL", "NESSIE_KEY", "CRS_USERNAME", "TWILIO_NUMBER", "FACTORY_API_KEY"): os.environ.pop(k, None)
+for k in ("CONVEX_URL", "NESSIE_KEY", "CRS_USERNAME", "TWILIO_NUMBER", "FACTORY_API_KEY", "QBO_REFRESH_TOKEN"): os.environ.pop(k, None)
 import dotenv; dotenv.load_dotenv = lambda *a, **k: False  # offline: a real .env must not override the fakes above
 import agent, server
 from fastapi.testclient import TestClient
@@ -124,3 +124,62 @@ for i in range(overrides.THRESHOLD):
     assert c.post(f"/cases/o{i}/release").status_code == 200
 assert len(overrides._since_review) == overrides.THRESHOLD   # would have fired with FACTORY_API_KEY set
 print("overrides ok")
+
+# --- the books: every money event is one balanced entry, and the suspense account ties out ---
+import books, quickbooks, store
+booked = []
+async def fake_journal(e): booked.append(e)
+store.journal = fake_journal
+agent.CASES.clear()
+agent.triage = fake_allow
+asyncio.run(agent.on_new_purchase("robert", {**txn, "txn_id": "b1", "amount": 60}, [{"category": "gift_card", "merchant": "Target", "amount": 75, "date": "2026-09-01"}]))
+asyncio.run(agent.on_new_purchase("dolores", {**txn, "txn_id": "b2", "amount": 500}, []))
+asyncio.run(agent.on_new_purchase("dolores", {**txn, "txn_id": "b3", "amount": 1250}, []))
+assert c.post("/cases/b2/release").status_code == 200
+assert c.post("/cases/b3/confirm_fraud").status_code == 200
+asyncio.run(agent.do(agent.CASES["b3"], "release", "human", "x"))       # refused by the gate: books nothing
+assert [e["event"] for e in booked] == ["allowed", "hold", "hold", "release", "confirm_fraud"], [e["event"] for e in booked]
+assert all(books.balanced(e) for e in booked)
+bal = {}
+for e in booked:
+    for ln in e["lines"]: bal[ln["account"]] = round(bal.get(ln["account"], 0) + ln["credit"] - ln["debit"], 2)
+assert bal == {"2100": -560.0, "2190": 0.0, "2200": 560.0}, bal          # suspense empty once both holds are decided
+assert books.entry(agent.Case("s", "dolores", "s", "call", "scam_call", 0.0), "hold", "agent") is None
+print("books ok")
+
+# --- QuickBooks: token refresh, account lookup/creation, and no double post on retry (Intuit mocked) ---
+import httpx, json
+os.environ.update(QBO_CLIENT_ID="id", QBO_CLIENT_SECRET="sec", QBO_REALM_ID="123", QBO_REFRESH_TOKEN="seed")
+quickbooks.TOKENS = quickbooks.TOKENS.with_name("qbo_tokens.smoke.json")
+made, accts = {}, {}
+def intuit(req):
+    if req.url.path.endswith("/tokens/bearer"):
+        assert b"refresh_token=seed" in req.content or b"refresh_token=r2" in req.content
+        return httpx.Response(200, json={"access_token": "a", "refresh_token": "r2", "expires_in": 3600})
+    q = req.url.params.get("query", "")
+    if "from Account" in q:
+        name = q.split("'")[1]
+        return httpx.Response(200, json={"QueryResponse": {"Account": [{"Id": accts[name]}]} if name in accts else {"QueryResponse": {}}})
+    if "from JournalEntry" in q:
+        doc = q.split("'")[1]
+        return httpx.Response(200, json={"QueryResponse": {"JournalEntry": [{"Id": made[doc]}]} if doc in made else {}})
+    body = json.loads(req.content)
+    if req.url.path.endswith("/account"):
+        accts[body["Name"]] = str(len(accts) + 1)
+        return httpx.Response(200, json={"Account": {"Id": accts[body["Name"]]}})
+    if req.url.path.endswith("/journalentry"):
+        assert sum(l["Amount"] for l in body["Line"] if l["JournalEntryLineDetail"]["PostingType"] == "Debit") == \
+               sum(l["Amount"] for l in body["Line"] if l["JournalEntryLineDetail"]["PostingType"] == "Credit")
+        made[body["DocNumber"]] = str(100 + len(made))
+        return httpx.Response(200, json={"JournalEntry": {"Id": made[body["DocNumber"]]}})
+    return httpx.Response(404)
+quickbooks._http = httpx.AsyncClient(transport=httpx.MockTransport(intuit))
+assert quickbooks.enabled()
+async def post_all():
+    return [await quickbooks.post(e) for e in booked] + [await quickbooks.post(booked[1])]
+ids = asyncio.run(post_all())
+assert len(made) == 5 and ids[-1] == ids[1], ids                         # the retry found the first post
+assert len(accts) == 3 and all(n.split()[0] in books.ACCOUNTS["shares"] + books.ACCOUNTS["suspense"] + books.ACCOUNTS["settlement"] for n in accts)
+assert json.loads(quickbooks.TOKENS.read_text())["refresh"] == "r2"     # rotated token kept for next time
+quickbooks.TOKENS.unlink()
+print("quickbooks ok")

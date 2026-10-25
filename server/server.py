@@ -24,6 +24,7 @@ from twilio.request_validator import RequestValidator  # noqa: E402
 from twilio.twiml.voice_response import Connect, Dial, Stream, VoiceResponse  # noqa: E402
 
 import agent  # noqa: E402
+import books  # noqa: E402
 import intel  # noqa: E402
 import nessie  # noqa: E402
 import review  # noqa: E402
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):
     tasks = [asyncio.create_task(agent.expire_holds())]
     if os.getenv("FACTORY_API_KEY"):
         tasks.append(asyncio.create_task(morning_reviews()))
+    tasks.append(asyncio.create_task(books.sync()))  # QuickBooks catches up on anything booked while it was down
     if accounts:
         tasks.append(asyncio.create_task(nessie.watch(accounts, agent.on_new_purchase)))
     else:
@@ -67,7 +69,8 @@ def analyst(x_analyst_token: str = Header("")):
 @app.get("/health")
 async def health():
     """For preflight.py and ngrok checks: no secrets, just what's loaded."""
-    return {"ok": True, "cases": len(agent.CASES), "analyst_auth": bool(os.getenv("ANALYST_TOKEN"))}
+    return {"ok": True, "cases": len(agent.CASES), "analyst_auth": bool(os.getenv("ANALYST_TOKEN")),
+            "quickbooks": books.quickbooks.enabled()}
 
 
 async def twilio_form(request: Request) -> dict:
@@ -219,6 +222,14 @@ async def decide_review(decision: str):
     if why := await review.decide(decision == "approve"):
         raise HTTPException(409, why)
     return {"ok": True}
+
+
+@app.post("/books/sync", dependencies=[Depends(analyst)])
+async def books_sync():
+    """Dashboard's "Post to QuickBooks": sends every journal entry QuickBooks doesn't have yet."""
+    if not books.quickbooks.enabled():
+        raise HTTPException(409, "QuickBooks isn't connected: set the QBO_ keys in server/.env")
+    return {"ok": True, "sent": await books.sync()}
 
 
 @app.post("/reset", dependencies=[Depends(analyst)])

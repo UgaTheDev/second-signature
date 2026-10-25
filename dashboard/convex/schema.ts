@@ -19,6 +19,8 @@ export const caseState = v.object({
   bridged: v.boolean(),
 });
 
+export const journalLine = v.object({ account: v.string(), name: v.string(), debit: v.number(), credit: v.number() });
+
 export default defineSchema({
   cases: defineTable({
     member_id: v.string(),
@@ -63,6 +65,24 @@ export default defineSchema({
     summary: v.string(),
     rows: v.array(v.object({ scenario: v.string(), kind: v.string(), passed: v.number(), runs: v.number(), critical: v.number(), misses: v.string() })),
   }),
+
+  // The books: one balanced double-entry journal entry per money event (server/books.py)
+  journal: defineTable({
+    key: v.string(), // caseId:event, so an event is never booked twice
+    caseId: v.string(),
+    txn_id: v.string(),
+    event: v.string(), // allowed | hold | release | confirm_fraud
+    by: v.string(),
+    date: v.string(), // YYYY-MM-DD, the accounting date
+    t: v.number(),
+    memo: v.string(),
+    lines: v.array(journalLine),
+    ext_system: v.optional(v.string()), // quickbooks
+    ext_id: v.optional(v.string()), // its JournalEntry Id there
+    ext_error: v.optional(v.string()), // why the last post failed; cleared on success
+  })
+    .index("by_key", ["key"])
+    .index("by_t", ["t"]),
 
   transcript: defineTable({
     caseId: v.id("cases"),
