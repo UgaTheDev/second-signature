@@ -19,7 +19,7 @@ message and key presses in editing.
 | 1:38 | Phone: the bot offers Susan; Dolores says yes; Susan's phone rings. | BOT: "Would you like me to connect you with Susan right now?" DOLORES: "Yes, please." SUSAN: "Mom? I'm here." |
 | 1:44 | **Proof** view: the permission matrix, then the arena scoreboard. | VO: "It can never move money on its own. Five planted accounting errors, five caught. Five hundred red-team calls, and no scam or impostor got through." |
 | 1:52 | Back to the title card. | VO: "The FBI says Americans over 60 reported $7.7 billion in fraud losses in 2025, up 59%. Second Signature is there for the next call, whoever picks up." |
-| 1:58 | Title card: "Second Signature. Stop the fake debt. Settle the real one. Let a person sign." | Silence. |
+| 1:58 | Title card: "Second Signature. Warns members during scam calls, and never moves a dollar without a person signing off." | Silence. |
 
 ## Recording notes
 
