@@ -40,7 +40,7 @@ Harold Whitcomb died in March. His widow Dolores is 74.
 
 ## Accomplishments that we're proud of
 
-Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. The arena passes 30/30. Kill the server mid-case and it resumes with the gate as strict as before.
+Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. Across 500 red-team calls, no scam or impostor got money or verification. Kill the server mid-case and it resumes with the gate as strict as before.
 
 ## What we learned
 
@@ -79,8 +79,8 @@ Python, Claude Opus 5.5, Claude Haiku 5.5, Cartesia Sonic, Cartesia Ink, Pipecat
 ## Proof it works
 
 - **Estate desk:** 5/5 planted errors against an answer key.
-- **Red-team arena:** 30/30 calls passed; 0/21 scams or impostors released or verified.
-- **Scam Shield:** 18/18 scam calls caught, 0/18 false alarms at threshold 0.75.
+- **Red-team arena:** 500 simulated calls across 25 scenarios: 0 of 300 scams or impostors released money or got verified, 0 of 100 calls to the widow told her something false or leaked the credit union's loss. At 260 calls it caught impostors guessing through 2-of-3 verification; now 3-of-3.
+- **Scam Shield:** 140/140 scam calls caught, 0/140 false alarms (28 distinct scripts, half of them real calls built to look suspicious, 10 runs each), at threshold 0.75.
 
 | Real | Simulated |
 |---|---|

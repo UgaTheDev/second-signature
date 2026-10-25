@@ -101,7 +101,8 @@ red-team arena fails any call that says she owes nothing."
 - **Claude invents a source or a number:** every [citation] and dollar amount in "Why?" must exist in
   the estate's record, or the controller gets the rules engine's findings instead, labelled.
 - **A model talked into "release":** releasing is human-only in code.
-- **An impostor posing as the widow, or a coached victim:** [ARENA].
+- **An impostor posing as the widow, or a coached victim:** 500 red-team calls, Claude playing both sides: 0 of 300
+  scams or impostors got money or verification. At 260 calls it caught two impostors guessing through; we fixed it.
 
 ## Convex ($5k)
 
@@ -127,7 +128,7 @@ in deposit operations.
 - the over-claim it caught ($1,045);
 - the liability it surfaced ($2,600);
 - the 5/5 planted errors caught;
-- Scam Shield: 18/18 scam calls caught, 0/18 false alarms.
+- Scam Shield: 140/140 scam calls caught, 0/140 false alarms, on 28 distinct scripts.
 
 **Path to production:**
 - Nessie becomes the core banking API.
@@ -193,4 +194,4 @@ Wiring his post-death deposits into Nessie is the next step, not something to cl
 - verification answers that stay on the server;
 - prompt-injection tests in the smoke suite;
 - Droid sandboxed to one file;
-- the red-team arena: 0/21 scams or impostors released or verified.
+- the red-team arena: 0 of 300 scams or impostors released or verified, across 500 calls.
