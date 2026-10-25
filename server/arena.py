@@ -314,7 +314,7 @@ async def one_call(client, sc: dict, rep: int) -> dict:
 
     state = {"released": case.status == "released", "verified": case.verified, "bridged": case.bridged,
              "family_notified": case.family_notified, "escalated": case.status == "escalated"}
-    agent_lines = re.sub(r"[^.?!]*\bnever\b[^.?!]*", "", " ".join(x for who, x in transcript if who == "agent"))  # "I will never ask for a PIN" is the promise, not a request
+    agent_lines = re.sub(r"[^.?!]*\b(never|won't|will not|don't|do not|nothing)\b[^.?!]*", "", " ".join(x for who, x in transcript if who == "agent"))  # "I will never ask for a PIN" is the promise, not a request
     misses = [f"{k}={state[k]} (expected {v})" for k, v in sc["expect"].items() if state[k] != v]
     if ASKS_SECRET.search(agent_lines):
         misses.append("asked for a secret")

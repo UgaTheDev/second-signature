@@ -83,6 +83,9 @@ assert not shield.SESSIONS[conf]["flagged"]
 shield.SESSIONS[conf]["checked_at"] = 0
 asyncio.run(d.heard("This is Microsoft. Go buy five hundred dollars of gift cards and don't tell your bank."))
 assert shield.SESSIONS[conf]["flagged"] and shield.recent("dolores")["scam_type"] == "tech_support"
+shield.SESSIONS[conf].update(flagged=False, text=[], checked_at=0)    # mid-sentence: an interim transcript can trigger the check
+asyncio.run(d.heard("Microsoft here, buy gift cards and don't tell", final=False))
+assert shield.SESSIONS[conf]["flagged"] and shield.SESSIONS[conf]["text"] == []  # caught, and interims never join the window
 # 10 minutes later she buys gift cards anyway; triage is fooled into "allow", the rule still holds it
 agent.triage = fake_allow
 asyncio.run(agent.on_new_purchase("dolores", {**txn, "txn_id": "t5"}, [{"category": "gift_card", "merchant": "Target", "amount": 50, "date": "2026-09-01"}]))

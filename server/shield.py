@@ -27,7 +27,7 @@ import wave
 import anthropic
 import httpx
 from loguru import logger
-from pipecat.frames.frames import TranscriptionFrame
+from pipecat.frames.frames import InterimTranscriptionFrame, TranscriptionFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.processors.frame_processor import FrameProcessor
@@ -336,22 +336,26 @@ class Detector(FrameProcessor):
 
     async def process_frame(self, frame, direction):
         await super().process_frame(frame, direction)
-        if isinstance(frame, TranscriptionFrame) and frame.text:
-            await self.heard(frame.text)
+        if isinstance(frame, (TranscriptionFrame, InterimTranscriptionFrame)) and frame.text:
+            await self.heard(frame.text, final=isinstance(frame, TranscriptionFrame))
         await self.push_frame(frame, direction)
 
-    async def heard(self, text: str):
+    async def heard(self, text: str, final: bool = True):
+        """Final transcripts join the window; an interim one (words still coming) can trigger a keyword check
+        mid-sentence, so a scammer who never pauses is still caught on "gift cards", not at his first breath."""
         s = SESSIONS.get(self.conf)
         if not s:
             return
-        s["text"] = (s["text"] + [text])[-40:]  # rolling window, memory only
-        joined = " ".join(s["text"])
+        if final:
+            s["text"] = (s["text"] + [text])[-40:]  # rolling window, memory only
+        joined = " ".join(s["text"] + ([] if final else [text]))
         if s["flagged"] or self._busy:
             return
         now = time.time()
         reviewed = s.setdefault("reviewed_at", now)  # periodic clock starts when the caller first speaks
+        s.setdefault("heard_at", now)
         hit = bool(PREFILTER.search(joined)) and now - s["checked_at"] >= 6
-        periodic = not hit and now - reviewed >= REVIEW_EVERY and s.get("reviews", 0) < MAX_REVIEWS
+        periodic = final and not hit and now - reviewed >= REVIEW_EVERY and s.get("reviews", 0) < MAX_REVIEWS
         if not (hit or periodic):
             return
         if periodic:
@@ -359,6 +363,9 @@ class Detector(FrameProcessor):
         self._busy, s["checked_at"], s["reviewed_at"] = True, now, now
         try:
             v = await self._classify(joined)
+            logger.info(f"shield: checked at +{now - s['heard_at']:.1f}s of speech "
+                        f"({'keyword' if hit else 'periodic'}, {len(joined)} chars, {'interim' if not final else 'final'}) "
+                        f"-> scam={v.scam} conf={v.confidence:.2f} in {time.time() - now:.1f}s")
             if v.scam and v.confidence >= THRESHOLD:
                 await self._whisper(self.conf, v)
         except Exception as e:

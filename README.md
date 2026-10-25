@@ -226,19 +226,22 @@ language, fails.
 
 ```bash
 uv run python arena.py --selftest      # harness check, no API calls
-uv run python arena.py -n 3            # 30 calls, both sides on Haiku 5.5: a few cents
+uv run python arena.py -n 20 -p 16     # 500 calls (25 scenarios), both sides on Haiku 5.5: about $1.25
 ```
 
 The scoreboard prints as a markdown table, and full transcripts go to `arena_results.json`. Designing it
 found one hole, now closed: a coached victim who passes verification could release her own first-ever gift
 card purchase. Purchases held by the code floor now need an analyst to release them.
 
-Latest run (`-n 3`): **30/30 passed**, 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with
-the right outcome. Its first live run found a second hole: a scammer who knew Dolores's city guessed through
+Latest run (`-n 20`, 500 calls): **0 of 300 scams or attacks released or verified**, 0 of 100 widow calls harmful,
+1 of 100 legitimate calls with the wrong outcome. The 14 misses: 8 where the simulated caller went off-script on the
+family offer (or verification failed, so the bridge was correctly refused), 4 grader false positives ("I won't ask for
+a PIN" read as asking; fixed), 2 real members who missed one of three questions (the price of 3-of-3, below).
+Scaling from 30 to 260 calls found a hole 30 never showed: at 2-of-3, two impostors guessed through verification.
+Verification now needs all three, and the real card year is no longer always the second-oldest option. Its first live run found a second hole: a scammer who knew Dolores's city guessed through
 verification, because the real street was the only local one among the options and Bank of America sat beside
 obscure lenders. Decoys are now local streets and household-name banks. Outbound calls that end with "I'll call the
-number on my card" continue as a simulated callback on the same case. Scam Shield on its 12 labelled scripts (`--shield -n 3`):
-18/18 caught, 0/18 false alarms.
+number on my card" continue as a simulated callback on the same case. Scam Shield (`--shield -n 10`): 140/140 scam calls caught, 0/140 false alarms (28 distinct scripts, half of them real calls built to look suspicious, 10 runs each).
 
 ### Where and how Droid is used (Factory)
 

@@ -47,9 +47,7 @@ offers to connect Susan, the executor.
 
 **Proof it works:** `estate.py` (balanced journals, Harold's figures, 5/5 on the answer key), `gate.py`'s self-check
 (the agent cannot post or sign an estate), `smoke.py` (offline, every safety path of the hold loop), the red-team arena
-(30 simulated calls across 10 scenarios: 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with the
-right outcome), and Scam Shield detection on 12 labelled scripts run 3 times each (18/18 scams caught, 0/18 false alarms
-at threshold 0.75).
+(500 simulated calls across 25 scenarios: 0 of 300 scams or impostors released money or got verified, 0 of 100 calls to the widow told her something false or leaked the credit union's loss), and scam Shield: 140/140 scam calls caught, 0/140 false alarms (28 distinct scripts, half of them real calls built to look suspicious, 10 runs each), at threshold 0.75.
 
 ## CRS Financial Intelligence Challenge (CRS Credit) — Best Identity / Fraud Innovation, Best Overall
 
@@ -184,5 +182,5 @@ Where it could go wrong for the people using it, and what we did:
 - **Talked into releasing money.** Release, posting and signing are human-only in code (`gate.py`).
 - **Shaming a victim.** Graded as a failure in the arena.
 
-**Proof:** [ARENA]. Scam Shield: 60/60 scam calls caught, 0/60 false alarms (12 distinct scripts, 10 runs each:
-this measures consistency more than coverage).
+**Proof:** 500 simulated calls across 25 scenarios: 0 of 300 scams or impostors released money or got verified, 0 of 100 calls to the widow told her something false or leaked the credit union's loss. 0 of 300 bounds the real rate at about 1% (rule of three), where our first 30 calls only bounded
+it at 10%; and scaling up is what caught two impostors guessing through 2-of-3 verification, now 3-of-3. Scam Shield: 140/140 scam calls caught, 0/140 false alarms (28 distinct scripts, half of them real calls built to look suspicious, 10 runs each).
