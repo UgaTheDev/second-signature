@@ -54,6 +54,9 @@ def build(case_id: str, report: dict | None, needed: int = NEEDED) -> list[dict]
         rng.shuffle(options)
         questions.append({"number": len(questions) + 1, "question": text, "options": options})
         answers.append(real)
+    # A fraud alert asks for 3, but a thin file may only yield 2: then all of them must be right, never an impossible bar.
+    if questions:  # no questions at all keeps the bar: nothing to answer must never mean verified
+        needed = min(needed, len(questions))
     _state[case_id] = {"questions": questions, "answers": answers, "asked": set(), "right": 0, "wrong": 0, "needed": needed}
     return questions
 
@@ -113,4 +116,8 @@ if __name__ == "__main__":
     assert check_answer("stepup", 3, "1978")["verified"]
     q4 = build("stepup2", report, needed=3)
     assert check_answer("stepup2", 1, next(o for o in q4[0]["options"] if o != "Elm St"))["failed"]  # one miss = can't reach 3
+    thin = {"creditFiles": [{"addresses": [{"addressLine1": "612 OCEAN VIEW DR"}]}], "tradelines": [{"creditorName": "Chase"}]}
+    assert len(build("thin", thin, needed=3)) == 2 and _state["thin"]["needed"] == 2  # alert but 2 questions: both, not 3
+    build("empty", {}, needed=2)
+    assert _state["empty"]["needed"] == 2 and not check_answer("empty", 1, "x").get("verified")  # nothing to ask != verified
     print("verify ok")

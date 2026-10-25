@@ -41,12 +41,15 @@ def _ensure_indices():
 def _load_alerts_sync():
     items = []
     if os.getenv("APIFY_TOKEN") and os.getenv("APIFY_ACTOR"):
-        from apify_client import ApifyClient
+        try:
+            from apify_client import ApifyClient
 
-        run = ApifyClient(os.environ["APIFY_TOKEN"]).actor(os.environ["APIFY_ACTOR"]).last_run(status="SUCCEEDED")
-        items = run.dataset().list_items().items
-        ALERTS_FILE.write_text(json.dumps(items))  # offline copy for the next restart
-    elif ALERTS_FILE.exists():
+            run = ApifyClient(os.environ["APIFY_TOKEN"]).actor(os.environ["APIFY_ACTOR"]).last_run(status="SUCCEEDED")
+            items = run.dataset().list_items().items
+            ALERTS_FILE.write_text(json.dumps(items))  # offline copy for the next restart
+        except Exception as e:  # no successful run yet, wrong actor id, network: the committed copy still works
+            logger.warning(f"intel: Apify unavailable ({e}); using {ALERTS_FILE.name}")
+    if not items and ALERTS_FILE.exists():
         items = json.loads(ALERTS_FILE.read_text())
     ALERTS[:] = items
     if _es:

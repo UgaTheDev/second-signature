@@ -75,7 +75,8 @@ async def on_new_purchase(member_id: str, txn: dict, history: list[dict]):
     needed = crs.answers_needed(data)
     qs = verify.build(cid, data.get("report"), needed)
     why = {0: "CRS identity check failed: no phone verification, an analyst must handle this",
-           3: "CRS shows a fraud alert: stepping up to 3 of 3"}.get(needed, "2 of 3 needed")
+           3: "CRS shows a fraud alert: stepping up"}.get(needed, "standard check")
+    why += f"; {verify._state[cid]['needed']} of {len(qs)} must be right" if qs else ""
     await store.action(cid, "verify", "agent", f"{len(qs)} verification questions from her CRS credit file, answers kept server-side ({why})")
     await do(case, "call_member", "agent", f"Calling {m['first_name']} about the paused purchase")
 
@@ -123,7 +124,8 @@ async def dial(case: Case, to: str | None, mode: str):
             Twilio(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"]).calls.create,
             to=to, from_=frm, url=f"{base}/twiml?{q}", method="POST",
             status_callback=f"{base}/call-status?{q}", status_callback_event=["completed"],
-            **({"machine_detection": "Enable"} if mode in ("member", "bridge") else {}),  # family mode may leave a voicemail
+            # Opt-in: on a Twilio trial the "press any key" preamble makes AMD call a person a machine, and we hang up.
+            **({"machine_detection": "Enable"} if mode in ("member", "bridge") and os.getenv("MACHINE_DETECTION") == "1" else {}),
         )
         logger.info(f"dialed {mode} for {case.id}: {call.sid}")
     except Exception as e:
