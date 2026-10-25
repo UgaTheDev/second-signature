@@ -76,7 +76,6 @@ export function RecordTimeline({ detail, live = false, className }: { detail: Ca
   return (
     <section aria-label="The record" className={`flex flex-col ${className ?? ""}`}>
       <SectionHead
-        num="03"
         title="The record"
         aside={live ? (
           <span className="flex items-center gap-1.5 text-[12px] text-green">

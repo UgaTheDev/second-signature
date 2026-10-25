@@ -18,7 +18,7 @@ export function Ledger({ cases, selectedId, onSelect, fresh = null, history = fa
   return (
     <section aria-label={title}>
       <div className="px-6 pt-6 pb-4">
-        <SectionHead num="01" title={title} />
+        <SectionHead title={title} />
         {!history && (
           <div className="mt-4 flex items-baseline gap-2" role="status">
             <span className={`num text-[28px] font-semibold leading-none ${openHolds ? "text-amber" : "text-ink"}`}>{openHolds ?? "—"}</span>

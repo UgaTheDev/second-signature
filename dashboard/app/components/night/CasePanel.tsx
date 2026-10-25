@@ -1,13 +1,13 @@
 "use client";
 
-// Centre column: the case head, pipeline ruler, analyst actions, live call, next/why, evidence, record.
+// Centre column: the case head, pipeline ruler, analyst actions, why, evidence, record.
 import { useState } from "react";
 import { post } from "../../lib/api";
 import { countdown, deriveCall, holdExpiry, riskScore, riskTone, statusMeta, toneVar, type Tone } from "../../lib/derive";
 import { clock, money, needsDecision, shortClock, words } from "../../lib/format";
 import type { CaseDetail } from "../../lib/types";
 import { EvidenceList } from "./EvidenceList";
-import { LiveCall, useNow } from "./LiveCall";
+import { useNow } from "./LiveCall";
 import { Kicker, Stamp } from "./primitives";
 import { RecordTimeline } from "./Record";
 
@@ -145,17 +145,9 @@ function CaseBody({ c }: { c: CaseDetail }) {
         )}
       </div>
 
-      <LiveCall detail={c} now={now} />
-
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-x-10 gap-y-6">
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-[13px] font-normal text-muted">What happens next</h3>
-          <p className="text-[15px] leading-relaxed text-pretty">{c.plan || "Waiting on triage…"}</p>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-[13px] font-normal text-muted">Why</h3>
-          <p className="text-[15px] leading-relaxed text-pretty">{c.decision_rationale || "Waiting on triage…"}</p>
-        </div>
+      <div className="flex flex-col gap-1.5">
+        <h3 className="text-[13px] font-normal text-muted">Why</h3>
+        <p className="text-[15px] leading-relaxed text-pretty">{c.decision_rationale || "Waiting on triage…"}</p>
       </div>
 
       <EvidenceList signals={c.risk_signals} />

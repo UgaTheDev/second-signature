@@ -9,7 +9,7 @@ const LABEL: Record<string, string> = { shield: "Scam Shield", crs: "CRS", elast
 export function EvidenceList({ signals, className }: { signals: Signal[]; className?: string }) {
   return (
     <section aria-label="The evidence" className={`flex flex-col ${className ?? ""}`}>
-      <SectionHead num="02" title="The evidence" aside={<span className="text-[12px] text-muted">Weight = push toward a hold</span>} />
+      <SectionHead title="The evidence" aside={<span className="text-[12px] text-muted">Weight = push toward a hold</span>} />
       {signals.length === 0 && <p className="py-4 text-[14px] text-muted">Gathering signals…</p>}
       <ol>
         {signals.map((s, i) => {

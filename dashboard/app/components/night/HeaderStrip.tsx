@@ -55,7 +55,7 @@ export function HeaderStrip({
         aria-expanded={open}
         aria-controls="demo-tools"
         title="Demo tools"
-        className="fixed top-4 right-4 z-30 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-panel text-muted shadow-md transition-colors hover:bg-panel2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="fixed right-4 bottom-4 z-30 grid size-11 cursor-pointer place-items-center rounded-full border border-line bg-panel text-muted shadow-md transition-colors hover:bg-panel2 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       >
         <SlidersHorizontal size={18} strokeWidth={1.75} aria-hidden />
       </button>
@@ -67,7 +67,7 @@ export function HeaderStrip({
           setOpen(event.newState === "open");
           if (event.newState === "closed") setConfirming(false);
         }}
-        className="fixed inset-auto top-[68px] right-4 m-0 w-60 max-w-[calc(100vw-32px)] rounded-xl border border-line bg-panel p-2 text-ink shadow-xl"
+        className="fixed inset-auto right-4 bottom-[68px] m-0 w-60 max-w-[calc(100vw-32px)] rounded-xl border border-line bg-panel p-2 text-ink shadow-xl"
       >
         <p className="px-3 pt-2 pb-1 text-[11px] font-medium uppercase tracking-wider text-muted">Demo tools</p>
         <button type="button" onClick={() => run(onScenario)} className={ITEM}>Run a scenario</button>

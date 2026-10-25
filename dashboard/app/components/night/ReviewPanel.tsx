@@ -22,7 +22,7 @@ export function ReviewPanel({ className = "" }: { className?: string }) {
   const customers = (r?.customers ?? []).filter((customer) => customer.status !== "no_change").sort((a, b) => a.member_name.localeCompare(b.member_name));
   return (
     <section className={`flex flex-col gap-5 px-7 py-8 ${className}`}>
-      <SectionHead id="review" num="06" title="Policy reviews" />
+      <SectionHead id="review" title="Policy reviews" />
       <p className="text-[14px] text-muted">Approve or reject each customer’s recommendations independently.</p>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Btn variant="outline" size="sm" disabled={busy || running} onClick={() => send("/review", "Review started.")}>

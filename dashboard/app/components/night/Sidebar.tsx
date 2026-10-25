@@ -13,7 +13,7 @@ function navRows({ cases, review }: Pick<NavProps, "cases" | "review">): NavRow[
   const pending = review?.customers?.filter((customer) => customer.status === "proposed").length ?? 0;
   return [
     { view: "cases", label: "Active issues", count: cases ? String(new Set(cases.filter(isActiveCase).map(customerKey)).size) : "—" },
-    { view: "history", label: "Historical log", count: cases ? String(cases.filter((c) => !isActiveCase(c)).length) : "—" },
+    { view: "history", label: "Historical log" },
     { view: "customers", label: "Member profiles" },
     { view: "review", label: "Policy review", count: pending ? `${pending} new` : rs === "running" ? "Running" : undefined, alert: pending > 0 },
   ];
@@ -41,7 +41,7 @@ function NavLink({ r, active, onNavigate, className }: { r: NavRow; active: View
 
 export function Sidebar(props: NavProps) {
   return (
-    <nav aria-label="Views" className="sticky top-0 flex h-screen flex-[0_0_200px] flex-col gap-8 border-r border-line bg-bg px-4 py-7 max-lg:hidden">
+    <nav aria-label="Views" className="flex h-full flex-[0_0_200px] overflow-y-auto flex-col gap-8 border-r border-line bg-bg px-4 py-7 max-lg:hidden">
       <div className="flex flex-col gap-1 px-2">
         <span className="font-sans font-semibold text-[20px] leading-tight tracking-[-.01em]">Second Signature</span>
         <SignatureStroke variant="mark" className="h-2 w-[72px]" />

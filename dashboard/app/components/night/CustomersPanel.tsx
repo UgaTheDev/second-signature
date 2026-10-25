@@ -19,7 +19,7 @@ function ProfileDetail({ customer, demo }: { customer: Customer; demo: boolean }
   const [transactionSearch, setTransactionSearch] = useState("");
   const transactions = facts.transactions.filter((c) => `${c.merchant} ${words(c.category)}`.toLowerCase().includes(transactionSearch.trim().toLowerCase()));
   return (
-    <article className="min-w-0 flex-1 space-y-6 p-6 max-sm:p-4">
+    <article className="relative min-w-0 flex-1 space-y-6 p-6 max-sm:p-4 lg:overflow-y-auto">
       <header>
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-[26px] font-semibold tracking-tight">{customer.name}</h2>
@@ -107,10 +107,10 @@ export function CustomersPanel({ cases }: { cases: Case[] | undefined }) {
   const matching = customers.filter((customer) => matchesCustomer(customer, query));
   const current = matching.find((customer) => customer.id === selected) ?? matching[0];
   return (
-    <section className="mx-auto max-w-[1500px] px-6 py-8 max-sm:px-4">
+    <section className="mx-auto max-w-[1500px] px-6 py-8 max-sm:px-4 lg:flex lg:h-full lg:flex-col">
       <header className="mb-6 pr-12"><h2 className="text-[24px] font-semibold">Member profiles</h2><p className="mt-1 text-[14px] text-muted">Transaction history, credit information, and financial patterns in one place.</p></header>
-      <div className="overflow-hidden rounded-xl border border-line lg:flex">
-        <aside className="shrink-0 border-b border-line bg-panel/40 lg:w-72 lg:border-r lg:border-b-0" aria-label="Customer directory">
+      <div className="overflow-hidden rounded-xl border border-line lg:flex lg:min-h-0 lg:flex-1">
+        <aside className="shrink-0 border-b border-line bg-panel/40 lg:flex lg:w-72 lg:flex-col lg:border-r lg:border-b-0" aria-label="Customer directory">
           <div className="p-4">
             <label htmlFor="customer-search" className="mb-2 block text-[12px] font-medium text-muted">Find a customer</label>
             <div className="relative">
@@ -119,7 +119,7 @@ export function CustomersPanel({ cases }: { cases: Case[] | undefined }) {
             </div>
             <p role="status" className="mt-2 text-[12px] text-muted">{cases ? `${matching.length} customer${matching.length === 1 ? "" : "s"}` : "Loading customer records…"}</p>
           </div>
-          <ul className="max-h-72 overflow-y-auto pb-3 lg:max-h-none">{matching.map((customer) => <li key={customer.id}>
+          <ul className="max-h-72 overflow-y-auto pb-3 lg:max-h-none lg:min-h-0 lg:flex-1">{matching.map((customer) => <li key={customer.id}>
             <button type="button" aria-current={current?.id === customer.id ? "true" : undefined} onClick={() => setSelected(customer.id)} className={`w-full cursor-pointer border-l-2 px-4 py-3 text-left hover:bg-panel2 ${current?.id === customer.id ? "border-l-amber bg-panel2" : "border-l-transparent"}`}>
               <span className="block text-[14px] font-medium">{customer.name}</span><span className="mt-1 block text-[12px] text-muted">{customer.id} · {customer.cases.length} recorded case{customer.cases.length === 1 ? "" : "s"}</span>
             </button>

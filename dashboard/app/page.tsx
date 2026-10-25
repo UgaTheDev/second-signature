@@ -39,7 +39,6 @@ function useView() {
   const go = (v: View) => {
     if (v !== viewFromHash()) history.pushState(null, "", `#${v}`);
     setView(v);
-    window.scrollTo(0, 0);
   };
   return [view, go] as const;
 }
@@ -115,9 +114,9 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
 
   const single = "mx-auto w-full max-w-[1200px] px-8 py-10 max-sm:px-4";
   return (
-    <div className="flex">
+    <div className="flex h-dvh overflow-hidden">
       <Sidebar cases={cases} review={review} active={view} onNavigate={go} />
-      <div className="min-w-0 flex-1 overflow-x-clip">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <h1 className="sr-only">Second Signature: after-hours fraud desk</h1>
         <HeaderStrip
           demo={demo}
@@ -127,14 +126,15 @@ function Desk({ demo, onToggleDemo }: { demo: boolean; onToggleDemo?: () => void
           onPasscode={() => setPasscodeOpen(true)}
         />
         <ViewTabs cases={cases} review={review} active={view} onNavigate={go} />
-        <main key={view} className="ss-in">
+        {/* Each view scrolls inside the viewport; on wide screens its panes scroll independently. */}
+        <main key={view} className="ss-in min-h-0 flex-1 overflow-y-auto">
           {(view === "cases" || historyView) && (
             <>
-              <div className="flex flex-wrap">
-                <aside aria-label="Cases" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line">
+              <div className="flex flex-wrap lg:h-full lg:flex-nowrap">
+                <aside aria-label="Cases" className="min-w-[280px] max-w-full flex-[1_1_320px] border-r border-line lg:overflow-y-auto">
                   <Ledger cases={visibleCases} selectedId={selectedId} onSelect={setSelected} fresh={fresh} history={historyView} />
                 </aside>
-                <section aria-label="The case" className="min-w-0 flex-[3_1_640px]">
+                <section aria-label="The case" className="min-w-0 flex-[3_1_640px] lg:overflow-y-auto">
                   <div className="px-10 pt-8 pb-14 max-sm:px-4">
                     {selectedId ? <CasePanel key={selectedId} detail={detail} /> : (
                       <p className="text-[15px] text-muted">{!cases ? "Loading…" : historyView ? "No historical cases yet." : "No active issues. Resolved cases are in the historical log."}</p>
