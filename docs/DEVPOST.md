@@ -19,8 +19,8 @@ When a member dies, scammers who read obituaries call the widow, and Treasury se
 Harold Whitcomb died in March. His widow Dolores is 74.
 
 1. **Scam Shield.** A fake debt collector tells Dolores to pay Harold's debts in gift cards. She hears, and he doesn't, a chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up."
-2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books a $2,600 credit-union liability, because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.
-3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing; the credit union is handling the repayment with Treasury. It offers to connect Susan, the executor, then leaves the line.
+2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books the remaining $2,600 as the credit union's own loss (not Dolores's), because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.
+3. **The call.** A calm Cartesia voice verifies Dolores from her CRS credit file and tells her she owes the scammer nothing and the credit union is handling the repayment with Treasury. It won't tell her she owes Treasury nothing: she withdrew after the death, so that isn't settled. It offers to connect Susan, the executor, then leaves the line.
 
 ## How we built it
 
@@ -35,12 +35,13 @@ Harold Whitcomb died in March. His widow Dolores is 74.
 ## Challenges we ran into
 
 - **A fact-check against 31 CFR 210 changed our liability rule.** Without prior knowledge, liability is the lesser of the 45-day amount and the unrecovered total, and only if Treasury can't collect from the withdrawers.
-- **The arena found a verification-guessing hole.** A scammer who knew Dolores's city guessed through, because the real street was the only local option. Decoys are now local streets and household-name banks.
+- **Our first call told a grieving widow something false.** It said she owed "nothing". But she'd withdrawn post-death deposits, and the credit union must name her to Treasury. Now it says it isn't settled, and the red-team arena fails any call that says otherwise.
+- **Scaling the red-team arena from 30 to 500 calls found a hole 30 never showed.** At 2-of-3, impostors guessed through verification (the real card year was always the second-oldest option). Now every answer is required, and decoys copy the bureau's format: the CRS sandbox anonymizes lenders as "Former Lender 3", and a household bank name beside that gave the answer away.
 - **Keeping the agent unable to post or move money.** Rules live in `gate.py`, not the prompt. The bot never sees verification answers, and the estate call has no hold tools.
 
 ## Accomplishments that we're proud of
 
-Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. Across 500 red-team calls, no scam or impostor got money or verification. Kill the server mid-case and it resumes with the gate as strict as before.
+Harold's figures match the cited rules to the dollar, and the desk scores 5/5 on planted errors. Claude's explanations reach the controller only if every citation and dollar amount exists in the record. Across 500 red-team calls, no scam or impostor got money or verification. Kill the server mid-case and it resumes with the gate as strict as before.
 
 ## What we learned
 
