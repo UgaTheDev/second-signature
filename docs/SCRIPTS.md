@@ -63,7 +63,7 @@ exact words.
 - No chime within ~8 s: SCAMMER says once, slowly, "You need to buy gift cards today to pay Harold's debts." The
   listener re-checks every 6 s.
 - Dolores's phone never rings: SCAMMER hangs up and the presenter narrates from the dashboard.
-- The scammer started talking before Dolores joined: keep going. The whisper retries for ~15 s until she's on.
+- The scammer started talking before Dolores joined: keep going. The whisper waits up to ~50 s for her to join, then plays.
 
 ---
 

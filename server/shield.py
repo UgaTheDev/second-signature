@@ -51,7 +51,7 @@ ANNOUNCE = f"This call is protected by {CU}'s scam shield, and an automated assi
 # Fixed words only: the trusted voice never repeats anything the caller (or a model reading him) wrote.
 WHISPER = ("{name}, it's your credit union. You don't need to answer me. This sounds like a scam. "
            "It's okay to hang up. It's okay to hang up.")
-WHISPER_TRIES, WHISPER_GAP = 3, 5  # she may not have picked up yet: retry over ~15s
+WHISPER_TRIES, WHISPER_GAP = 12, 4  # she may not have joined yet (ringing + a trial number's preamble took 33s live): retry ~50s; stops when the call ends
 
 # Cheap gate before any model call: phrases from real scripts (FTC alerts, PLAYBOOK.md section 2).
 PREFILTER = re.compile(
