@@ -1,12 +1,19 @@
 # Second Signature
 
-**Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.**
+**Second Signature warns members during scam calls and never moves a dollar without a person signing off.**
 
-Second Signature is the back office a small credit union can't afford to staff, shown through one widow's week.
+Scam Shield listens to the caller on a member's protected line and whispers a warning only she can hear, whatever the script: fake IRS agents, "Microsoft support", a grandchild in jail, romance and Bitcoin-ATM scams, fake debt collectors. It is the back office a small credit union can't afford to staff, and we demo it on the hardest case: the week after a death, when two people want Harold's money, a scammer and the US Treasury, and only one of them is owed it.
 When Harold Whitcomb dies, a fake debt collector goes after his widow Dolores, and the US Treasury sends a reclamation
 notice for the Social Security that kept arriving after his death. The agent warns Dolores during the scam call, closes
 Harold's books against Treasury's claim with every number cited to a rule, and calls her to explain it: it drafts, a
 human signs, and **it can never move money on its own**.
+
+## How we use Convex
+
+Convex is the case file. The server appends every call line, action and posted journal entry to Convex, and the dashboard reads it all with live `useQuery`, so the case view updates during a call without a refresh.
+Held cases keep their permission-gate state in Convex and come back after a server restart.
+All writes go through mutations that check a shared server secret; the dashboard only reads.
+Details, features and a commit log: [hackathon.md](hackathon.md).
 
 ## The demo in three beats
 
