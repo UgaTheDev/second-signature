@@ -192,18 +192,31 @@ async def resume() -> int:
     for r in rows:
         if r["_id"] in CASES or r["member_id"] not in MEMBERS:
             continue
-        state = {k: v for k, v in (r.get("state") or {}).items() if k in store.STATE}
-        case = Case(r["_id"], r["member_id"], r["txn_id"], r["merchant"], r["category"], float(r["amount"]),
-                    status=r["status"], signals=r["risk_signals"], plan=r["plan"], rationale=r["decision_rationale"],
-                    opened_at=r["opened_at"] / 1000, **state)
-        CASES[case.id] = case
-        if case.status == "open" and not case.verified:
-            data = await crs.pull(case.member_id, MEMBERS[case.member_id]["crs"])
-            verify.build(case.id, data.get("report"), crs.answers_needed(data))
+        case = await _load(r)
         await store.action(case.id, "resume", "agent", "Server restarted; case reloaded from the case file with its gate state")
     if rows:
         logger.info(f"resumed {len(CASES)} cases from Convex")
     return len(rows)
+
+
+async def _load(r: dict) -> Case:
+    state = {k: v for k, v in (r.get("state") or {}).items() if k in store.STATE}
+    case = Case(r["_id"], r["member_id"], r["txn_id"], r["merchant"], r["category"], float(r["amount"]),
+                status=r["status"], signals=r["risk_signals"], plan=r["plan"], rationale=r["decision_rationale"],
+                opened_at=r["opened_at"] / 1000, **state)
+    CASES[case.id] = case
+    if case.status == "open" and not case.verified:
+        data = await crs.pull(case.member_id, MEMBERS[case.member_id]["crs"])
+        verify.build(case.id, data.get("report"), crs.answers_needed(data))
+    return case
+
+
+async def find_case(case_id: str) -> Case | None:
+    """A case this process may not hold yet: Scam Shield opens its cases straight in the case file."""
+    if case_id in CASES:
+        return CASES[case_id]
+    r = next((r for r in await store.load_active() if r["_id"] == case_id and r["member_id"] in MEMBERS), None)
+    return await _load(r) if r else None
 
 
 def open_case_for(member_id: str | None) -> Case | None:

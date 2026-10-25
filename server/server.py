@@ -182,9 +182,9 @@ async def scenario(s: Scenario):
 async def analyst_decision(case_id: str, action: str):
     if action not in ("release", "confirm_fraud"):
         raise HTTPException(404)
-    case = agent.CASES.get(case_id)
+    case = await agent.find_case(case_id)
     if not case:
-        raise HTTPException(404, "case not loaded in this server process")
+        raise HTTPException(404, "no open case with that id (already decided, or reset)")
     if why := await agent.do(case, action, "human", f"Analyst decision from the dashboard: {action.replace('_', ' ')}"):
         raise HTTPException(409, why)
     return {"ok": True}
