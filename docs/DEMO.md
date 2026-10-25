@@ -1,6 +1,6 @@
 # Demo script (under 2 minutes)
 
-**Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.**
+**Second Signature catches scam calls while they're happening, for any member, and never moves money on its own. Our demo is the hardest case: two people want Harold's money, a scammer and the US Treasury, and only one of them is owed it.**
 
 Three beats, opening on the whisper. Three people: **Dolores** (a teammate's phone, MEMBER_PHONE), **the scammer**
 (another teammate), **Susan**, Harold's daughter and executor (third phone, FAMILY_PHONE). Dashboard on the big screen.
@@ -27,7 +27,7 @@ Three beats, opening on the whisper. Three people: **Dolores** (a teammate's pho
 | 1:10 | Click **Why?** | "Claude explains it, and every sentence cites a source or a rule. It never computes a number." |
 | 1:20 | Click **Sign as controller**, confirm. Journal shows posted. | "The agent drafted the entries. Only the controller can sign them." |
 | 1:30 | Click **Call Dolores**. Her phone rings: Cartesia voice, she verifies, it explains gently. It offers Susan; she says yes. | "We handle the repayment with Treasury. She owes the scammer nothing. And she isn't alone with this." |
-| 1:50 | — | "Five planted errors, five caught. It drafts; a human signs. When my grandfather passed, we worried my grandmother would fall for exactly this. She knew better. This is for the ones who don't." |
+| 1:50 | — | "Five planted errors, five caught. It drafts; a human signs. The FBI says Americans over 60 reported $7.7 billion in fraud losses in 2025, up 59%. Second Signature is there for the next call, whoever picks up." |
 
 ## If a judge brings their own scenario
 

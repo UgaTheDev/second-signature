@@ -8,7 +8,7 @@ message and key presses in editing.
 | 0:00 | Black. A phone rings. Dolores's phone screen: an unknown number. | Phone ring. |
 | 0:04 | Phone on speaker, close up. | SCAMMER: "Mrs. Whitcomb, this is collections about Harold's debts. As his widow you're responsible. You have to pay today in gift cards, and don't tell your bank." |
 | 0:13 | Hold on the phone. | A soft two-note chime. WHISPER: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up." |
-| 0:21 | Dolores hangs up. Cut to the thumbnail title card. | VO: "When someone dies, two people come for the money: a scammer, and the US Treasury. Only one of them is owed it." |
+| 0:21 | Dolores hangs up. Cut to the thumbnail title card. | VO: "Scammers call older Americans every day: fake IRS agents, fake tech support, fake debt collectors. Here's the hardest case: the week after a death." |
 | 0:30 | Dashboard, **Scam Shield** view: his exact words, 9X% confident, the whisper. | VO: "That was Scam Shield. It hears only the caller, Claude catches the script, and the warning reaches her ear alone. For the next day, any gift card she buys waits for a human." |
 | 0:42 | Sidebar to **Estate desk**, click **Harold Whitcomb**. Pan the **Timeline**. | VO: "Now the real claim. Harold died in March, and Social Security kept paying. Treasury wants $4,180 back." |
 | 0:52 | Highlight the **Reclamation** rows. | VO: "$1,045 was already returned, so we protest it. $535 is still in the account, so it goes back now. The other $2,600 is gone, and because a rep wrote down in March that Harold had died, that loss is the credit union's, not Dolores's." |
@@ -18,7 +18,7 @@ message and key presses in editing.
 | 1:23 | Phone on speaker, condensed: the bot's greeting, one verification answer, then the explanation. | BOT: "Harold's Social Security from after March goes back to the Treasury, and the credit union is handling that. Anyone who phones asking you to pay Harold's debts in gift cards is a scammer, and you owe them nothing." |
 | 1:38 | Phone: the bot offers Susan; Dolores says yes; Susan's phone rings. | BOT: "Would you like me to connect you with Susan right now?" DOLORES: "Yes, please." SUSAN: "Mom? I'm here." |
 | 1:44 | **Proof** view: the permission matrix, then the arena scoreboard. | VO: "It can never move money on its own. Five planted accounting errors, five caught. Five hundred red-team calls, and no scam or impostor got through." |
-| 1:52 | Back to the title card. | VO: "When my grandfather passed, we worried my grandmother would fall for exactly this. She knew better. This is for the ones who don't." |
+| 1:52 | Back to the title card. | VO: "The FBI says Americans over 60 reported $7.7 billion in fraud losses in 2025, up 59%. Second Signature is there for the next call, whoever picks up." |
 | 1:58 | Title card: "Second Signature. Stop the fake debt. Settle the real one. Let a person sign." | Silence. |
 
 ## Recording notes
