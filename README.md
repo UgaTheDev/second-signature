@@ -59,7 +59,7 @@ only calls her. Hard questions like this one, and our answers, are in [docs/CRIT
 3. **Detect cheaply.** Cartesia Ink transcribes. A keyword check (gift cards, "don't tell", Microsoft, IRS, warrant, bail…) gates
    a Claude Haiku verdict with the caller's exact words as evidence. The transcript is memory-only and dropped at hang-up.
 4. **Whisper to her alone.** A Twilio participant announcement plays a Cartesia-voiced warning to **her leg only**:
-   *"Dolores, only you can hear me. This call sounds like a scam: he wants gift cards and secrecy. It's okay to hang up."*
+   a soft two-note chime, then *"Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up. It's okay to hang up."*
 5. **Arm the money side.** A flagged call shows up on the dashboard as a case, with the evidence quote. For 24 hours, any gift card,
    wire or crypto purchase is held by rule, and only an analyst can release it, even if triage is fooled and even for Robert,
    who buys gift cards every year.
