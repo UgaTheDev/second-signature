@@ -31,7 +31,7 @@ export function EstatesPanel() {
   const toast = useToast();
   const [sel, setSel] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  const [why, setWhy] = useState<Record<string, string>>({});
+  const [why, setWhy] = useState<Record<string, Why>>({});
   const [confirm, setConfirm] = useState(false);
 
   const row = rows?.find((r) => r.key === sel) ?? rows?.find((r) => r.key === "harold") ?? rows?.[0];
@@ -70,9 +70,9 @@ export function EstatesPanel() {
                 busy={busy}
                 onWhy={() =>
                   act("why", async () => {
-                    const r = await postJson<{ text: string }>(`/estates/${row.key}/why`);
+                    const r = await postJson<Why>(`/estates/${row.key}/why`);
                     if (typeof r === "string") return r;
-                    setWhy((w) => ({ ...w, [row.key]: r.text }));
+                    setWhy((w) => ({ ...w, [row.key]: r }));
                     return null;
                   }, "Explanation ready.")
                 }
@@ -161,8 +161,10 @@ function EstateList({ rows, active, onSelect, score, busy, onRun }: {
   );
 }
 
+type Why = { text: string; checked?: boolean };
+
 function EstateView({ row, why, busy, onWhy, onSign, onCall }: {
-  row: EstateRow; why?: string; busy: string | null; onWhy: () => void; onSign: () => void; onCall: () => void;
+  row: EstateRow; why?: Why; busy: string | null; onWhy: () => void; onSign: () => void; onCall: () => void;
 }) {
   const e = row.data;
   const d = DECISION[e.decision] ?? DECISION.return_in_full;
@@ -190,7 +192,16 @@ function EstateView({ row, why, busy, onWhy, onSign, onCall }: {
         </div>
       </div>
 
-      {why && <p className="ss-in max-w-[760px] border-l border-line pl-4 text-[14px] leading-[1.6] text-pretty whitespace-pre-line">{why}</p>}
+      {why && (
+        <div className="ss-in max-w-[760px] border-l border-line pl-4">
+          <p className="text-[14px] leading-[1.6] text-pretty whitespace-pre-line">{why.text}</p>
+          <p className="mt-2 text-[12px] text-muted">
+            {why.checked
+              ? "Claude Opus · every citation and dollar amount checked against this estate's record before it reached you"
+              : "From the rules engine's findings · Claude's answer was unavailable or cited something not in the record"}
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Block title="Reclamation">
