@@ -2,7 +2,7 @@
 import { MATRIX, type MatrixCell } from "../../lib/derive";
 import { Stamp } from "./primitives";
 
-const COLS = ["Agent alone", "Needs her yes", "Needs an analyst"] as const;
+const COLS = ["Agent alone", "Needs her yes", "Needs staff"] as const;
 
 function Cell({ c }: { c: MatrixCell }) {
   const note = c.note && c.kind !== "never" ? <span className="text-[13px] leading-[1.4] text-muted">{c.note}</span> : null;

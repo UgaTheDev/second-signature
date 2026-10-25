@@ -263,6 +263,8 @@ export const MATRIX: MatrixRow[] = [
   row("Connect her live to that contact (the agent then leaves the call)", NONE, IF("once verified, and only if she asks"), NONE),
   row("Release a hold under $1,000 (not a first-ever gift card, wire or crypto)", NONE, IF("after verification"), NONE),
   row("Release any other hold", NONE, NONE, Y()),
+  row("Draft an estate's journal entries and Treasury response", Y(), NONE, NONE),
+  row("Post the journal, or sign a credit-union loss over $250", NEVER, NEVER, Y("the controller")),
   row("Move, refund or send money", NEVER, NEVER, Y("only outside this system"), true),
   row("Close or freeze the account", NEVER, NONE, Y("only outside this system"), true),
 ];

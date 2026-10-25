@@ -207,8 +207,8 @@ function EstateView({ row, why, busy, onWhy, onSign, onCall }: {
         <Block title="Reclamation">
           <dl className="flex flex-col text-[14px]">
             <Money label="Treasury claimed (FS-133)" n={e.claimed} />
-            <Money label={`Not due${e.not_due.length ? ` · ${ids(e.not_due)}` : ""}`} n={-notDue} />
-            <Money label={`Already returned (R15)${e.already_returned.length ? ` · ${ids(e.already_returned)}` : ""}`} n={-returned} />
+            <Money label={`Not due${e.not_due.length ? ` · ${ids(e.not_due)}` : ""}`} n={-notDue || 0} />
+            <Money label={`Already returned (R15)${e.already_returned.length ? ` · ${ids(e.already_returned)}` : ""}`} n={-returned || 0} />
             <Money label="Valid claim" n={e.valid_claim} strong />
             <Money label={`Returned now (on hand at notice ${cents(e.on_hand)})`} n={e.return_now} />
             <Money label="Shortfall" n={e.shortfall} />
@@ -331,7 +331,7 @@ function Timeline({ e }: { e: Estate }) {
   const lo = Math.min(...dates);
   const span = Math.max(...dates) - lo || 1;
   const x = (s: string) => `${((ms(s) - lo) / span) * 100}%`;
-  const events = [...e.timeline].sort((a, b) => a.date.localeCompare(b.date));
+  const events = e.timeline.filter((t) => t.kind !== "death" && t.kind !== "knowledge").sort((a, b) => a.date.localeCompare(b.date)); // those two are pinned above
   return (
     <div className="flex flex-col gap-4">
       <div className="relative mx-1 h-14" aria-hidden>
