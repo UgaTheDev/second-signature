@@ -230,6 +230,20 @@ export function heardFlags(transcript: Line[], actions: Action[] = [], call?: De
   return { flags, next, nextTone };
 }
 
+// ---- where sources disagreed ------------------------------------------------------------------------------
+
+export type Conflict = { said: string; against: string; trusted: string; why: string };
+/** Source disagreements read from the case actions (server/agent.py writes both details verbatim). */
+export function sourceConflicts(actions: Action[]): Conflict[] {
+  const out: Conflict[] = [];
+  const floor = actions.find((a) => a.type === "override")?.detail.match(/^Triage said allow, held anyway: (.+)$/)?.[1];
+  if (floor) out.push({ said: "Triage (Claude) said allow", against: "Code rule held it", trusted: "the rule", why: floor });
+  // ponytail: only member release refusals count; agent refusals are the gate doing its job, not a disagreement
+  const refused = actions.find((a) => a.type === "deny" && /^member tried to release: /.test(a.detail))?.detail.replace(/^member tried to release: /, "");
+  if (refused) out.push({ said: "Member asked to release it", against: "Rule refused", trusted: "the rule, an analyst decides", why: refused });
+  return out;
+}
+
 // ---- holds ---------------------------------------------------------------------------------------------------
 
 /** When the agent's hold authority ends: +1 day, rolled past Sat/Sun (same rule as server agent.hold_expires). */
@@ -352,6 +366,11 @@ export function __selfcheck() {
   ok(deriveCall(d, 2000).state === "ringing", "ringing after dial");
   ok(deriveCall({ ...d, transcript: [{ _id: "l", t: 3000, speaker: "member", text: "hi" }] }, 4000).state === "live", "line => live");
   ok(shieldInfo({ ...c, decision_rationale: "Scam Shield: tech support script detected live (confidence 93%)." }).confidence === 93, "confidence parse");
+  const A = (type: string, by: string, detail: string): Action => ({ _id: type, t: 0, type, by, detail });
+  ok(sourceConflicts([A("triage", "agent", "HOLD: x"), A("deny", "gate", "agent tried to release: the agent cannot release a hold on its own")]).length === 0, "no conflict on agreement");
+  const cf = sourceConflicts([A("triage", "agent", "ALLOW: ok"), A("override", "gate", "Triage said allow, held anyway: first gift_card purchase in her history; held by rule regardless of triage"),
+    A("deny", "gate", "member tried to release: first-ever gift_card purchase; an analyst must release it")]);
+  ok(cf.length === 2 && cf[0].why.startsWith("first gift_card") && cf[1].why === "first-ever gift_card purchase; an analyst must release it", "override + member refusal");
   ok(holdExpiry(new Date(2026, 9, 23, 22).getTime()) === new Date(2026, 9, 26, 22).getTime(), "Fri night hold rolls to Monday");
   return true;
 }
