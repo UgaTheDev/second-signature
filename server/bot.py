@@ -20,6 +20,9 @@ import os
 from loguru import logger
 from pipecat.adapters.schemas.function_schema import FunctionSchema
 from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.audio.vad.vad_analyzer import VADParams
+from pipecat.turns.user_start import MinWordsUserTurnStartStrategy
+from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.frames.frames import CancelFrame, EndFrame, EndWorkerFrame, LLMRunFrame, TTSSpeakFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
@@ -131,7 +134,14 @@ async def member_call(transport, serializer: HandoffSerializer, runner_args, cas
     tools = [FunctionSchema(t["name"], t["description"], t["properties"], t["required"], handler=handler)
              for t in calltools.tool_specs(case)]
     context = LLMContext(tools=tools)
-    user_agg, asst_agg = LLMContextAggregatorPair(context, user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer()))
+    # Phone lines carry hiss, breathing and the bot's own echo. With the default VAD start, any of it interrupted the bot
+    # mid-word ("Hello Dolo-") and left 5s of dead air when no words came. Now only transcribed words take the turn:
+    # 2+ while the bot talks, 1 when it's quiet (so "yes" still works).
+    user_agg, asst_agg = LLMContextAggregatorPair(context, user_params=LLMUserAggregatorParams(
+        vad_analyzer=SileroVADAnalyzer(params=VADParams(confidence=0.8, start_secs=0.3, min_volume=0.7)),
+        user_turn_strategies=UserTurnStrategies(start=[MinWordsUserTurnStartStrategy(min_words=2)]),
+        user_turn_stop_timeout=2.5,
+    ))
     worker = PipelineWorker(
         Pipeline([transport.input(), stt, user_agg, llm, tts, transport.output(), asst_agg]),
         params=PipelineParams(audio_in_sample_rate=8000, audio_out_sample_rate=8000, enable_metrics=True),
