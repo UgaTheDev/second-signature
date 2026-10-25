@@ -1,8 +1,9 @@
 "use client";
 
 // Centre column: the case head, pipeline ruler, analyst actions, why, evidence, record.
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { post } from "../../lib/api";
+import { DemoContext } from "../../lib/data";
 import { countdown, deriveCall, holdExpiry, riskScore, riskTone, statusMeta, toneVar, type Tone } from "../../lib/derive";
 import { clock, money, needsDecision, shortClock, words } from "../../lib/format";
 import type { CaseDetail } from "../../lib/types";
@@ -54,11 +55,13 @@ function Pipeline({ c }: { c: CaseDetail }) {
 
 function CaseBody({ c }: { c: CaseDetail }) {
   const now = useNow();
+  const demo = useContext(DemoContext);
   const [busy, setBusy] = useState<Decision | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [signed, setSigned] = useState<Signed | null>(null);
 
   async function decide(kind: Decision) {
+    if (demo) return setErr("Sample data is on, so nothing was sent. Switch to live data in Demo tools.");
     setBusy(kind);
     setErr(null);
     const e = await post(`/cases/${c._id}/${kind}`);
