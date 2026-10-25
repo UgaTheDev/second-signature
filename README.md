@@ -103,6 +103,13 @@ The scoreboard prints as a markdown table, and full transcripts go to `arena_res
 found one hole, now closed: a coached victim who passes verification could release her own first-ever gift
 card purchase. Purchases held by the code floor now need an analyst to release them.
 
+Latest run (`-n 3`): **30/30 passed**, 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with
+the right outcome. Its first live run found a second hole: a scammer who knew Dolores's city guessed through
+verification, because the real street was the only local one among the options and Bank of America sat beside
+obscure lenders. Decoys are now local streets and household-name banks. Outbound calls that end with "I'll call the
+number on my card" continue as a simulated callback on the same case. Scam Shield on its 10 labelled scripts (`--shield -n 3`):
+15/15 caught, 0/15 false alarms.
+
 ## Where and how Droid is used (Factory)
 
 **Triggers:** every day at 7am (`server.py: morning_reviews`), "Run review now" on the dashboard, or an event: when analysts
