@@ -6,9 +6,9 @@ Read with `docs/DEMO.md` (run table and timings). This covers only what the thre
 
 | Who | Phone | Role |
 |---|---|---|
-| DOLORES | ends **0632** (MEMBER_PHONE) | 74, Harold's widow. Gets every call. |
-| SUSAN | ends **7664** (FAMILY_PHONE) | Daughter, executor. Gets bridged in on the estate call. |
-| SCAMMER | a **third** phone, not Susan's | Dials (415) …**3852**. Never call from 7664: that number is trusted and skips the Shield. |
+| DOLORES | ends **7664** (MEMBER_PHONE) | 74, Harold's widow. Gets every call. |
+| SUSAN | ends **0632** (FAMILY_PHONE) | Daughter, executor. Gets bridged in on the estate call. |
+| SCAMMER | a **third** phone, not Susan's | Dials (415) …**3852**. Never call from 0632: that number is trusted and skips the Shield. |
 
 **Key press:** the Twilio number is a trial. Every call it places or bridges starts with Twilio's trial message, and you
 press any key to continue. Answer fast and press right away.
@@ -28,7 +28,7 @@ those are the arena's practice data, not the live file.
 
 ## 1. Beat 1: Scam Shield (0:00 to 0:35)
 
-**Who dials:** SCAMMER dials (415) …3852. Dolores's phone (0632) rings from that same number.
+**Who dials:** SCAMMER dials (415) …3852. Dolores's phone (7664) rings from that same number.
 
 **Order of events (trial number):**
 1. SCAMMER dials, hears the Twilio trial message, presses a key.
@@ -69,8 +69,8 @@ exact words.
 
 ## 2. Beat 3: the estate call (1:30 to 1:50)
 
-**Who dials:** the presenter clicks **Call Dolores**. Dolores's phone (0632) rings from (415) …3852. Later the bot rings
-Susan (7664) from the same number.
+**Who dials:** the presenter clicks **Call Dolores**. Dolores's phone (7664) rings from (415) …3852. Later the bot rings
+Susan (0632) from the same number.
 
 DOLORES answers, hears the trial message, presses a key. The bot speaks first.
 
@@ -88,7 +88,7 @@ DOLORES answers, hears the trial message, presses a key. The bot speaks first.
 | DOLORES | Yes, please. |
 | BOT | I'm connecting you now. Please stay on the line; you'll hear music for a moment. |
 
-Dolores now hears hold music. SUSAN's phone (7664) rings. SUSAN answers, hears the trial message, presses a key, then:
+Dolores now hears hold music. SUSAN's phone (0632) rings. SUSAN answers, hears the trial message, presses a key, then:
 
 | Speaker | Line |
 |---|---|
@@ -114,7 +114,7 @@ Both hang up on the presenter's cue.
 ## 3. Optional: a judge's own scenario (Overnight holds, "Run a scenario")
 
 **Who dials:** the presenter clicks **Run a scenario** in the Overnight holds toolbar. For a Dolores purchase (the gift
-card held by rule, or the $1,500 bike), Dolores's phone (0632) rings from (415) …3852. Robert's $100 gift card goes
+card held by rule, or the $1,500 bike), Dolores's phone (7664) rings from (415) …3852. Robert's $100 gift card goes
 through with no call.
 
 DOLORES answers, presses a key for the trial message.
