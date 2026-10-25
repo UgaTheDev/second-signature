@@ -14,13 +14,14 @@ Read with `docs/DEMO.md` (run table and timings). This covers only what the thre
 press any key to continue. Answer fast and press right away.
 
 **Verification (Dolores only).** These come live from the CRS sandbox test identity, not a real person. Its file has
-no street addresses and anonymized lenders, and live calls ask **one** question, which must be right:
+no street addresses and anonymized lenders, so the bot asks **two** questions, and **both must be right**:
 
 | Question                                                 | Say                                                                                                                                    |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Which of these lenders have you had an account with?     | the **"Former Lender" numbered 1 to 6**. Exactly one option will be (the others are 7 and up). Say it exactly, e.g. "Former Lender 3". |
+| About what year did you open your oldest credit account? | **1981**                                                                                                                               |
 
-One wrong answer and the call can't verify (each question can be answered once). Don't use Bank of America:
+One wrong answer and the call can't verify (each question can be answered once). Don't use Bank of America or 1978:
 those are the arena's practice data, not the live file.
 
 ---
@@ -75,15 +76,14 @@ Susan (0632) from the same number.
 
 DOLORES answers, hears the trial message, presses a key. The bot speaks first.
 
-| Speaker | Line                                                                                                                                                                                                                                                                                                                                    |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| BOT     | Hi Dolores, this is the after-hours assistant at Bayview Community Credit Union, about Harold's account. I'm so sorry for your loss. You can always hang up and call the number on your card instead, and I will never ask for a PIN, password or code.                                                                                 |
-| BOT     | Which of these lenders have you had an account with? _(four "Former Lender" options)_                                                                                                                                                                                                                                                   |
-| DOLORES | Former Lender _(the one numbered 1 to 6)_.                                                                                                                                                                                                                                                                                              |
-| BOT     | Harold's Social Security from after March goes back to the Treasury, and the credit union is handling that. Anyone who phones asking you to pay Harold's debts in gift cards is a scammer, and you owe them nothing. |
-| BOT     | Would you like me to connect you with your daughter Susan, who is the executor of Harold's estate, right now?                                                                                                                                                                                                                           |
-| DOLORES | Yes, please.                                                                                                                                                                                                                                                                                                                            |
-| BOT     | I'm connecting you now. Please stay on the line; you'll hear music for a moment.                                                                                                                                                                                                                                                        |
+| Speaker | Line                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| BOT     | Hi Dolores, this is the after-hours assistant at Bayview Community Credit Union, about Harold's account. I'm so sorry for your loss. You can always hang up and call the number on your card instead, and I will never ask for a PIN, password or code.                                                                                                                                                                                               |
+| BOT     | Which of these lenders have you had an account with? _(four "Former Lender" options)_                                                                                                                                                                                                                                                                                                                                                                 |
+| DOLORES | Former Lender _(the one numbered 1 to 6)_.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| BOT     | Harold's Social Security from after March goes back to the Treasury, and the credit union is handling that. Anyone who phones asking you to pay Harold's debts in gift cards is a scammer, and you owe them nothing. Would you like me to connect you with your daughter Susan, who is the executor of Harold's estate, right now? |
+| DOLORES | Yes, please                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| BOT     | I'm connecting you now. Please stay on the line; you'll hear music for a moment.                                                                                                                                                                                                                                                                                                                                                                      |
 
 Dolores now hears hold music. SUSAN's phone (0632) rings. SUSAN answers, hears the trial message, presses a key, then:
 
@@ -100,7 +100,7 @@ Both hang up on the presenter's cue.
 
 **If it goes wrong:**
 
-- No option is numbered 1 to 6: say "I'm not sure". The bot will say a staff member will call during business hours and hang up. That is the designed failure, so
+- No option is numbered 1 to 6, or no 1981: say "I'm not sure". The bot will say a staff member will call during business hours and hang up. That is the designed failure, so
   the presenter says so and narrates from the dashboard. Don't redial live.
 - The bot asks no questions (CRS down): it won't discuss the account and ends the call. Also designed.
 - The bot says the Treasury question is settled or that she owes nothing: carry on, and the presenter notes it later.
