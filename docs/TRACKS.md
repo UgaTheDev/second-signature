@@ -27,13 +27,16 @@ scammer's side of a live call and whispering a warning to her alone, and the fam
 "don't tell anyone" by connecting her with her daughter, as her choice.
 
 **The moment:** a scammer from "Microsoft" tells Dolores to buy gift cards and keep quiet. Mid-call she hears, and he
-doesn't: "Dolores, only you can hear me. This call sounds like a scam." Ten minutes later she tries to buy the gift cards
+doesn't: a soft chime, then "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up." Ten minutes later she tries to buy the gift cards
 anyway. The purchase is held by rule, even though triage was coached into "allow" (the smoke test proves this path), and
 she's offered a call with her daughter. Recovery: we kill the server mid-case, restart it, and the case picks up with its
 gate state intact.
 
-**Proof it works:** `smoke.py` (offline, every safety path), the red-team arena ([N] simulated calls, [0] scams released),
-Scam Shield detection on 10 labelled scripts ([x/5] caught, [y/5] false alarms), and the live demo.
+**Proof it works:** `smoke.py` (offline, every safety path), the red-team arena (30 simulated calls across 10 scenarios: 0 of 21 scams or attacks
+released or verified, 9 of 9 legitimate calls with the right outcome), Scam Shield detection on 10 labelled scripts run 3 times
+each (15/15 scams caught, 0/15 false alarms at threshold 0.75), and the live demo. The arena earned its keep: its first real
+run caught a scammer who knew Dolores's city guessing through verification, because the real street was the only local one
+among the options. Decoys are now local streets and household-name banks.
 
 ## CRS Financial Intelligence Challenge (CRS Credit) — Best Identity / Fraud Innovation, Best Overall
 

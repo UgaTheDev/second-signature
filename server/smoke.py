@@ -88,6 +88,12 @@ agent.triage = fake_allow
 asyncio.run(agent.on_new_purchase("dolores", {**txn, "txn_id": "t5"}, [{"category": "gift_card", "merchant": "Target", "amount": 50, "date": "2026-09-01"}]))
 c5 = agent.CASES["t5"]
 assert c5.status == "open" and c5.held_by_rule and agent.gate.check("release", c5, "member"), c5
+import io, wave
+buf = io.BytesIO()
+with wave.open(buf, "wb") as w: w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000); w.writeframes(bytes(16000))
+shield.AUDIO["t"] = shield.chime(buf.getvalue()); assert 2 < shield.clip_seconds("t") < 2.2   # 1s speech + 1.1s chime
+streamed = bytearray(buf.getvalue()); streamed[40:44] = b"\xff\xff\xff\xff"   # Cartesia's "unknown length" data header
+shield.AUDIO["t"] = shield.chime(bytes(streamed)); assert 2 < shield.clip_seconds("t") < 2.2
 print("shield ok")
 
 # --- restart: held cases come back from Convex with their gate state ---

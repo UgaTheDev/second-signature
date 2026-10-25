@@ -3,7 +3,7 @@
 // Centre column: the case head, pipeline ruler, analyst actions, why, evidence, record.
 import { useState } from "react";
 import { post } from "../../lib/api";
-import { countdown, deriveCall, holdExpiry, riskScore, riskTone, statusMeta, toneVar, type Tone } from "../../lib/derive";
+import { countdown, deriveCall, holdExpiry, riskScore, riskTone, sourceConflicts, statusMeta, toneVar, type Tone } from "../../lib/derive";
 import { clock, money, needsDecision, shortClock, words } from "../../lib/format";
 import type { CaseDetail } from "../../lib/types";
 import { EvidenceList } from "./EvidenceList";
@@ -47,6 +47,28 @@ function Pipeline({ c }: { c: CaseDetail }) {
         );
       })}
     </ol>
+  );
+}
+
+// ---- where sources disagreed -------------------------------------------------------------------------
+
+function Disagreements({ c }: { c: CaseDetail }) {
+  const list = sourceConflicts(c.actions);
+  if (!list.length) return null;
+  return (
+    <section aria-label="Where sources disagreed" className="-mt-6 flex flex-col">
+      <h3 className="border-b border-line pb-2 text-[13px] font-normal text-muted">Where sources disagreed</h3>
+      <ul>
+        {list.map((x) => (
+          <li key={x.said} className="flex flex-col gap-1 border-b border-line py-3">
+            <span className="text-[14px]">{x.said} · {x.against}</span>
+            <span className="text-[13px] text-muted text-pretty">
+              Trusted {x.trusted}: <span className="text-ink">{x.why}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -151,6 +173,7 @@ function CaseBody({ c }: { c: CaseDetail }) {
       </div>
 
       <EvidenceList signals={c.risk_signals} />
+      <Disagreements c={c} />
       <RecordTimeline detail={c} live={call.state === "live"} />
     </article>
   );

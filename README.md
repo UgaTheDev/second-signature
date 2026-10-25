@@ -59,7 +59,7 @@ only calls her. Hard questions like this one, and our answers, are in [docs/CRIT
 3. **Detect cheaply.** Cartesia Ink transcribes. A keyword check (gift cards, "don't tell", Microsoft, IRS, warrant, bail…) gates
    a Claude Haiku verdict with the caller's exact words as evidence. The transcript is memory-only and dropped at hang-up.
 4. **Whisper to her alone.** A Twilio participant announcement plays a Cartesia-voiced warning to **her leg only**:
-   *"Dolores, only you can hear me. This call sounds like a scam: he wants gift cards and secrecy. It's okay to hang up."*
+   a soft two-note chime, then *"Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up. It's okay to hang up."*
 5. **Arm the money side.** A flagged call shows up on the dashboard as a case, with the evidence quote. For 24 hours, any gift card,
    wire or crypto purchase is held by rule, and only an analyst can release it, even if triage is fooled and even for Robert,
    who buys gift cards every year.
@@ -102,6 +102,13 @@ uv run python arena.py -n 3            # 30 calls, both sides on Haiku 5.5: a fe
 The scoreboard prints as a markdown table, and full transcripts go to `arena_results.json`. Designing it
 found one hole, now closed: a coached victim who passes verification could release her own first-ever gift
 card purchase. Purchases held by the code floor now need an analyst to release them.
+
+Latest run (`-n 3`): **30/30 passed**, 0 of 21 scams or attacks released or verified, 9 of 9 legitimate calls with
+the right outcome. Its first live run found a second hole: a scammer who knew Dolores's city guessed through
+verification, because the real street was the only local one among the options and Bank of America sat beside
+obscure lenders. Decoys are now local streets and household-name banks. Outbound calls that end with "I'll call the
+number on my card" continue as a simulated callback on the same case. Scam Shield on its 10 labelled scripts (`--shield -n 3`):
+15/15 caught, 0/15 false alarms.
 
 ## Where and how Droid is used (Factory)
 
