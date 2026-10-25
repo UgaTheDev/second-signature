@@ -11,7 +11,14 @@ import re
 
 NEEDED = 2
 DECOY_STREETS = ["Maple Ave", "Harbor Blvd", "Cedar Ln", "Mission St", "Lincoln Way", "Elm St", "Pacific Ave"]
-DECOY_LENDERS = ["Wells Fargo", "Discover", "Ally Financial", "Citibank", "US Bank", "Synchrony", "Toyota Financial"]
+# Decoys must be as plausible as the real answer: a caller who knows her city picks the one local-sounding street,
+# and the one household-name bank among obscure lenders. ponytail: hand lists for the demo cities; a street list per ZIP
+# (OpenAddresses) is the upgrade.
+LOCAL_STREETS = {
+    "SANTA BARBARA": ["State St", "Chapala St", "De La Vina St", "Cabrillo Blvd", "Milpas St", "Garden St", "Castillo St", "Bath St"],
+    "SAN JOSE": ["Santa Clara St", "Almaden Blvd", "Bascom Ave", "Meridian Ave", "Lincoln Ave", "Curtner Ave", "Willow St"],
+}
+DECOY_LENDERS = ["Wells Fargo", "Chase", "Citibank", "US Bank", "Capital One", "Discover"]
 
 # case_id -> {"questions": [...], "answers": [...], "asked": set(), "right": int, "wrong": int}
 _state: dict[str, dict] = {}  # ponytail: in-process; one server holds every call
@@ -25,7 +32,7 @@ def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", str(s).lower())
 
 
-def build(case_id: str, report: dict | None, needed: int = NEEDED) -> list[dict]:
+def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | None = None) -> list[dict]:
     """Make up to 3 multiple-choice questions from a CRS standard-format credit report."""
     report = report or {}
     rng = random.Random(case_id)
@@ -35,7 +42,7 @@ def build(case_id: str, report: dict | None, needed: int = NEEDED) -> list[dict]
     streets.discard("")
     if streets:
         real = sorted(streets)[0]
-        qs.append(("Which of these streets have you lived on?", real, [d for d in DECOY_STREETS if d not in streets]))
+        qs.append(("Which of these streets have you lived on?", real, [d for d in LOCAL_STREETS.get((city or "").upper(), DECOY_STREETS) if d not in streets]))
 
     lines = report.get("tradelines", [])
     lenders = {(t.get("creditorName") or "").strip().title() for t in lines} - {""}

@@ -16,6 +16,7 @@ MEMBERS = {
         "name": "Dolores Whitcomb",
         "first_name": "Dolores",
         "age": 74,
+        "city": _P20_ADDR["city"],
         "phone_env": "MEMBER_PHONE",
         "family": {"name": "Susan", "relation": "daughter", "phone_env": "FAMILY_PHONE"},
         "shield_env": "SHIELD_NUMBER",  # her protected line (Scam Shield)
@@ -41,6 +42,7 @@ MEMBERS = {
         "name": "Robert Chen",
         "first_name": "Robert",
         "age": 71,
+        "city": _P01_ADDR["city"],
         "phone_env": "ROBERT_PHONE",
         "family": None,
         "notes": "Buys $50-100 gift cards for grandchildren every Christmas and birthday.",
