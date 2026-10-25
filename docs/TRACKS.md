@@ -3,7 +3,7 @@
 One section per track, written against that track's judging criteria. Paste into Devpost and trim as needed.
 Numbers in [brackets] come from the live run and the arena; fill them in before submitting.
 
-**One line, for every track:** Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.
+**One line, for every track:** Second Signature catches scam calls while they're happening, for any member, and never moves money on its own. Our demo is the hardest case: two people want Harold's money, a scammer and the US Treasury, and only one of them is owed it.
 Second Signature is the back office a small credit union can't afford to staff. It whispers a warning to a widow during
 a scam call, closes her late husband's books against Treasury's reclamation with every number cited to a rule, and calls
 her in a calm voice to explain. Overnight, it also holds suspicious payments and calls the member to check. The agent
@@ -160,7 +160,7 @@ Judged on four things; one paragraph each.
 things reach them at once: scammers who read the obituary and call as "debt collectors", and the US Treasury reclaiming the
 late spouse's Social Security from the joint account.
 
-**2. A real problem.** We lived it. When my grandfather passed, my family had a real worry: that my grandmother would fall for the scams that follow a death. She had the financial literacy to see through them. But what about the widows who don't? Sourced backdrop: FBI IC3 2025,
+**2. A real problem.** The scams that follow a death are documented, not hypothetical: FBI IC3 2025,
 people over 60 reported $7.7B lost (+59%); the CFPB warns specifically about fake debt collectors after a death; and the
 Treasury reclaims post-death benefit payments from the bank account, 31 CFR 210 (details in `docs/RECLAMATION.md`).
 

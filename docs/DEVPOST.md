@@ -2,7 +2,7 @@
 
 ## Tagline
 
-Two people want Harold's money: a scammer and the US Treasury. Only one is owed it. An AI back office that tells them apart, and never moves money on its own.
+An AI fraud desk for small credit unions: it catches scam calls while they're happening, settles the real debts, and never moves money on its own.
 
 **The seat it fills:** the back office a small credit union can't afford to staff: the estate desk and the night fraud analyst.
 
@@ -10,13 +10,13 @@ Live dashboard: https://second-signature-ai.vercel.app · Code: https://github.c
 
 ## Inspiration
 
-When my grandfather passed, my family had a real worry: that my grandmother would fall for the scams that follow a death. She had the financial literacy to see through them. But what about the widows who don't?
+In 2025, Americans over 60 reported $7.7 billion in fraud losses to the FBI, up 59% in a single year. The CFPB warns that fake debt collectors go after families right after a death. We built this for whoever picks up the next call.
 
-When a member dies, scammers who read obituaries call the widow, and Treasury sends the credit union a reclamation notice (FS-133) for Social Security paid after the death. At a small credit union, answering it is a part-time job, and mistakes cost money either way. We wanted an agent trusted for what it can't do.
+Scam calls hit every older member: fake IRS agents, "Microsoft support", a grandchild in jail, romance and Bitcoin-ATM scams, fake debt collectors. The hardest week is the one after a death: scammers who read obituaries call the widow, and Treasury sends the credit union a reclamation notice (FS-133) for Social Security paid after the death. At a small credit union, answering it is a part-time job, and mistakes cost money either way. We wanted an agent trusted for what it can't do.
 
 ## What it does
 
-Harold Whitcomb died in March. His widow Dolores is 74.
+Scam Shield protects any member on any scam call. We show the whole product on its hardest case: Harold Whitcomb died in March, and his widow Dolores is 74.
 
 1. **Scam Shield.** A fake debt collector tells Dolores to pay Harold's debts in gift cards. She hears, and he doesn't, a chime, then: "Dolores, it's your credit union. You don't need to answer me. This sounds like a scam. It's okay to hang up."
 2. **Estate desk.** The agent closes Harold's books against the FS-133: it protests the $1,045 already returned (R15), returns the $535 on hand, and books the remaining $2,600 as the credit union's own loss (not Dolores's), because a rep's March 20 note shows the credit union knew. Without that note the cap would be $1,045. It drafts balanced journal entries; only the controller can post and sign. **Why?** has Claude explain, citing a source or rule in every sentence.

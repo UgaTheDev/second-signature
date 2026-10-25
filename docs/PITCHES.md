@@ -2,7 +2,7 @@
 
 One product, one story, told with a different emphasis for each judge. The story never changes:
 
-> **Two people want Harold's money: a scammer and the US Treasury. Only one of them is owed it.**
+> **Second Signature catches scam calls while they're happening, for any member, and never moves money on its own. Our demo is the hardest case: two people want Harold's money, a scammer and the US Treasury, and only one of them is owed it.**
 > Harold died in March. A fake collector phones his widow Dolores for $8,900 in gift cards; Scam Shield
 > whispers. Meanwhile the estate desk closes Harold's books: Treasury reclaims his post-death Social
 > Security, the agent proves part of the claim is wrong, and refuses to finalise until the controller
@@ -83,8 +83,8 @@ false death report when the 'deceased' member is still using his card."
 **Community:** recently widowed members of small credit unions. They're targeted by scammers who
 read obituaries, and buried in their late spouse's paperwork.
 
-**Real problem, in our words:** "When my grandfather passed, we were genuinely worried my grandmother would fall
-for these scams. She had the literacy to avoid them. This is for the ones who don't."
+**Real problem, in numbers:** "The FBI says Americans over 60 reported $7.7 billion in fraud losses in 2025, up 59%. Second Signature is there for the next call, whoever picks up."
+(FBI IC3 2025 Internet Crime Report.)
 
 **Say:** "Claude does three jobs, and none of them is moving money."
 1. **Haiku** listens for a scam script as the call happens.
