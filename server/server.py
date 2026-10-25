@@ -321,7 +321,7 @@ async def estates_call(key: str):
     case = estate_case(d, cid)
     agent.CASES[cid] = case
     data = await crs.pull("dolores", m["crs"])
-    verify.build(cid, data.get("report"), crs.answers_needed(data), city=m.get("city"))
+    verify.build(cid, data.get("report"), crs.answers_needed(data), city=m.get("city"), max_q=verify.LIVE_QUESTIONS)
     await store.action(cid, "call", "agent", f"Estate desk calling {m['first_name']} about {d['name']}'s account")
     await agent.dial(case, member_phone("dolores"), "estate")
     return {"ok": True, "case_id": cid}

@@ -73,7 +73,7 @@ async def on_new_purchase(member_id: str, txn: dict, history: list[dict]):
         return
     await nessie.set_status(case.txn_id, "held")
     needed = crs.answers_needed(data)
-    qs = verify.build(cid, data.get("report"), needed, city=m.get("city"))
+    qs = verify.build(cid, data.get("report"), needed, city=m.get("city"), max_q=verify.LIVE_QUESTIONS)
     why = {0: "CRS identity check failed: no phone verification, an analyst must handle this",
            3: "CRS shows a fraud alert: stepping up"}.get(needed, "standard check")
     why += f"; {verify._state[cid]['needed']} of {len(qs)} must be right" if qs else ""
@@ -207,7 +207,7 @@ async def _load(r: dict) -> Case:
     CASES[case.id] = case
     if case.status == "open" and not case.verified:
         data = await crs.pull(case.member_id, MEMBERS[case.member_id]["crs"])
-        verify.build(case.id, data.get("report"), crs.answers_needed(data), city=MEMBERS[case.member_id].get("city"))
+        verify.build(case.id, data.get("report"), crs.answers_needed(data), city=MEMBERS[case.member_id].get("city"), max_q=verify.LIVE_QUESTIONS)
     return case
 
 

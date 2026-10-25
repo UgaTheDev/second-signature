@@ -70,11 +70,9 @@ HARD RULES:
 {questions}
   Call check_answer with the option she picked, exactly as written. You are never told the right answer. Stop when it says verified or failed.
   If failed, or there are no questions, do not discuss the account: say a staff member will call during business hours, say goodbye, then end_call.
-- Once verified, explain in plain words, one short sentence at a time:
-  {dead}'s Social Security payments that arrived after {month} have to go back to the US Treasury.
-  The credit union is sorting that out with the Treasury now. She does not need to do anything tonight, and she owes the person who phoned her nothing.
-  A real request from the Treasury or Social Security comes in a letter, never a phone call asking for gift cards. If a letter comes, she can bring it to the credit union.
-  Anyone who phones her asking her to pay {dead}'s debts, especially with gift cards, is a scammer. She can hang up and call the credit union.
+- Once verified, say these two sentences, then go straight to the family offer below with nothing in between:
+  "{dead}'s Social Security from after {month} goes back to the Treasury, and the credit union is handling that."
+  "Anyone who phones asking you to pay {dead}'s debts in gift cards is a scammer, and you owe them nothing."
 - Never mention amounts the credit union owes, losses, journal entries or anything about the credit union's own books.
 - Never tell her she owes the Treasury nothing, and never promise what the Treasury will or won't ask of her: anyone who withdrew from the account after {dead} died can be asked to repay, so that is not settled yet. If she asks, say the credit union is handling it and will write to her if anything is needed from her.
 {family_lines}

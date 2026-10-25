@@ -15,7 +15,7 @@ message and key presses in editing.
 | 1:07 | Click **Why?** The explanation appears with its citations and the "checked" line. | VO: "Claude explains every number with a source or a rule, and our code checks every citation before anyone sees it." |
 | 1:15 | Click **Sign as controller**, confirm. "Signed" appears. | VO: "The agent drafts the entries. Only the controller can sign." |
 | 1:20 | Click **Call Dolores**. Cut to the phone ringing. | VO: "Then it calls her." |
-| 1:23 | Phone on speaker, condensed: the bot's greeting, one verification answer, then the explanation. | BOT: "...Harold's Social Security payments that arrived after March have to go back to the Treasury. The credit union is sorting that out. You owe the person who phoned you nothing." DOLORES: "Do I owe the government anything?" BOT: "That isn't settled yet. The credit union is handling it and will write to you if anything is needed." |
+| 1:23 | Phone on speaker, condensed: the bot's greeting, one verification answer, then the explanation. | BOT: "Harold's Social Security from after March goes back to the Treasury, and the credit union is handling that. Anyone who phones asking you to pay Harold's debts in gift cards is a scammer, and you owe them nothing." |
 | 1:38 | Phone: the bot offers Susan; Dolores says yes; Susan's phone rings. | BOT: "Would you like me to connect you with Susan right now?" DOLORES: "Yes, please." SUSAN: "Mom? I'm here." |
 | 1:44 | **Proof** view: the permission matrix, then the arena scoreboard. | VO: "It can never move money on its own. Five planted accounting errors, five caught. Five hundred red-team calls, and no scam or impostor got through." |
 | 1:52 | Back to the title card. | VO: "When my grandfather passed, we worried my grandmother would fall for exactly this. She knew better. This is for the ones who don't." |
@@ -28,7 +28,7 @@ message and key presses in editing.
 - **Phone audio:** put the phones on speaker next to a good mic, or screen-record the phone (iPhone screen recording
   with the mic on picks up the call). Record the dashboard with QuickTime at 1920×1080 or above.
 - **Trial number:** every call opens with Twilio's trial message and a key press. Cut them; don't speed them up.
-- **Verification:** Dolores answers the "Former Lender" numbered 1 to 6, then 1981. Show one answer on screen, then
+- **Verification:** Dolores answers the "Former Lender" numbered 1 to 6 (the only question). Show it on screen, then
   cut to the explanation.
 - **Scam Shield:** the scammer stays silent until Dolores says "Hello?". Use the first line exactly as written; its
   trigger words fire the detector mid-sentence.
