@@ -1,6 +1,6 @@
 "use client";
 
-// 05 Scam Shield: the most recent scam_call case. Armed for 24h from when the call was flagged (server/shield.py).
+// Scam Shield: the most recent scam_call case. Armed for 24h from when the call was flagged (server/shield.py).
 import { useEffect, useState } from "react";
 import { countdown, firstName, isShield, SHIELD_THRESHOLD, shieldInfo, whisperText } from "../../lib/derive";
 import { shortClock } from "../../lib/format";

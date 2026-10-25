@@ -1,4 +1,4 @@
-// 02 The evidence: one row per risk signal, in the order triage recorded them.
+// The evidence: one row per risk signal, in the order triage recorded them.
 import { sourceLabel, toneVar, weightTone } from "../../lib/derive";
 import type { Signal } from "../../lib/types";
 import { SectionHead } from "./primitives";

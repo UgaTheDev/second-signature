@@ -1,5 +1,5 @@
 "use client";
-// 08 Red-team arena (live from useArena) + 09 Honesty (REAL / SIMULATED from derive).
+// Red-team arena (live from useArena) + Honesty (REAL / SIMULATED from derive).
 import { useArena } from "../../lib/data";
 import { REAL, SIMULATED } from "../../lib/derive";
 import { words } from "../../lib/format";
@@ -89,7 +89,7 @@ export function Honesty({ id = "honesty" }: { id?: string }) {
   );
 }
 
-/** 08 + 09 side by side (wraps under ~960px). */
+/** Arena + Honesty side by side (wraps under ~960px). */
 export function ArenaHonesty() {
   return (
     <section aria-label="Red-team arena and honesty" className="flex flex-wrap border-t border-line">
