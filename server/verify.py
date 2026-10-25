@@ -47,8 +47,13 @@ def build(case_id: str, report: dict | None, needed: int = NEEDED, city: str | N
     lines = report.get("tradelines", [])
     lenders = {(t.get("creditorName") or "").strip().title() for t in lines} - {""}
     if lenders:
-        real = sorted(lenders)[0]
-        qs.append(("Which of these lenders have you had an account with?", real, [d for d in DECOY_LENDERS if d.title() not in lenders]))
+        # The CRS sandbox anonymizes creditors ("Former Lender 3"). Bank-name decoys beside that are a giveaway, so the
+        # decoys copy the format, and the real one is any of hers (she knows them all; an impostor can't tell which).
+        anon = all(re.fullmatch(r"Former Lender \d+", x) for x in lenders)
+        real = rng.choice(sorted(lenders)) if anon else sorted(lenders)[0]
+        decoys = [f"Former Lender {n}" for n in range(1, 40) if f"Former Lender {n}" not in lenders][:9] if anon else \
+            [d for d in DECOY_LENDERS if d.title() not in lenders]
+        qs.append(("Which of these lenders have you had an account with?", real, decoys))
 
     years = [int(t["accountOpenedDate"][:4]) for t in lines if (t.get("accountOpenedDate") or "")[:4].isdigit()]
     if years:
@@ -125,6 +130,11 @@ if __name__ == "__main__":
     assert check_answer("stepup2", 1, next(o for o in q4[0]["options"] if o != "Elm St"))["failed"]  # one miss = can't reach 3
     thin = {"creditFiles": [{"addresses": [{"addressLine1": "612 OCEAN VIEW DR"}]}], "tradelines": [{"creditorName": "Chase"}]}
     assert len(build("thin", thin, needed=3)) == 2 and _state["thin"]["needed"] == 2  # alert but 2 questions: both, not 3
+    anon = {"tradelines": [{"creditorName": f"FORMER LENDER {n}", "accountOpenedDate": "1981-01-01"} for n in range(1, 7)]}
+    qa = build("anon", anon)
+    opts = qa[0]["options"]  # exactly one of hers among same-format decoys, no bank names to give it away
+    assert all(o.startswith("Former Lender") for o in opts) and sum(int(o.split()[-1]) <= 6 for o in opts) == 1, opts
+    assert _state["anon"]["needed"] == 2  # sandbox file: lender + year, both required
     build("empty", {}, needed=2)
     assert _state["empty"]["needed"] == 2 and not check_answer("empty", 1, "x").get("verified")  # nothing to ask != verified
     print("verify ok")
