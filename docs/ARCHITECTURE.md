@@ -32,7 +32,6 @@ flowchart LR
   Nessie --> Triage
   Ledger --> Estate
   CRS --> Triage
-  CRS --> Estate
   CRS --> Voice
   World --> Triage
   World --> Estate
