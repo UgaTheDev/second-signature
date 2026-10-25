@@ -238,7 +238,7 @@ the right outcome. Its first live run found a second hole: a scammer who knew Do
 verification, because the real street was the only local one among the options and Bank of America sat beside
 obscure lenders. Decoys are now local streets and household-name banks. Outbound calls that end with "I'll call the
 number on my card" continue as a simulated callback on the same case. Scam Shield on its 10 labelled scripts (`--shield -n 3`):
-15/15 caught, 0/15 false alarms.
+18/18 caught, 0/18 false alarms.
 
 ### Where and how Droid is used (Factory)
 

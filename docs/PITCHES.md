@@ -9,8 +9,8 @@ One product, one story, told with a different emphasis for each judge. The story
 > signs the loss. Then a calm voice tells Dolores she owes the scammer nothing.
 
 Rule for every pitch: open with the moment, say the one line for that judge, show one thing on screen,
-then stop. Everything else is an answer to a question. Numbers in [brackets] are final after the
-estate-desk build lands; check `uv run python estate.py` output before saying them.
+then stop. Everything else is an answer to a question. Every number here is checked by
+`uv run python estate.py` and the arena; re-run them if the data changes.
 
 ---
 
@@ -26,14 +26,14 @@ draft; only the controller can post."
 - **Sources disagree:** the death certificate vs Treasury's death notice vs the credit file vs a
   rep's note. The agent says which one it trusted and why.
 - **Time:** a rep wrote "Harold passed" on March 20. That one note, written in March, decides the
-  credit union's liability in July ([$2,600 instead of $1,045]).
-- **The moment:** it refuses to finalise. Treasury over-claimed [$1,045]: one payment had already
+  credit union's liability in July ($2,600 instead of $1,045).
+- **The moment:** it refuses to finalise. Treasury over-claimed $1,045: one payment had already
   gone back (ACH return code R15).
 - **Limits:** the agent drafts the balanced journal entries; posting and signing are human-only, in
   code (`gate.py`).
 - **Defends a decision:** press **Why?** and every sentence cites a source id or regulation section.
 
-**Proof:** 5 estates, each with a planted error, scored against an answer key: [5/5]. The rules are
+**Proof:** 5 estates, each with a planted error, scored against an answer key: 5/5. The rules are
 cited to 31 CFR 210 and the Treasury Green Book in `docs/RECLAMATION.md`.
 
 **If asked "isn't this fraud again?":** "The scam is 20 seconds of the demo. It's the foil: the same
@@ -71,7 +71,8 @@ someone is really dead."
   answers stay on the server, so the bot never sees them and can't leak them.
 - **Death confirmation:** CRS's TransUnion identity response flags a deceased SSN (code 2301). It's
   one of the sources the estate desk weighs against the death certificate and Treasury's notice.
-  [Confirm which sandbox persona returns 2301 before claiming it live.]
+  Honest note: in the estate data the CRS deceased indicator is simulated; the live CRS calls are
+  Dolores's identity checks and the purchase-triage signals.
 - **Fraud signals:** the AtData Fraud Finder score feeds triage for purchases.
 
 **For "Most Unexpected Use":** "We use a credit bureau to settle a dead man's books, and to catch a
@@ -115,10 +116,10 @@ natural scheduled function.
 in deposit operations.
 
 **Measurable usefulness:**
-- the over-claim it caught ([$1,045]);
-- the liability it surfaced ([$2,600]);
+- the over-claim it caught ($1,045);
+- the liability it surfaced ($2,600);
 - the 5/5 planted errors caught;
-- Scam Shield: 15/15 scam calls caught, 0/15 false alarms.
+- Scam Shield: 18/18 scam calls caught, 0/18 false alarms.
 
 **Path to production:**
 - Nessie becomes the core banking API.
