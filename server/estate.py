@@ -11,6 +11,8 @@ from datetime import date, timedelta
 
 DATA = pathlib.Path(__file__).with_name("estates.json")
 MATERIALITY = 250.0  # losses over this need the controller's signature
+KIND_LABEL = {"certificate": "Death certificate", "rep_note": "Rep's note", "dne": "Treasury death notice (DNE)",
+              "crs": "Credit bureau deceased flag", "card_activity": "Card used", "family_call": "Family called the credit union"}
 
 # Cites as verified in docs/RECLAMATION.md. "Institution policy" = sensible choice, no CFR behind it.
 R_DOD = "Institution policy: the state death certificate (primary vital record) controls the date of death over DNE/CRS"
@@ -168,7 +170,7 @@ def compute(e: dict, ignore: tuple[str, ...] = ()) -> dict:
         out_src.setdefault(s["id"], {"trusted": True, "why": "consistent with the record"})
     timeline = [{"date": d["date"], "label": f"SSA deposit {_usd(d['amount'])}" + (" (returned R15)" if d["returned_r15"] else ""), "kind": "deposit"} for d in e["deposits"]]
     timeline += [{"date": w["date"], "label": f"Withdrawal {_usd(w['amount'])} by {w['by']}", "kind": "withdrawal"} for w in e["withdrawals"]]
-    timeline += [{"date": s.get("received") or s["date"], "label": f"{s['kind'].replace('_', ' ')} ({s['id']})", "kind": s["kind"]} for s in srcs]
+    timeline += [{"date": s.get("received") or s["date"], "label": f"{KIND_LABEL.get(s['kind'], s['kind'])} ({s['id']})", "kind": s["kind"]} for s in srcs]
     timeline.append({"date": fs["received"], "label": f"FS-133 {fs['id']} received, claims {_usd(claimed)}", "kind": "fs133"})
     if dod:
         timeline.append({"date": str(dod), "label": "Date of death", "kind": "death"})

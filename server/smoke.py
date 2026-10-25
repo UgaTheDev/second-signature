@@ -97,6 +97,8 @@ with wave.open(buf, "wb") as w: w.setnchannels(1); w.setsampwidth(2); w.setframe
 shield.AUDIO["t"] = shield.chime(buf.getvalue()); assert 2 < shield.clip_seconds("t") < 2.2   # 1s speech + 1.1s chime
 streamed = bytearray(buf.getvalue()); streamed[40:44] = b"\xff\xff\xff\xff"   # Cartesia's "unknown length" data header
 shield.AUDIO["t"] = shield.chime(bytes(streamed)); assert 2 < shield.clip_seconds("t") < 2.2
+assert shield.quote('Caller says: "I want you to pay 5 000 dollars in gift cards." Demanding gift cards is a strong si') == "I want you to pay 5 000 dollars in gift cards."
+assert shield.quote("word " * 60).endswith("…") and len(shield.quote("word " * 60)) <= 201
 print("shield ok")
 
 # --- restart: held cases come back from Convex with their gate state ---

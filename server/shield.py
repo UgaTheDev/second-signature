@@ -36,7 +36,7 @@ from pipecat.serializers.twilio import TwilioFrameSerializer
 from pipecat.services.cartesia.stt import CartesiaSTTService
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams, FastAPIWebsocketTransport
 from pipecat.workers.runner import WorkerRunner
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from twilio.rest import Client as Twilio
 from twilio.twiml.voice_response import Dial, Start, VoiceResponse
 
@@ -74,7 +74,13 @@ class Verdict(BaseModel):
     scam: bool
     confidence: float
     scam_type: str  # tech_support | government_impersonation | family_emergency | romance | debt_collection | other | none
-    evidence: str  # the caller's exact words that show it (case file only, never spoken to her)
+    evidence: str = Field(description="ONLY the caller's own words, verbatim, at most 30 words: no commentary, no 'Caller says'")  # case file only
+
+
+def quote(evidence: str) -> str:
+    """The case file keeps the caller's words, not the model's commentary: the quoted part if it wrapped one, cut at a word."""
+    q = next((m for m in re.findall(r'["\u201c]([^"\u201d]{8,})["\u201d]', evidence)), evidence).strip()
+    return q if len(q) <= 200 else q[:200].rsplit(" ", 1)[0] + "…"
 
 
 def _digits(s: str | None) -> str:
@@ -267,6 +273,7 @@ async def whisper(conf: str, v: Verdict):
     """Record the flag and arm the money-side hold (exactly once), then warn her and only her."""
     s = SESSIONS[conf]
     s["flagged"] = True
+    v.evidence = quote(v.evidence)
     m = MEMBERS[s["member_id"]]
     EVENTS.setdefault(s["member_id"], []).append({"t": time.time(), "scam_type": v.scam_type, "evidence": v.evidence})
     cid = await store.open_case(
