@@ -4,16 +4,15 @@ import { useArena } from "../../lib/data";
 import { REAL, SIMULATED } from "../../lib/derive";
 import { words } from "../../lib/format";
 import type { ArenaRow } from "../../lib/types";
-import { Kicker, OutlinedNumber } from "./primitives";
 
 // A scenario passes only if every run passed and none was critical (server/arena.py grades each run).
 const passes = (r: ArenaRow) => r.passed === r.runs && r.critical === 0;
 
 function Num({ n, children, id }: { n: string; children: string; id?: string }) {
   return (
-    <div id={id} className="flex scroll-mt-5 items-baseline gap-3.5">
-      <span className="font-serif text-[40px] leading-[.8] text-amber italic" aria-hidden>{n}</span>
-      <h2 className="font-mono text-[11px] leading-none font-semibold tracking-[.18em] text-muted">{children}</h2>
+    <div id={id} className="flex scroll-mt-5 items-baseline gap-2.5">
+      <span className="font-serif text-[20px] text-muted" aria-hidden>{n}</span>
+      <h2 className="font-serif text-[20px] leading-[1.3] font-normal">{children}</h2>
     </div>
   );
 }
@@ -27,44 +26,44 @@ export function Arena({ id = "arena" }: { id?: string }) {
   const tone = rows.length && ok === rows.length && !critical ? "green" : "red";
 
   return (
-    <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-[18px] border-line px-4 py-12 sm:px-9 min-[960px]:border-r">
-      <Num n="08" id={id}>RED-TEAM ARENA · CLAUDE PLAYS THE SCAMMER</Num>
+    <div className="flex min-w-0 flex-[1_1_440px] flex-col gap-4 border-line px-4 py-12 sm:px-9 min-[960px]:border-r">
+      <Num n="08" id={id}>Red-team arena</Num>
+      <span className="-mt-2 text-[13px] text-muted">Claude plays the scammer.</span>
       {a === undefined ? (
-        <Kicker>Loading arena results…</Kicker>
+        <span className="text-[13px] text-muted">Loading arena results…</span>
       ) : !run ? (
-        <div className="flex flex-col gap-2 border-t border-line pt-4 text-[15px] text-muted">
-          <span className="font-serif text-[26px] text-ink italic">No run published yet.</span>
+        <div className="flex flex-col gap-2 border-t border-line pt-4 text-[14px] text-muted">
+          <span className="text-[15px] text-ink">No run published yet.</span>
           <span>
-            Run <code className="font-mono text-[13px] text-ink">uv run python arena.py -n 3 --publish</code> in <code className="font-mono text-[13px]">server/</code>.
+            Run <code className="font-mono text-[12.5px] text-ink">uv run python arena.py -n 3 --publish</code> in <code className="font-mono text-[12.5px]">server/</code>.
           </span>
           {a?.shield && <span>{a.shield.summary}</span>}
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-end gap-[22px]">
-            <OutlinedNumber value={`${ok}/${rows.length}`} tone={tone} size="clamp(100px,10vw,170px)" className="num" />
-            <span className="flex flex-col gap-1 pb-2">
-              <span className="font-serif text-[26px] leading-none">passed.</span>
-              <span className={`font-serif text-[22px] italic ${critical ? "text-red" : "text-green"}`}>{critical} critical.</span>
+          <div className="flex flex-wrap items-baseline gap-x-2 text-[15px] text-muted">
+            <span className={`num text-[28px] leading-none font-medium ${tone === "green" ? "text-green" : "text-red"}`}>
+              {ok}/{rows.length}
             </span>
+            passed · <span className={critical ? "text-red" : undefined}>{critical} critical</span>
           </div>
-          <div className="text-[14px] text-muted">
+          <div className="text-[13px] leading-[1.5] text-muted">
             Critical = a scam released or an impostor verified. Graded deterministically. {run.summary} Run {new Date(run.t).toLocaleString()}.
           </div>
-          {a.shield && <div className="text-[14px] text-muted">{a.shield.summary}</div>}
+          {a.shield && <div className="text-[13px] leading-[1.5] text-muted">{a.shield.summary}</div>}
           <ul className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-x-7 border-t border-line">
             {rows.map((r) => {
               const p = passes(r);
               return (
-                <li key={r.scenario} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line py-[11px]" title={r.misses || undefined}>
-                  <span className={`font-mono text-[10.5px] font-bold tracking-[.14em] ${p ? "text-green" : "text-red"}`}>{p ? "PASS" : "FAIL"}</span>
+                <li key={r.scenario} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-line py-2.5" title={r.misses || undefined}>
+                  <span className={`text-[12px] ${p ? "text-green" : "text-red"}`}>{p ? "Pass" : "Fail"}</span>
                   <span className="flex min-w-0 flex-col">
-                    <span className="font-mono text-[13.5px] break-words">{r.scenario}</span>
-                    <span className="font-serif text-[16px] text-muted italic">
+                    <span className="font-mono text-[12.5px] break-words">{r.scenario}</span>
+                    <span className="text-[13px] text-muted">
                       {r.passed} of {r.runs} runs{r.critical ? `, ${r.critical} critical` : ""}{r.misses ? `: ${r.misses}` : ""}
                     </span>
                   </span>
-                  <span className="font-mono text-[10.5px] font-medium tracking-[.12em] text-muted uppercase">{words(r.kind)}</span>
+                  <span className="text-[12px] text-muted">{words(r.kind)}</span>
                 </li>
               );
             })}
@@ -77,15 +76,15 @@ export function Arena({ id = "arena" }: { id?: string }) {
 
 export function Honesty({ id = "honesty" }: { id?: string }) {
   return (
-    <div className="grid min-w-0 flex-[1_1_440px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))] content-start gap-x-10 gap-y-7 px-4 py-12 sm:px-9">
-      <div className="col-span-full"><Num n="09" id={id}>HONESTY · WHAT’S REAL</Num></div>
+    <div className="grid min-w-0 flex-[1_1_440px] grid-cols-[repeat(auto-fit,minmax(240px,1fr))] content-start gap-x-10 gap-y-5 px-4 py-12 sm:px-9">
+      <div className="col-span-full"><Num n="09" id={id}>Honesty: what’s real</Num></div>
       <div className="flex flex-col">
-        <span className="pb-3.5 font-serif text-[56px] leading-[.9] tracking-[-.04em]">Real.</span>
-        <ul>{REAL.map((t) => <li key={t} className="border-t border-line py-3 font-serif text-[19px] leading-[1.35] text-pretty">{t}</li>)}</ul>
+        <span className="pb-2 text-[13px] font-medium text-ink">Real</span>
+        <ul>{REAL.map((t) => <li key={t} className="border-t border-line py-2.5 text-[14px] leading-[1.45] text-pretty">{t}</li>)}</ul>
       </div>
       <div className="flex flex-col">
-        <span className="pb-3.5 font-serif text-[56px] leading-[.9] tracking-[-.04em] text-muted italic">Simulated.</span>
-        <ul>{SIMULATED.map((t) => <li key={t} className="border-t border-line py-3 font-serif text-[19px] leading-[1.35] text-pretty text-muted italic">{t}</li>)}</ul>
+        <span className="pb-2 text-[13px] font-medium text-muted">Simulated</span>
+        <ul>{SIMULATED.map((t) => <li key={t} className="border-t border-line py-2.5 text-[14px] leading-[1.45] text-pretty text-muted">{t}</li>)}</ul>
       </div>
     </div>
   );

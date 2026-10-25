@@ -22,14 +22,14 @@ const mmss = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-const Q: Record<QState, { mark: string; bg: string; fg: string; bd: string; word: string }> = {
-  ok: { mark: "✓", bg: "var(--green)", fg: "var(--on-red)", bd: "var(--line)", word: "answered" },
-  fail: { mark: "✕", bg: "var(--red)", fg: "var(--on-red)", bd: "var(--line)", word: "failed" },
-  asking: { mark: "…", bg: "var(--panel2)", fg: "var(--ink)", bd: "var(--amber)", word: "asking" },
-  pending: { mark: "", bg: "var(--panel2)", fg: "var(--ink)", bd: "var(--line)", word: "not asked yet" },
+const Q: Record<QState, { mark: string; color: string; word: string }> = {
+  ok: { mark: "✓", color: "var(--green)", word: "answered" },
+  fail: { mark: "✕", color: "var(--red)", word: "failed" },
+  asking: { mark: "…", color: "var(--amber)", word: "asking" },
+  pending: { mark: "·", color: "var(--muted)", word: "not asked yet" },
 };
 
-const LANE = "w-[120px] flex-none font-mono text-[11px] font-semibold tracking-[.14em] uppercase";
+const LANE = "w-[110px] flex-none truncate text-[12px] text-muted";
 
 /** Renders nothing when the case has no call. Pass `now` from a parent clock to share its tick; otherwise it ticks itself. */
 export function LiveCall({ detail, now: outer }: { detail: CaseDetail; now?: number }) {
@@ -54,63 +54,64 @@ export function LiveCall({ detail, now: outer }: { detail: CaseDetail; now?: num
   return (
     <section
       aria-label="The call"
-      className="ss-in relative -mx-9 flex flex-col gap-[22px] overflow-hidden border-y px-9 max-sm:-mx-4 max-sm:px-4 pt-7 pb-[30px]"
-      style={{ borderColor: k === "ended" ? "var(--line)" : accent, background: `linear-gradient(90deg, color-mix(in oklch, ${accent} 15%, transparent), transparent 75%)` }}
+      className="ss-in flex flex-col gap-4 border-y border-line border-l-2 py-5 pl-5"
+      style={{ borderLeftColor: k === "ended" ? "var(--line)" : accent }}
     >
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2.5">
-        <span className="inline-flex items-center gap-2 border-[1.5px] px-2.5 py-[5px] font-mono text-[11px] leading-none font-bold tracking-[.18em]" style={{ borderColor: accent, color: accent }}>
-          <span aria-hidden className="size-[7px] rounded-full" style={{ background: accent }} />
-          {k === "ringing" ? "RING" : k === "ended" ? "END" : "LIVE"}
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="inline-flex items-center gap-1.5 text-[12px] font-medium" style={{ color: accent }}>
+          <span aria-hidden className="size-1.5 rounded-full" style={{ background: accent }} />
+          {k === "ringing" ? "Ringing" : k === "ended" ? "Ended" : "Live"}
         </span>
-        <h3 className="font-serif text-[34px] leading-none font-normal tracking-[-.02em]">{title}</h3>
-        <span className="num font-mono text-[13px] text-muted">{sub}</span>
+        <h3 className="text-[16px] leading-tight font-medium">{title}</h3>
+        <span className="num font-mono text-[12px] text-muted">{sub}</span>
       </div>
 
-      <div className="flex h-16 items-center">
-        <Waveform active={k === "live" && call.speaking !== null} tone={call.speaking === "member" ? "green" : "ink"} className="max-w-[400px] flex-1" />
-        {speaking && <span className="ml-3.5 font-mono text-[11px] font-semibold tracking-[.14em] whitespace-nowrap text-muted uppercase">{speaking}</span>}
+      <div className="flex items-center gap-3">
+        <Waveform active={k === "live" && call.speaking !== null} tone={call.speaking === "member" ? "green" : "muted"} height={24} bars={40} className="max-w-[280px] flex-1" />
+        {speaking && <span className="text-[12px] whitespace-nowrap text-muted">{speaking}</span>}
       </div>
 
-      <div className="flex flex-wrap gap-x-12 gap-y-[22px]">
+      <div className="flex flex-wrap gap-x-10 gap-y-4">
         {call.qs.length > 0 && (
-          <div className="flex flex-col gap-2.5">
-            <span className="font-mono text-[11px] leading-none font-semibold tracking-[.18em] text-muted">IDENTITY · FROM THE CREDIT FILE</span>
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[12px] text-muted">Identity, from the credit file</span>
+            <div className="flex items-center gap-3 text-[13px]">
               {call.qs.map((q, i) => {
                 const m = Q[q.s];
                 return (
-                  <span key={i} className="inline-flex items-center gap-2 font-mono text-[12px] font-semibold tracking-[.1em]">
-                    <span aria-hidden className="grid size-7 place-items-center border-[1.5px] text-[13px]" style={{ background: m.bg, color: m.fg, borderColor: m.bd }}>{m.mark}</span>
-                    Q{i + 1}<span className="sr-only">: {m.word}</span>
+                  <span key={i} className="inline-flex items-center gap-1">
+                    Q{i + 1}
+                    <span aria-hidden style={{ color: m.color }}>{m.mark}</span>
+                    <span className="sr-only">: {m.word}</span>
                   </span>
                 );
               })}
-              <span className="font-serif text-[20px] italic" style={{ color: verified ? "var(--green)" : "var(--muted)" }}>
+              <span style={{ color: verified ? "var(--green)" : "var(--muted)" }}>
                 {verified ? "Verified" : `${ok} of ${call.qs.length}`}
               </span>
             </div>
           </div>
         )}
-        <div className="flex min-w-0 flex-[1_1_300px] flex-col gap-3">
+        <div className="flex min-w-0 flex-[1_1_280px] flex-col gap-2">
           <div className="flex items-center gap-3">
             <span className={LANE}>{first}</span>
-            <span aria-hidden className="h-[3px] flex-1 bg-green" />
+            <span aria-hidden className="h-px flex-1 bg-green" />
           </div>
-          <div className="flex items-center gap-3 transition-opacity duration-[1200ms]" style={{ opacity: bridged ? 0.28 : 1 }}>
-            <span className={LANE}>BAYVIEW AGENT{bridged && <span className="sr-only"> (left the line)</span>}</span>
-            <span aria-hidden className="h-0 flex-1 border-t-[3px] border-ink" style={{ borderTopStyle: bridged ? "dashed" : "solid" }} />
+          <div className="flex items-center gap-3 transition-opacity duration-[1200ms]" style={{ opacity: bridged ? 0.35 : 1 }}>
+            <span className={LANE}>Bayview agent{bridged && <span className="sr-only"> (left the line)</span>}</span>
+            <span aria-hidden className="h-0 flex-1 border-t border-ink" style={{ borderTopStyle: bridged ? "dashed" : "solid" }} />
           </div>
           <div className="flex items-center gap-3">
-            <span className={LANE} style={{ color: bridged ? "var(--family)" : "var(--muted)" }}>{fam}{!bridged && <span className="sr-only"> (not on the call)</span>}</span>
-            <span aria-hidden className="h-[3px] flex-1 transition-colors duration-1000" style={{ background: bridged ? "var(--family)" : "var(--line)" }} />
+            <span className={LANE} style={{ color: bridged ? "var(--family)" : undefined }}>{fam}{!bridged && <span className="sr-only"> (not on the call)</span>}</span>
+            <span aria-hidden className="h-px flex-1 transition-colors duration-1000" style={{ background: bridged ? "var(--family)" : "var(--line)" }} />
           </div>
         </div>
       </div>
 
       {bridged ? (
-        <p className="ss-in font-serif text-[clamp(34px,3.6vw,52px)] leading-none tracking-[-.02em] text-family italic">The agent leaves the line.</p>
+        <p className="ss-in font-serif text-[18px] leading-snug text-family italic">The agent leaves the line.</p>
       ) : (
-        <p className="font-serif text-[18px] text-muted italic">Family can join only if {first} is verified and asks.</p>
+        <p className="text-[13px] text-muted">Family can join only if {first} is verified and asks.</p>
       )}
     </section>
   );

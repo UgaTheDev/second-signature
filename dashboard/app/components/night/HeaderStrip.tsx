@@ -1,11 +1,12 @@
 "use client";
 
-// 2. Header strip: desk line, live status, server indicator, cinema, passcode; small row: theme, sample/live, reset (inline confirm).
+// 2. Header strip: one quiet row. Live status (muted) on the left; theme, sample/live, reset, run a scenario, cinema, passcode on the right.
 import { KeyRound } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { pingServer } from "../../lib/api";
 import { clock, shortClock } from "../../lib/format";
 import type { Case } from "../../lib/types";
+import { Btn } from "./primitives";
 
 // Theme lives on <html data-theme>; layout.tsx restores it from localStorage("theme") before paint.
 function subscribeTheme(cb: () => void) {
@@ -45,17 +46,19 @@ function useServerUp(skip: boolean) {
   return up;
 }
 
-const SMALL = "cursor-pointer underline-offset-4 hover:text-ink hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:no-underline";
-const QUIET = "border border-line px-3.5 py-2 text-[14px] whitespace-nowrap transition-colors hover:bg-panel2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50";
+const SMALL = "cursor-pointer text-muted underline-offset-4 hover:text-ink hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:no-underline";
+const OUTLINE = "inline-flex h-8 cursor-pointer items-center rounded-[6px] border border-line px-3 text-[13px] whitespace-nowrap transition-colors hover:bg-panel2";
 
 export function HeaderStrip({
-  cases, now, demo, onToggleDemo, onCinema, onReset, onPasscode,
+  cases, now, demo, onToggleDemo, onScenario, onCinema, onReset, onPasscode,
 }: {
   cases?: Case[];
   now: number;
   demo: boolean;
   /** Omit when live data isn't available (no Convex): the toggle is hidden. */
   onToggleDemo?: () => void;
+  /** Opens the scenario sheet: an action available from every view. */
+  onScenario: () => void;
   onCinema: () => void;
   onReset: () => void;
   onPasscode: () => void;
@@ -67,42 +70,24 @@ export function HeaderStrip({
   const members = new Set((cases ?? []).map((c) => c.member_name)).size;
   const last = (cases ?? []).reduce((m, c) => Math.max(m, c.opened_at), 0);
   const [srvLabel, srvTone] = demo
-    ? ["Sample data", "var(--brand)"]
+    ? ["Sample data", "var(--muted)"]
     : up === null ? ["Checking server", "var(--muted)"] : up ? ["Server connected", "var(--green)"] : ["Server not reachable", "var(--red)"];
 
   return (
-    <header className="relative z-[5] flex flex-wrap items-center justify-between gap-x-8 gap-y-[18px] border-b border-line px-7 pt-[18px] pb-4 max-sm:px-4">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <div className="text-[15px] font-medium">Bayview Community CU · after-hours fraud desk</div>
-        <div className="font-serif text-[16px] text-muted italic">It can never move money on its own.</div>
+    <header className="relative z-[5] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line px-8 py-3.5 max-sm:px-4">
+      <div role="status" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted">
+        <span className="font-medium text-ink">Bayview Community CU · after-hours fraud desk</span>
+        <span>Watching {members} member{members === 1 ? "" : "s"}</span>
+        <span>Last purchase <span className="font-mono">{last ? shortClock(last) : "—"}</span></span>
+        <span className="num font-mono" suppressHydrationWarning>{clock(now)}</span>
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden className="size-1.5 rounded-full" style={{ background: srvTone }} />
+          {srvLabel}
+        </span>
       </div>
-      <div className="flex flex-col items-end gap-2">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div role="status" className="flex min-w-0 flex-[0_1_auto] flex-wrap items-center gap-x-3.5 gap-y-1 border border-line px-3.5 py-2 font-mono text-[13px] text-muted">
-            <span className="flex items-center gap-[7px] text-ink">
-              <span aria-hidden className="size-[7px] rounded-full bg-green" />
-              Watching {members} member{members === 1 ? "" : "s"}
-            </span>
-            <span>Last purchase {last ? shortClock(last) : "—"}</span>
-            <span className="num text-ink" suppressHydrationWarning>{clock(now)}</span>
-            <span className="flex items-center gap-[7px]">
-              <span aria-hidden className="size-[7px]" style={{ background: srvTone }} />
-              {srvLabel}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onCinema}
-            className="cursor-pointer border border-amber px-3.5 py-2 font-mono text-[11.5px] leading-[1.3] font-bold tracking-[.16em] whitespace-nowrap text-amber transition-colors hover:bg-amber hover:text-on-red"
-          >
-            CINEMA MODE ▸
-          </button>
-          <button type="button" onClick={onPasscode} aria-label="Analyst passcode" title="Analyst passcode" className={`${QUIET} text-muted hover:text-ink`}>
-            <KeyRound size={16} strokeWidth={1.75} aria-hidden />
-          </button>
-        </div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {/* ponytail: secondary controls as a small text row, not a menu: no open/close state to manage. */}
-        <div role="group" aria-label="Desk settings" className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 text-[12.5px] text-muted">
+        <div role="group" aria-label="Desk settings" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
           <button type="button" onClick={toggleTheme} className={SMALL}>{theme === "dark" ? "Light mode" : "Dark mode"}</button>
           {onToggleDemo && (
             <button type="button" onClick={onToggleDemo} aria-pressed={demo} className={SMALL}>{demo ? "Use live data" : "Use sample data"}</button>
@@ -110,7 +95,7 @@ export function HeaderStrip({
           {confirming ? (
             <span role="group" aria-label="Confirm reset" className="flex items-center gap-2 text-ink">
               Wipe all cases?
-              <button type="button" autoFocus onClick={() => { setConfirming(false); onReset(); }} className="cursor-pointer bg-red px-2 py-0.5 font-semibold text-on-red">Reset</button>
+              <button type="button" autoFocus onClick={() => { setConfirming(false); onReset(); }} className="cursor-pointer rounded-[4px] border border-red/45 px-2 py-0.5 font-medium text-red hover:bg-red/10">Reset</button>
               <button type="button" onClick={() => setConfirming(false)} className={SMALL}>Cancel</button>
             </span>
           ) : (
@@ -119,6 +104,11 @@ export function HeaderStrip({
             </button>
           )}
         </div>
+        <Btn variant="ink" size="sm" onClick={onScenario}>Run a scenario</Btn>
+        <button type="button" onClick={onCinema} className={OUTLINE}>Cinema mode</button>
+        <button type="button" onClick={onPasscode} aria-label="Analyst passcode" title="Analyst passcode" className={`${OUTLINE} px-2 text-muted hover:text-ink`}>
+          <KeyRound size={15} strokeWidth={1.75} aria-hidden />
+        </button>
       </div>
     </header>
   );

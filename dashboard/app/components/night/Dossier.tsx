@@ -1,7 +1,6 @@
 // Left column, top: the member dossier for the selected case's member.
-import { initials } from "../../lib/derive";
 import type { Case } from "../../lib/types";
-import { DottedRow, Kicker, OutlinedNumber } from "./primitives";
+import { Kicker } from "./primitives";
 
 type Profile = { age: number; sub: string; contact: string | null; shield: boolean; pattern: string[]; note: string };
 
@@ -32,48 +31,37 @@ export function Dossier({ cases, selectedId }: { cases: Case[] | undefined; sele
   const name = c.member_name;
   const p = MEMBER_PROFILES[name];
   return (
-    <div className="relative isolate flex flex-col gap-4 overflow-hidden border-b border-line px-[26px] pt-[30px] pb-[26px]">
-      <OutlinedNumber
-        value={initials(name)}
-        size={200}
-        stroke={1.2}
-        italic
-        className="pointer-events-none absolute -top-5 -right-3.5 -z-10 opacity-[.12] select-none"
-      />
-      <Kicker>The member</Kicker>
-      <div className="flex flex-col gap-1.5">
-        <div className="font-serif text-[36px] leading-[.95] tracking-[-.025em]">
+    <div className="flex flex-col gap-5 border-b border-line px-6 pt-7 pb-6">
+      <div className="flex flex-col gap-1">
+        <Kicker>The member</Kicker>
+        <div className="mt-1 text-[20px] leading-tight font-medium">
           {name}
-          {p && <span className="text-muted">, {p.age}</span>}
+          {p && <span className="font-normal text-muted">, {p.age}</span>}
         </div>
-        <div className="text-[14px] text-muted">{p ? p.sub : "No profile on file"}</div>
+        <div className="text-[13px] text-muted">{p ? p.sub : "No profile on file"}</div>
       </div>
       {p && (
         <>
-          <div className="flex flex-col">
-            <DottedRow
-              className="border-t border-line py-2"
-              label="Trusted contact"
-              tone={p.contact ? "family" : "muted"}
-              value={<span className="font-serif text-[18px] italic">{p.contact ?? "Not on file"}</span>}
-            />
-            <DottedRow
-              className="border-y border-line py-2"
-              label="Scam Shield"
-              tone={p.shield ? "green" : "muted"}
-              value={<span className="font-mono text-[12px] font-semibold tracking-[.14em]">{p.shield ? "ON" : "OFF"}</span>}
-            />
-          </div>
-          <div className="flex flex-col gap-2.5">
-            <Kicker>Normal spending</Kicker>
+          <dl className="flex flex-col text-[14px]">
+            <div className="flex items-baseline justify-between gap-4 border-t border-line py-2">
+              <dt className="text-[12px] text-muted">Trusted contact</dt>
+              <dd className={p.contact ? "text-family" : "text-muted"}>{p.contact ?? "Not on file"}</dd>
+            </div>
+            <div className="flex items-baseline justify-between gap-4 border-y border-line py-2">
+              <dt className="text-[12px] text-muted">Scam Shield</dt>
+              <dd className={p.shield ? "text-green" : "text-muted"}>{p.shield ? "On" : "Off"}</dd>
+            </div>
+          </dl>
+          <div className="flex flex-col gap-2">
+            <span className="text-[12px] text-muted">Normal spending</span>
             <ul className="flex flex-wrap gap-1.5">
               {p.pattern.map((s) => (
-                <li key={s} className="border border-line px-[9px] py-1 font-mono text-[12px] font-medium tracking-[.04em]">
+                <li key={s} className="rounded-[6px] border border-line px-2 py-0.5 text-[12px] text-muted">
                   {s}
                 </li>
               ))}
             </ul>
-            <p className="font-serif text-[17px] leading-[1.35] text-pretty text-muted italic">{p.note}</p>
+            <p className="text-[13px] leading-normal text-pretty text-muted">{p.note}</p>
           </div>
         </>
       )}

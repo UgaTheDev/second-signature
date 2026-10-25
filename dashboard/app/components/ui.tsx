@@ -31,13 +31,13 @@ export function Dialog({
       ref={ref}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
-      className={`${position} border border-line bg-panel p-0`}
+      className={`${position} border border-line bg-panel p-0 ${side ? "" : "rounded-[6px]"}`}
     >
-      <div className="flex items-center justify-between border-b border-line px-6 py-4">
-        <h2 className="font-serif text-[24px] tracking-[-.01em]">{title}</h2>
+      <div className="flex items-center justify-between border-b border-line px-6 py-3.5">
+        <h2 className="text-[16px] font-medium">{title}</h2>
         <button type="button" aria-label="Close" title="Close" onClick={onClose}
-          className="inline-flex size-10 items-center justify-center text-muted hover:bg-panel2 hover:text-ink">
-          <X size={18} strokeWidth={1.75} aria-hidden />
+          className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] text-muted hover:bg-panel2 hover:text-ink">
+          <X size={16} strokeWidth={1.75} aria-hidden />
         </button>
       </div>
       <div className="p-6">{children}</div>
@@ -64,7 +64,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role={t.bad ? "alert" : "status"}
-            className={`border bg-panel2 px-4 py-3 text-[15px] shadow-lg ${t.bad ? "border-red" : "border-line"}`}
+            className={`ss-in rounded-[6px] border bg-panel px-4 py-3 text-[14px] shadow-md ${t.bad ? "border-red/45 text-red" : "border-line"}`}
           >
             {t.text}
           </div>

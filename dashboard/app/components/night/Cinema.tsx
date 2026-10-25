@@ -10,11 +10,10 @@ import { Waveform } from "./primitives";
 const ACTIVE = new Set(["ringing", "live", "bridged"]);
 const RESOLVED = new Set<Status>(["escalated", "released", "confirmed_fraud"]);
 const KEY_PHRASE = /not to tell the bank|let it go through|gift cards|Microsoft/i;
-const MONO = "font-mono text-[11px] leading-none font-bold tracking-[.18em]";
+const LABEL = "text-[13px] leading-none";
 const DIM = (pct: number) => `color-mix(in oklch, var(--term-ink) ${pct}%, transparent)`;
 
-const lineSize = (n: number) =>
-  n < 70 ? "clamp(56px,6.4vw,104px)" : n < 140 ? "clamp(46px,5vw,80px)" : n < 220 ? "clamp(38px,4vw,62px)" : "clamp(32px,3.3vw,52px)";
+const lineSize = (n: number) => (n < 140 ? "clamp(28px,3.4vw,48px)" : "clamp(24px,2.6vw,36px)");
 const mmss = (ms: number) => {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
@@ -98,7 +97,6 @@ function Stage({ detail, call, now, onExit }: { detail: CaseDetail; call: Derive
 
   const k = call.state;
   const F = firstName(detail.member_name);
-  const FU = F.toUpperCase();
   const family = familyName(detail.actions);
   const contact = family ?? "Family";
   const lines = [...detail.transcript].sort((a, b) => a.t - b.t);
@@ -108,121 +106,111 @@ function Stage({ detail, call, now, onExit }: { detail: CaseDetail; call: Derive
   const gate = gates.at(-1);
   const gateLatest = !!gate && (!cur || gate.t > cur.t);
   const mode = k === "ringing" || (!cur && !gateLatest && k !== "bridged") ? "ring" : k === "bridged" ? "bridge" : gateLatest ? "gate" : "line";
-  const glow: Tone = mode === "gate" ? "red" : mode === "bridge" ? "family" : mode === "ring" ? "amber" : "brand";
 
-  const [kicker, kTone]: [string, Tone] =
-    k === "ringing" ? [`RINGING · CALLING ${FU}`, "amber"]
-    : k === "live" ? [`LIVE · ON THE LINE WITH ${FU} · ${call.startedAt ? mmss(now - call.startedAt) : "0:00"}`, "green"]
-    : k === "bridged" ? [`PRIVATE · ${FU} AND ${contact.toUpperCase()} · NOT RECORDED`, "family"]
-    : k === "ended" ? ["CALL ENDED", "muted"]
-    : ["NO CALL ON THIS CASE", "muted"];
+  const [kicker, kTone]: [ReactNode, Tone] =
+    k === "ringing" ? [`Ringing · calling ${F}`, "amber"]
+    : k === "live" ? [<>Live · on the line with {F} · <span className="num font-mono">{call.startedAt ? mmss(now - call.startedAt) : "0:00"}</span></>, "green"]
+    : k === "bridged" ? [`Private · ${F} and ${contact} · not recorded`, "family"]
+    : k === "ended" ? ["Call ended", "muted"]
+    : ["No call on this case", "muted"];
 
   const okQ = call.qs.filter((q) => q.s === "ok").length;
   const verified = call.qs.length > 0 && okQ === call.qs.length;
   const { flags, next, nextTone } = heardFlags(detail.transcript, detail.actions, call);
   const isM = cur?.speaker === "member";
-  const who = (s: string) => (s === "agent" ? "AGENT" : FU);
+  const who = (s: string) => (s === "agent" ? "Agent" : F);
   const whoTone = (s: string): Tone => (s === "member" ? "green" : "brand");
   const hm = cur?.text.match(KEY_PHRASE);
   const at = hm?.index ?? 0;
 
   return (
     <div
-      className="ss-in relative flex h-full flex-col gap-7 overflow-y-auto px-4 pt-[38px] pb-11 md:overflow-hidden md:px-14"
+      className="ss-in relative flex h-full flex-col gap-8 overflow-y-auto px-4 pt-8 pb-10 md:overflow-hidden md:px-14"
       style={{ ["--ink" as string]: "var(--term-ink)" } as CSSProperties}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 transition-[background] duration-1000"
-        style={{
-          background: `radial-gradient(60% 55% at 72% 38%, color-mix(in oklch, ${toneVar(glow)} 24%, transparent), transparent 72%), repeating-linear-gradient(0deg, oklch(1 0 0 / .03) 0 1px, transparent 1px 4px)`,
-        }}
-      />
-
       {/* top bar */}
-      <div className="relative flex flex-wrap items-center justify-between gap-x-7 gap-y-3.5">
-        <span className={`flex items-center gap-3 ${MONO}`} style={{ color: toneVar(kTone) }} role="status">
-          <span aria-hidden className="ss-blink size-2.5 rounded-full" style={{ background: toneVar(kTone) }} />
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <span className={`flex items-center gap-2.5 ${LABEL}`} style={{ color: toneVar(kTone) }} role="status">
+          <span aria-hidden className="size-1.5 rounded-full" style={{ background: toneVar(kTone) }} />
           {kicker}
         </span>
-        <div className="flex flex-wrap items-center justify-end gap-x-[18px] gap-y-2.5">
+        <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
           {call.qs.map((q, i) => {
             const [mark, t, sr]: [string, Tone, string] =
               q.s === "ok" ? ["✓", "green", "passed"] : q.s === "fail" ? ["✕", "red", "failed"] : q.s === "asking" ? ["…", "amber", "asking"] : ["", "muted", "pending"];
             return (
-              <span key={i} className={MONO} style={{ color: toneVar(t) }}>
+              <span key={i} className={LABEL} style={{ color: toneVar(t) }}>
                 Q{i + 1} <span aria-hidden>{mark}</span>
                 <span className="sr-only">{sr}</span>
               </span>
             );
           })}
           {call.qs.length > 0 && (
-            <span className={MONO} style={{ color: verified ? "var(--term-ink)" : "var(--muted)" }}>
-              {verified ? "VERIFIED" : `${okQ} OF ${call.qs.length}`}
+            <span className={LABEL} style={{ color: verified ? "var(--term-ink)" : "var(--muted)" }}>
+              {verified ? "Verified" : `${okQ} of ${call.qs.length}`}
             </span>
           )}
           <button
             ref={exitRef}
             type="button"
             onClick={onExit}
-            className={`cursor-pointer border px-3.5 py-[9px] whitespace-nowrap transition-colors hover:bg-term-ink hover:text-term ${MONO}`}
-            style={{ borderColor: DIM(35) }}
+            className={`cursor-pointer rounded-md border px-3 py-2 whitespace-nowrap transition-colors hover:bg-term-ink hover:text-term ${LABEL}`}
+            style={{ borderColor: DIM(25) }}
           >
-            EXIT · ESC
+            Exit · Esc
           </button>
         </div>
       </div>
 
       {/* main */}
-      <div className="relative flex min-h-0 flex-1 flex-col gap-12 md:flex-row md:items-center">
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-[34px]">
+      <div className="flex min-h-0 flex-1 flex-col gap-10 md:flex-row md:items-center">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-8">
           {mode === "ring" &&
             (k === "ringing" ? (
-              <div className="flex flex-col gap-[26px]">
-                <span aria-hidden className="ss-pulse size-[26px] rounded-full bg-amber" />
-                <div className="font-serif leading-[.92] tracking-[-.045em]" style={{ fontSize: "clamp(64px,8vw,132px)" }}>
-                  Calling <em className="text-amber">{F}…</em>
+              <div className="flex flex-col gap-4">
+                <div className="leading-[1.1] font-medium tracking-[-.02em]" style={{ fontSize: "clamp(32px,4vw,48px)" }}>
+                  Calling <span className="text-amber">{F}…</span>
                 </div>
-                <div className="max-w-[820px] font-serif text-[26px] leading-[1.35]" style={{ color: DIM(70) }}>
-                  Nothing’s wrong with the account. We just want to check one purchase: {money(detail.amount)} at {detail.merchant}.
+                <div className="max-w-[720px] text-[18px] leading-[1.5]" style={{ color: DIM(70) }}>
+                  Nothing’s wrong with the account. We just want to check one purchase: <span className="num font-mono">{money(detail.amount)}</span> at {detail.merchant}.
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col gap-[26px]">
-                <div className="font-serif leading-[.92] tracking-[-.045em]" style={{ fontSize: "clamp(48px,6vw,96px)" }}>
-                  {k === "ended" ? "The call has ended." : <>No call on <em className="text-amber">{F}’s</em> case.</>}
+              <div className="flex flex-col gap-4">
+                <div className="leading-[1.1] font-medium tracking-[-.02em]" style={{ fontSize: "clamp(28px,3.4vw,44px)" }}>
+                  {k === "ended" ? "The call has ended." : <>No call on <span className="text-amber">{F}’s</span> case.</>}
                 </div>
-                <div className="max-w-[820px] font-serif text-[26px] leading-[1.35]" style={{ color: DIM(70) }}>
-                  {money(detail.amount)} at {detail.merchant}. Pick a case with a call, or run a scenario.
+                <div className="max-w-[720px] text-[18px] leading-[1.5]" style={{ color: DIM(70) }}>
+                  <span className="num font-mono">{money(detail.amount)}</span> at {detail.merchant}. Pick a case with a call, or run a scenario.
                 </div>
               </div>
             ))}
 
           {mode === "line" && cur && (
-            <div className="flex flex-col gap-[34px]">
+            <div className="flex flex-col gap-7">
               {prev && (
-                <div className="flex max-w-[900px] flex-col gap-2.5">
-                  <span className={MONO} style={{ color: toneVar(whoTone(prev.speaker)) }}>
-                    {who(prev.speaker)} · {shortClock(prev.t)}
+                <div className="flex max-w-[860px] flex-col gap-2">
+                  <span className={LABEL} style={{ color: toneVar(whoTone(prev.speaker)) }}>
+                    {who(prev.speaker)} · <span className="num font-mono">{shortClock(prev.t)}</span>
                   </span>
-                  <div className="line-clamp-3 font-serif text-[25px] leading-[1.35]" style={{ color: DIM(62) }}>
+                  <div className="line-clamp-3 text-[16px] leading-[1.5]" style={{ color: DIM(55) }}>
                     {prev.text}
                   </div>
                 </div>
               )}
-              <div className="flex flex-col gap-4" aria-live="polite">
-                <span className={MONO} style={{ color: toneVar(whoTone(cur.speaker)) }}>
-                  {who(cur.speaker)} · {shortClock(cur.t)}
+              <div className="flex flex-col gap-3" aria-live="polite">
+                <span className={LABEL} style={{ color: toneVar(whoTone(cur.speaker)) }}>
+                  {who(cur.speaker)} · <span className="num font-mono">{shortClock(cur.t)}</span>
                 </span>
                 <div
-                  className={`max-w-[1180px] font-serif leading-[1.04] tracking-[-.03em] text-pretty ${isM ? "italic" : ""}`}
+                  className={`max-w-[1100px] leading-[1.25] tracking-[-.015em] text-pretty ${isM ? "italic" : ""}`}
                   style={{ fontSize: lineSize(cur.text.length) }}
                 >
                   {isM && "“"}
                   {hm ? (
                     <>
                       {cur.text.slice(0, at)}
-                      <span className="text-amber underline decoration-[3px] underline-offset-[10px]">{hm[0]}</span>
+                      <span className="text-amber underline decoration-1 underline-offset-[6px]">{hm[0]}</span>
                       {cur.text.slice(at + hm[0].length)}
                     </>
                   ) : (
@@ -235,28 +223,23 @@ function Stage({ detail, call, now, onExit }: { detail: CaseDetail; call: Derive
           )}
 
           {mode === "gate" && gate && (
-            <div className="ss-in flex flex-wrap items-center gap-11">
-              <span className="-rotate-6 font-serif leading-[.8] tracking-[-.06em] text-red italic" style={{ fontSize: "clamp(140px,16vw,260px)" }}>
-                No.
+            <div className="ss-in flex max-w-[1000px] flex-col gap-3">
+              <span className={`${LABEL} text-red`}>
+                {actionLabel(gate.type)} · {gate.type}
               </span>
-              <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-3.5">
-                <span className={`${MONO} text-[14px] text-red`}>
-                  {actionLabel(gate.type)} · {gate.type}
-                </span>
-                <div className="font-serif leading-[1.12] tracking-[-.02em] text-pretty" style={{ fontSize: "clamp(32px,3.4vw,52px)" }}>
-                  {gate.detail}
-                </div>
-                <span className={`self-start border-2 border-red px-3 py-[7px] text-red ${MONO}`}>ENFORCED IN CODE, NOT IN THE PROMPT.</span>
+              <div className="leading-[1.3] tracking-[-.01em] text-pretty" style={{ fontSize: "clamp(22px,2.4vw,32px)" }}>
+                {gate.detail}
               </div>
+              <span className="text-[13px]" style={{ color: DIM(60) }}>Enforced in code, not in the prompt.</span>
             </div>
           )}
 
           {mode === "bridge" && (
-            <div className="ss-in flex flex-col gap-6">
-              <div className="font-serif leading-[.9] tracking-[-.045em] text-family italic" style={{ fontSize: "clamp(72px,9vw,150px)" }}>
+            <div className="ss-in flex flex-col gap-4">
+              <div className="leading-[1.1] font-medium tracking-[-.02em] text-family" style={{ fontSize: "clamp(32px,4vw,48px)" }}>
                 The agent leaves the line.
               </div>
-              <div className="max-w-[860px] font-serif text-[28px] leading-[1.35]" style={{ color: DIM(78) }}>
+              <div className="max-w-[760px] text-[18px] leading-[1.5]" style={{ color: DIM(75) }}>
                 {F} and {contact} are talking privately. Not recorded. The hold stays until an analyst decides.
               </div>
             </div>
@@ -265,45 +248,42 @@ function Stage({ detail, call, now, onExit }: { detail: CaseDetail; call: Derive
 
         {/* right rail */}
         <div
-          className="flex flex-col justify-center gap-4 border-t pt-5 md:w-[230px] md:flex-none md:self-stretch md:border-t-0 md:border-l md:pt-0 md:pl-[22px]"
-          style={{ borderColor: DIM(20) }}
+          className="flex flex-col justify-center gap-3 border-t pt-5 md:w-[230px] md:flex-none md:self-stretch md:border-t-0 md:border-l md:pt-0 md:pl-6"
+          style={{ borderColor: DIM(15) }}
         >
-          <span className={`${MONO} text-amber`}>HEARD ON THE CALL</span>
+          <span className={LABEL} style={{ color: DIM(60) }}>Heard on the call</span>
           {flags.length ? (
             flags.map((f) => (
-              <span key={f} className="ss-in font-serif text-[23px] leading-[1.15]">
+              <span key={f} className="ss-in text-[16px] leading-[1.35]">
                 {f}
               </span>
             ))
           ) : (
-            <span className="font-serif text-[21px] italic" style={{ color: DIM(60) }}>
+            <span className="text-[15px]" style={{ color: DIM(55) }}>
               Nothing concerning yet.
             </span>
           )}
-          <span
-            className={`${MONO} mt-2 text-[11.5px] leading-normal`}
-            style={{ color: nextTone === "family" ? "var(--family)" : DIM(70) }}
-          >
+          <span className="mt-1 text-[13px] leading-normal" style={{ color: nextTone === "family" ? "var(--family)" : DIM(60) }}>
             {next}
           </span>
         </div>
       </div>
 
       {/* lanes */}
-      <div className="relative flex flex-col gap-[18px]">
+      <div className="flex flex-col gap-2.5">
         <Lane label={F} tone="green">
-          <Waveform active={(k === "live" && call.speaking === "member") || k === "bridged"} tone="green" height={58} className="flex-1" />
+          <Waveform active={(k === "live" && call.speaking === "member") || k === "bridged"} tone="green" height={20} className="flex-1" />
         </Lane>
-        <Lane label="AGENT" tone="ink" className={`transition-opacity duration-[1.2s] ${k === "bridged" ? "opacity-35" : ""}`}>
+        <Lane label="Agent" tone="ink" className={`transition-opacity duration-700 ${k === "bridged" ? "opacity-35" : ""}`}>
           {k === "bridged" ? (
             <Gone tone="ink" note="left the line" />
           ) : (
-            <Waveform active={k === "live" && call.speaking === "agent"} tone="ink" height={40} className="flex-1" />
+            <Waveform active={k === "live" && call.speaking === "agent"} tone="ink" height={14} className="flex-1" />
           )}
         </Lane>
         <Lane label={contact} tone="family">
           {k === "bridged" ? (
-            <Waveform active tone="family" height={58} className="flex-1" />
+            <Waveform active tone="family" height={20} className="flex-1" />
           ) : (
             <Gone tone="family" note={family ? `waiting for ${F}’s yes` : "not on the line"} faint />
           )}
@@ -315,8 +295,8 @@ function Stage({ detail, call, now, onExit }: { detail: CaseDetail; call: Derive
 
 function Lane({ label, tone, className = "", children }: { label: string; tone: Tone; className?: string; children: ReactNode }) {
   return (
-    <div className={`flex items-center gap-[22px] ${className}`}>
-      <span className={`w-[120px] flex-none uppercase ${MONO}`} style={{ color: toneVar(tone) }}>
+    <div className={`flex h-5 items-center gap-5 ${className}`}>
+      <span className={`w-[110px] flex-none truncate ${LABEL}`} style={{ color: toneVar(tone) }}>
         {label}
       </span>
       {children}
@@ -328,8 +308,8 @@ function Gone({ tone, note, faint }: { tone: Tone; note: string; faint?: boolean
   const c = toneVar(tone);
   return (
     <>
-      <span aria-hidden className="flex-1 border-t-[3px] border-dashed" style={{ borderColor: faint ? `color-mix(in oklch, ${c} 50%, transparent)` : c }} />
-      <span className="font-serif text-[20px] italic" style={{ color: c }}>
+      <span aria-hidden className="flex-1 border-t border-dashed" style={{ borderColor: `color-mix(in oklch, ${c} ${faint ? 35 : 60}%, transparent)` }} />
+      <span className="text-[13px]" style={{ color: c }}>
         {note}
       </span>
     </>
