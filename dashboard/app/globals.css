@@ -1,64 +1,102 @@
 @import "tailwindcss";
 
-/* One accent (amber). Red and green appear only as status text, never as decoration. */
+/* v4 "Night Ledger". Dark is the default; light via :root[data-theme="light"]. Square corners everywhere. */
 :root,
 :root[data-theme="dark"] {
-  --bg: #131210;
-  --surface: #1a1916;
-  --raise: #23211d;
-  --line: #2e2b26;
-  --ink: #efeae0;
-  --ink-2: #b9b2a4;
-  --ink-3: #8c8576;
-  --accent: #e8a33d;
-  --on-accent: #1b1306;
-  --danger: #f0705f;
-  --ok: #8cc194;
+  --bg: oklch(0.155 0.03 268);
+  --panel: oklch(0.215 0.024 262);
+  --panel2: oklch(0.26 0.026 262);
+  --line: oklch(0.33 0.022 262);
+  --ink: oklch(0.955 0.012 85);
+  --muted: oklch(0.76 0.018 262);
+  --amber: oklch(0.82 0.14 78);
+  --green: oklch(0.8 0.12 158);
+  --red: oklch(0.7 0.18 25);
+  --family: oklch(0.79 0.12 50);
+  --on-red: oklch(0.16 0.02 262);
+  --term: oklch(0.13 0.02 262);
+  --term-ink: oklch(0.9 0.012 85);
+  --brand: oklch(0.76 0.13 278);
+  --brand2: oklch(0.8 0.11 220);
+  --grid: oklch(1 0 0 / 0.045);
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --bg: #f4f1ea;
-  --surface: #faf8f3;
-  --raise: #ffffff;
-  --line: #dcd6c8;
-  --ink: #1c1a16;
-  --ink-2: #4b463d;
-  --ink-3: #6b6558;
-  --accent: #96570a;
-  --on-accent: #fffaf0;
-  --danger: #b0301d;
-  --ok: #2d6a39;
+  --bg: oklch(0.965 0.009 85);
+  --panel: oklch(0.993 0.004 85);
+  --panel2: oklch(0.945 0.012 85);
+  --line: oklch(0.87 0.012 85);
+  --ink: oklch(0.22 0.025 262);
+  --muted: oklch(0.45 0.022 262);
+  --amber: oklch(0.55 0.13 65);
+  --green: oklch(0.5 0.11 158);
+  --red: oklch(0.53 0.19 25);
+  --family: oklch(0.55 0.14 42);
+  --on-red: oklch(0.99 0 0);
+  --term: oklch(0.22 0.025 262);
+  --term-ink: oklch(0.93 0.01 85);
+  --brand: oklch(0.5 0.18 278);
+  --brand2: oklch(0.55 0.14 225);
+  --grid: oklch(0.3 0.03 262 / 0.06);
   color-scheme: light;
 }
 
 @theme inline {
   --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-raise: var(--raise);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel2);
   --color-line: var(--line);
   --color-ink: var(--ink);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-  --color-accent: var(--accent);
-  --color-on-accent: var(--on-accent);
-  --color-danger: var(--danger);
-  --color-ok: var(--ok);
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-code);
+  --color-muted: var(--muted);
+  --color-amber: var(--amber);
+  --color-green: var(--green);
+  --color-red: var(--red);
+  --color-family: var(--family);
+  --color-on-red: var(--on-red);
+  --color-term: var(--term);
+  --color-term-ink: var(--term-ink);
+  --color-brand: var(--brand);
+  --color-brand2: var(--brand2);
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/* Scanlines 1px every 4px, violet glow top-right, family glow bottom-left. */
 body {
-  background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-geist), system-ui, sans-serif;
   font-size: 16px;
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background:
+    repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 4px),
+    radial-gradient(1200px 700px at 85% 10%, color-mix(in oklch, var(--brand) 20%, transparent), transparent 65%),
+    radial-gradient(1000px 700px at 10% 90%, color-mix(in oklch, var(--family) 9%, transparent), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+/* Film grain. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.13;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+::selection {
+  background: var(--amber);
+  color: var(--on-red);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--amber);
   outline-offset: 2px;
 }
 
@@ -73,14 +111,81 @@ dialog::backdrop {
   font-variant-numeric: tabular-nums;
 }
 
-@keyframes arrive {
-  from { background-color: color-mix(in srgb, var(--accent) 22%, transparent); }
-  to { background-color: transparent; }
+/* ---- motion ------------------------------------------------------------------------------------ */
+
+@keyframes ss-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklch, var(--ss-pulse, var(--amber)) 70%, transparent); }
+  70% { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
-.arrive {
-  animation: arrive 1.8s ease-out;
+@keyframes ss-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
+@keyframes ss-arrive {
+  0% { opacity: 0; transform: translateY(-10px); background: color-mix(in oklch, var(--amber) 22%, var(--panel)); }
+  60% { opacity: 1; transform: none; }
+  100% { background: transparent; }
+}
+@keyframes ss-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* Paths use pathLength="1" with stroke-dasharray 1, so one keyframe draws any stroke. */
+@keyframes ss-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes ss-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes ss-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-2%, 1.5%) scale(1.04); }
+}
+@keyframes ss-wave {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
+@keyframes ss-ring {
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes ss-blink {
+  50% { opacity: 0; }
+}
+@keyframes ss-glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes ss-pop {
+  0% { opacity: 0; transform: rotate(var(--ss-rot, -9deg)) scale(1.35); }
+  100% { opacity: 1; transform: rotate(var(--ss-rot, -9deg)) scale(1); }
+}
+
+.ss-in { animation: ss-in 0.4s ease-out both; }
+.ss-arrive { animation: ss-arrive 1.4s ease-out; }
+.ss-pulse { animation: ss-pulse 1.8s ease-out infinite; }
+.ss-marquee { animation: ss-marquee 60s linear infinite; }
+.ss-draw { stroke-dasharray: 1; animation: ss-draw 1.8s ease-out both; }
+.ss-spin { animation: ss-spin 40s linear infinite; }
+.ss-drift { animation: ss-drift 28s ease-in-out infinite; }
+.ss-ring { animation: ss-ring 1.6s ease-out infinite; }
+.ss-blink { animation: ss-blink 1s steps(1) infinite; }
+.ss-glow { animation: ss-glow 3s ease-in-out infinite; }
+.ss-pop { animation: ss-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+
+/* Edge-masked marquee track container. */
+.ss-mask-x {
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .arrive { animation: none; }
-  * { scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
